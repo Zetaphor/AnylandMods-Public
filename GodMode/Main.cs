@@ -2,6 +2,8 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Reflection;
+using System.Reflection.Emit;
 using Harmony;
 using UnityEngine;
 using UnityModManagerNet;
@@ -11,13 +13,61 @@ namespace AnylandMods.GodMode
     public static class Main
     {
         public static bool enabled;
-		public static bool gmEnabled = false;
+        public static bool gmEnabled = false;
         public static UnityModManager.ModEntry mod;
+
+        public static IEnumerable<CodeInstruction> ForceClonableTranspiler(IEnumerable<CodeInstruction> code)
+        {
+            foreach (CodeInstruction inst in code)
+            {
+                yield return inst;
+                if (inst.opcode == OpCodes.Ldfld)
+                {
+                    FieldInfo field = inst.operand as FieldInfo;
+                    if (!(field is null))
+                    {
+                        if (field.Name.Equals("isClonable"))
+                        {
+                            yield return new CodeInstruction(OpCodes.Ldsfld, AccessTools.Field(typeof(Main), "gmEnabled"));
+                            yield return new CodeInstruction(OpCodes.Or);
+                        }
+                        else if (field.Name.Equals("isNeverClonable"))
+                        {
+                            yield return new CodeInstruction(OpCodes.Ldsfld, AccessTools.Field(typeof(Main), "gmEnabled"));
+                            yield return new CodeInstruction(OpCodes.Not);
+                            yield return new CodeInstruction(OpCodes.And);
+                        }
+                    } else
+                    {
+                        FileLog.Log("Warning: operand " + inst.operand.ToString() + " is not FieldInfo!");
+                    }
+                }
+            }
+        }
 
         public static bool Load(UnityModManager.ModEntry modEntry)
         {
             var harmony = HarmonyInstance.Create(modEntry.Info.Id);
             harmony.PatchAll();
+
+            MethodInfo[] methods = new MethodInfo[]
+            {
+                typeof(IncludeThingDialog).GetMethod("AddMergePartsButtonIfAppropriate", BindingFlags.NonPublic | BindingFlags.Instance),
+                typeof(ThingDialog).GetMethod("AddBacksideButtons", BindingFlags.NonPublic | BindingFlags.Instance),
+                typeof(ThingDialog).GetMethod("AddInfo", BindingFlags.NonPublic | BindingFlags.Instance),
+                typeof(ThingManager).GetMethod("ExportAllThings")
+            };
+            foreach (MethodInfo method in methods)
+            {
+                try
+                {
+                    harmony.Patch(method, transpiler: new HarmonyMethod(typeof(Main), "ForceClonableTranspiler"));
+                } catch (TargetInvocationException ex)
+                {
+                    FileLog.Log("Warning: Unable to patch " + method.Name);
+                    FileLog.Log(ex.ToString());
+                }
+            }
 
             mod = modEntry;
             return true;
