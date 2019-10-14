@@ -7,6 +7,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "VehicleUpdate", "VehicleUpd
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GodMode", "GodMode\GodMode.csproj", "{87F7F8E6-3654-44BC-A4BF-DD6EB881E993}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BetterVertexMover", "BetterVertexMover\BetterVertexMover.csproj", "{78943956-24DE-4F0E-8855-D7AB5A3C91BF}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -21,6 +23,10 @@ Global
 		{87F7F8E6-3654-44BC-A4BF-DD6EB881E993}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{87F7F8E6-3654-44BC-A4BF-DD6EB881E993}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{87F7F8E6-3654-44BC-A4BF-DD6EB881E993}.Release|Any CPU.Build.0 = Release|Any CPU
+		{78943956-24DE-4F0E-8855-D7AB5A3C91BF}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{78943956-24DE-4F0E-8855-D7AB5A3C91BF}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{78943956-24DE-4F0E-8855-D7AB5A3C91BF}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{78943956-24DE-4F0E-8855-D7AB5A3C91BF}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
