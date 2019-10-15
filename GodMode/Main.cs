@@ -15,6 +15,7 @@ namespace AnylandMods.GodMode
         public static bool enabled;
         public static bool gmEnabled = false;
         public static UnityModManager.ModEntry mod;
+        internal static HarmonyInstance harmony = null;
 
         public static IEnumerable<CodeInstruction> ForceClonableTranspiler(IEnumerable<CodeInstruction> code)
         {
@@ -47,7 +48,7 @@ namespace AnylandMods.GodMode
 
         public static bool Load(UnityModManager.ModEntry modEntry)
         {
-            var harmony = HarmonyInstance.Create(modEntry.Info.Id);
+            harmony = HarmonyInstance.Create(modEntry.Info.Id);
             harmony.PatchAll();
 
             MethodInfo[] methods = new MethodInfo[]
@@ -112,6 +113,43 @@ namespace AnylandMods.GodMode
         {
             __result = Main.gmEnabled;
             return !__result;
+        }
+    }
+
+    [HarmonyPatch(typeof(MySizeDialog), "HandleSetMyScale")]
+    public static class NoSizeLimit
+    {
+        private static float MathfClampIfNotGodMode(float value, float min, float max)
+        {
+            if (Main.gmEnabled)
+                return value;
+            else
+                return Mathf.Clamp(value, min, max);
+        }
+
+        private static IEnumerable<CodeInstruction> InnerTranspiler(IEnumerable<CodeInstruction> code)
+        {
+            foreach (CodeInstruction inst in code)
+            {
+                if (inst.opcode == OpCodes.Call && ((MethodInfo)inst.operand).Name.Equals("Clamp"))
+                    yield return new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(NoSizeLimit), nameof(MathfClampIfNotGodMode)));
+                else
+                    yield return inst;
+            }
+        }
+
+        public static IEnumerable<CodeInstruction> Transpiler(IEnumerable<CodeInstruction> code)
+        {
+            foreach (CodeInstruction inst in code)
+            {
+                yield return inst;
+                if (inst.opcode == OpCodes.Ldftn)
+                {
+                    MethodBase method = (MethodBase)inst.operand;
+                    FileLog.Log("(NoSizeLimit) Patching method " + method.Name);
+                    Main.harmony.Patch(method, transpiler: new HarmonyMethod(typeof(NoSizeLimit), nameof(InnerTranspiler)));
+                }
+            }
         }
     }
 }
