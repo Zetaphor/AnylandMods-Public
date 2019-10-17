@@ -3,5 +3,6 @@
   "DisplayName": "Clientside Permission Check Bypass (\"God Mode\")",
   "Author": "flarn2006",
   "Version": "1.0.0",
-  "EntryMethod": "AnylandMods.GodMode.Main.Load"
+  "EntryMethod": "AnylandMods.GodMode.Main.Load",
+  "Requirements": "Foundation"
 }

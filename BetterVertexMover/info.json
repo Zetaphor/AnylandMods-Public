@@ -3,5 +3,6 @@
   "DisplayName": "Better Vertex Mover",
   "Author": "flarn2006",
   "Version": "1.0.0",
-  "EntryMethod": "AnylandMods.BetterVertexMover.Main.Load"
+  "EntryMethod": "AnylandMods.BetterVertexMover.Main.Load",
+  "Requirements": "Foundation"
 }

@@ -7,7 +7,7 @@ using UnityEngine;
 
 namespace AnylandMods
 {
-    static class Publication
+    public static class Publication
     {
         private const BindingFlags InstanceNonPub = BindingFlags.Instance | BindingFlags.NonPublic;
         private const BindingFlags StaticNonPub = BindingFlags.Static | BindingFlags.NonPublic;
@@ -39,6 +39,18 @@ namespace AnylandMods
         {
             object[] args = new object[] { valuePrefix, valueSuffix, x, y, minValue, maxValue, roundValues, value, onValueChange, showValue, textSizeFactor };
             return (GameObject)typeof(Dialog).GetMethod("AddSlider", InstanceNonPub).Invoke(dialog, args);
+        }
+
+        public static Hand hand(this Dialog dialog)
+        {
+            return (Hand)typeof(Dialog).GetField("hand", InstanceNonPub).GetValue(dialog);
+        }
+
+        // DialogManager
+        
+        public static Hand GetDialogHand(this DialogManager manager)
+        {
+            return (Hand)typeof(DialogManager).GetMethod("GetDialogHand", InstanceNonPub).Invoke(manager, new object[] { });
         }
 
         // VertexMover

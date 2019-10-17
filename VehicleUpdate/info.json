@@ -3,5 +3,6 @@
   "DisplayName": "Unofficial Vehicle Update",
   "Author": "flarn2006",
   "Version": "1.0.0",
-  "EntryMethod": "AnylandMods.VehicleUpdate.Main.Load"
+  "EntryMethod": "AnylandMods.VehicleUpdate.Main.Load",
+  "Requirements": "Foundation"
 }

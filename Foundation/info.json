@@ -1,0 +1,7 @@
+﻿{
+  "Id": "Foundation",
+  "DisplayName": "Foundation API",
+  "Author": "flarn2006",
+  "Version": "1.0.0",
+  "EntryMethod": "AnylandMods.Foundation.Load"
+}

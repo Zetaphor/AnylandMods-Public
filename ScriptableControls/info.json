@@ -3,5 +3,6 @@
   "DisplayName": "More Scriptable Controls",
   "Author": "flarn2006",
   "Version": "1.0.0",
-  "EntryMethod": "AnylandMods.ScriptableControls.Main.Load"
+  "EntryMethod": "AnylandMods.ScriptableControls.Main.Load",
+  "Requirements": "Foundation"
 }
