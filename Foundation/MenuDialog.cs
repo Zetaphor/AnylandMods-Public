@@ -64,7 +64,7 @@ namespace AnylandMods {
             RemoveMenuItems();
             AddLabel("Mod Functions", 0, -420, 2.0f, textColor: TextColor.Blue, align: TextAlignment.Center, anchor: TextAnchor.MiddleCenter);
             int start = ItemsPerPage * currentPage;
-            int end = start + ItemsPerPage;
+            int end = Math.Min(start + ItemsPerPage, Menu.Count);
             for (int i = start; i < end; ++i) {
                 menuItemObjects.Add(Menu[i].Create(this, 0, 115 * (i - start) - 305));
             }
@@ -98,7 +98,11 @@ namespace AnylandMods {
                     break;
                 default:
                     if (Menu.Contains(contextName)) {
-                        Menu[contextName].OnAction(this);
+                        MenuItem item = Menu[contextName];
+                        if (item is MenuDataItem<bool> mdi) {
+                            mdi.Value = state;
+                        }
+                        item.OnAction(this);
                     }
                     break;
             }

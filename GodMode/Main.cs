@@ -51,6 +51,11 @@ namespace AnylandMods.GodMode
             harmony = HarmonyInstance.Create(modEntry.Info.Id);
             harmony.PatchAll();
 
+            MenuCheckbox gmEnableCheckbox = new MenuCheckbox("godMode", "Enable God Mode");
+            gmEnableCheckbox.ExtraIcon = ExtraIcon.Unlocked;
+            gmEnableCheckbox.Action += GmEnableCheckbox_Action;
+            Foundation.ModMenu.Add(gmEnableCheckbox);
+
             MethodInfo[] methods = new MethodInfo[]
             {
                 typeof(IncludeThingDialog).GetMethod("AddMergePartsButtonIfAppropriate", BindingFlags.NonPublic | BindingFlags.Instance),
@@ -73,26 +78,11 @@ namespace AnylandMods.GodMode
             mod = modEntry;
             return true;
         }
-    }
 
-    [HarmonyPatch(typeof(OwnProfileDialog), nameof(OwnProfileDialog.Start))]
-    public static class AddButton
-    {
-        public static void Postfix(OwnProfileDialog __instance)
+        private static void GmEnableCheckbox_Action(string id, Dialog dialog, bool value)
         {
-            __instance.AddCheckbox("godMode", null, "Enable God Mode", 0, 300, Main.gmEnabled, textColor: TextColor.Blue, extraIcon: ExtraIcon.Unlocked);
-        }
-    }
-
-    [HarmonyPatch(typeof(OwnProfileDialog), nameof(OwnProfileDialog.OnClick), new Type[] { typeof(string), typeof(string), typeof(bool), typeof(GameObject) })]
-    public static class HandleButtonClick
-    {
-        public static void Postfix(OwnProfileDialog __instance, string contextName, string contextId, bool state, GameObject thisButton)
-        {
-            if (contextName == "godMode")
-            {
-                Main.gmEnabled = state;
-            }
+            FileLog.Log("God mode turned " + (value ? "on" : "off"));
+            Main.gmEnabled = value;
         }
     }
 
