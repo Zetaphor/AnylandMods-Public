@@ -17,13 +17,6 @@ namespace AnylandMods
         static Foundation()
         {
             ModMenu = new Menu();
-            for (int i=0; i<12; ++i) {
-                var b = new MenuButton("test" + i.ToString(), "Test Item #" + i.ToString());
-                b.Action += delegate {
-                    FileLog.Log("Test Item #" + i.ToString() + " selected");
-                };
-                ModMenu.Add(b);
-            }
         }
 
         public static bool Load(UnityModManager.ModEntry modEntry)
