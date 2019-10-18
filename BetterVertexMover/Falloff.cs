@@ -29,26 +29,22 @@ namespace AnylandMods.BetterVertexMover
 
     namespace Functions
     {
-        class Dome : FalloffFunction
-        {
+        class Dome : FalloffFunction {
             public Dome(float radius) : base(radius) { }
             protected override float R1ValueAt(float distance) => (float)Math.Sqrt(1.0 - distance * distance);
         }
 
-        class Sharp : FalloffFunction
-        {
+        class Sharp : FalloffFunction {
             public Sharp(float radius) : base(radius) { }
             protected override float R1ValueAt(float distance) => (float)Math.Exp(1.0 - distance);
         }
 
-        class Linear : FalloffFunction
-        {
+        class Linear : FalloffFunction {
             public Linear(float radius) : base(radius) { }
             protected override float R1ValueAt(float distance) => 1.0f - distance;
         }
 
-        class Constant : FalloffFunction
-        {
+        class Constant : FalloffFunction {
             public Constant(float radius) : base(radius) { }
             protected override float R1ValueAt(float distance) => 1.0f;
         }
