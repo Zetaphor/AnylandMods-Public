@@ -18,7 +18,16 @@ namespace AnylandMods.ScriptableControls {
             harmony.PatchAll();
             mod = modEntry;
 
+            MenuButton btnBodyMotions = new MenuButton("bodyMotions", "Body Motions...");
+            btnBodyMotions.Action += BtnBodyMotions_Action;
+            Foundation.ModMenu.Add(btnBodyMotions);
+
             return true;
+        }
+
+        private static void BtnBodyMotions_Action(string id, Dialog dialog)
+        {
+            Managers.dialogManager.SwitchToNewDialog(DialogType.BodyMotions, dialog.hand(), dialog.tabName);
         }
 
         internal static void TellBody(string data)
