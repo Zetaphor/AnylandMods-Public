@@ -38,11 +38,12 @@ namespace AnylandMods.BetterVertexMover
 
         public static void Postfix(VertexMoverDialog __instance)
         {
+            __instance.AddButton("falloffSmooth", null, "Smooth", "ButtonSmallCentered", 350, -150, textSizeFactor: 0.75f, textColor: TextColor.Blue);
+            __instance.AddButton("falloffDome", null, "Dome", "ButtonSmallCentered", 350, -50, textColor: TextColor.Blue);
+            __instance.AddButton("falloffLinear", null, "Linear", "ButtonSmallCentered", 350, 50, textSizeFactor: 0.75f, textColor: TextColor.Blue);
+            __instance.AddButton("falloffSharp", null, "Sharp", "ButtonSmallCentered", 350, 150, textColor: TextColor.Blue);
+            __instance.AddButton("falloffConstant", null, "Constant", "ButtonSmallCentered", 350, 250, textSizeFactor: 0.6f, textColor: TextColor.Blue);
             __instance.AddSlider("Area Radius: ", "", 0, 30, 0, 4, false, Main.falloff.Radius, new Action<float>(RadiusSliderChange));
-            __instance.AddButton("falloffDome", null, "Dome", "ButtonSmallCentered", -300, -420, textColor: TextColor.Blue);
-            __instance.AddButton("falloffLinear", null, "Linear", "ButtonSmallCentered", -200, -420, textColor: TextColor.Blue);
-            __instance.AddButton("falloffSharp", null, "Sharp", "ButtonSmallCentered", -100, -420, textColor: TextColor.Blue);
-            __instance.AddButton("falloffConstant", null, "Constant", "ButtonSmallCentered", 0, -420, textColor: TextColor.Blue);
         }
     }
 
@@ -51,7 +52,9 @@ namespace AnylandMods.BetterVertexMover
     {
         public static void Postfix(VertexMoverDialog __instance, string contextName, string contextId, bool state, GameObject thisButton)
         {
-            if (contextName.Equals("falloffDome"))
+            if (contextName.Equals("falloffSmooth"))
+                Main.falloff = new Functions.Smooth(Main.falloff.Radius);
+            else if (contextName.Equals("falloffDome"))
                 Main.falloff = new Functions.Dome(Main.falloff.Radius);
             else if (contextName.Equals("falloffLinear"))
                 Main.falloff = new Functions.Linear(Main.falloff.Radius);
