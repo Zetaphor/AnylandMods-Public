@@ -53,7 +53,7 @@ namespace AnylandMods
             return (Hand)typeof(DialogManager).GetMethod("GetDialogHand", InstanceNonPub).Invoke(manager, new object[] { });
         }
 
-        // VertexMover
+        // VertexMover(Dialog)
 
         private static FieldInfo VertexMover_grabbedVertexIndex;
         private static FieldInfo VertexMover_thingPart;
@@ -87,6 +87,11 @@ namespace AnylandMods
         public static void UpdateSelectedVertexIndicatorPositions(this VertexMover vertexMover)
         {
             VertexMover_UpdateSelectedVertexIndicatorPositions.Invoke(vertexMover, new object[] { });
+        }
+
+        public static VertexMover vertexMover(this VertexMoverDialog dialog)
+        {
+            return (VertexMover)typeof(VertexMoverDialog).GetField("vertexMover", InstanceNonPub).GetValue(dialog);
         }
     }
 }

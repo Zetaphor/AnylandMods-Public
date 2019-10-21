@@ -11,10 +11,22 @@ namespace AnylandMods.BetterVertexMover
 {
     public static class Main
     {
+        internal struct UndoVertex {
+            public int index;
+            public Vector3 pos;
+
+            public UndoVertex(int index, Vector3 pos)
+            {
+                this.index = index;
+                this.pos = pos;
+            }
+        }
+
         public static bool enabled;
         public static UnityModManager.ModEntry mod;
         internal static FalloffFunction falloff;
         internal static Vector3[] savedVertices = null;
+        internal static Stack<UndoVertex[]> undoStack;
 
         public static bool Load(UnityModManager.ModEntry modEntry)
         {
@@ -22,9 +34,14 @@ namespace AnylandMods.BetterVertexMover
             harmony.PatchAll();
             mod = modEntry;
 
-            falloff = new Functions.Dome(0.0f);
+            falloff = new Functions.Smooth(0.0f);
 
             return true;
+        }
+
+        private static void Mb_Action(string id, Dialog dialog)
+        {
+            Managers.dialogManager.SwitchToNewDialog(DialogType.VertexMover, dialog.hand(), dialog.tabName);
         }
     }
 
@@ -38,11 +55,15 @@ namespace AnylandMods.BetterVertexMover
 
         public static void Postfix(VertexMoverDialog __instance)
         {
-            __instance.AddButton("falloffSmooth", null, "Smooth", "ButtonSmallCentered", 350, -150, textSizeFactor: 0.75f, textColor: TextColor.Blue);
-            __instance.AddButton("falloffDome", null, "Dome", "ButtonSmallCentered", 350, -50, textColor: TextColor.Blue);
-            __instance.AddButton("falloffLinear", null, "Linear", "ButtonSmallCentered", 350, 50, textSizeFactor: 0.75f, textColor: TextColor.Blue);
-            __instance.AddButton("falloffSharp", null, "Sharp", "ButtonSmallCentered", 350, 150, textColor: TextColor.Blue);
-            __instance.AddButton("falloffConstant", null, "Constant", "ButtonSmallCentered", 350, 250, textSizeFactor: 0.6f, textColor: TextColor.Blue);
+            if (!(Main.undoStack is null))
+                Main.undoStack.Clear();
+            __instance.AddButton("undo", null, null, "ButtonVerySmall", 390, 420, "undo");
+            __instance.AddButton("falloffSmooth", null, "Smooth", "ButtonSmallCentered", 350, -225, textSizeFactor: 0.75f, textColor: TextColor.Blue);
+            __instance.AddButton("falloffDome", null, "Dome", "ButtonSmallCentered", 350, -150, textColor: TextColor.Blue);
+            __instance.AddButton("falloffLinear", null, "Linear", "ButtonSmallCentered", 350, -75, textSizeFactor: 0.75f, textColor: TextColor.Blue);
+            __instance.AddButton("falloffSharp", null, "Sharp", "ButtonSmallCentered", 350, 0, textColor: TextColor.Blue);
+            __instance.AddButton("falloffConstant", null, "Constant", "ButtonSmallCentered", 350, 75, textSizeFactor: 0.6f, textColor: TextColor.Blue);
+            __instance.AddButton("invert", null, "Invert", "ButtonSmallCentered", -400, 300, textSizeFactor: 0.75f, textColor: TextColor.Blue);
             __instance.AddSlider("Area Radius: ", "", 0, 30, 0, 4, false, Main.falloff.Radius, new Action<float>(RadiusSliderChange));
         }
     }
@@ -62,6 +83,30 @@ namespace AnylandMods.BetterVertexMover
                 Main.falloff = new Functions.Sharp(Main.falloff.Radius);
             else if (contextName.Equals("falloffConstant"))
                 Main.falloff = new Functions.Constant(Main.falloff.Radius);
+            else if (contextName.Equals("undo")) {
+                if (Main.undoStack.Count > 0) {
+                    Main.UndoVertex[] undoVertices = Main.undoStack.Pop();
+                    VertexMover mover = __instance.vertexMover();
+                    ThingPart tp = mover.thingPart();
+                    Vector3[] vertices = mover.mesh.vertices;
+                    foreach (Main.UndoVertex vertex in undoVertices) {
+                        vertices[vertex.index] = vertex.pos;
+                        tp.changedVertices[vertex.index] = vertex.pos;
+                    }
+                    mover.mesh.vertices = vertices;
+                } else {
+                    Managers.soundManager.Play("no", __instance.transform, 0.5f, false, false);
+                }
+            } else if (contextName.Equals("invert")) {
+                VertexMover mover = __instance.vertexMover();
+                ThingPart tp = mover.thingPart();
+                Vector3[] vertices = mover.mesh.vertices;
+                for (int i=0; i<vertices.Length; ++i) {
+                    vertices[i] = new Vector3(-vertices[i].x, vertices[i].y, vertices[i].z);
+                    tp.changedVertices[i] = vertices[i];
+                }
+                mover.mesh.vertices = vertices;
+            }
         }
     }
 
@@ -70,8 +115,18 @@ namespace AnylandMods.BetterVertexMover
     {
         public static void Postfix(VertexMover __instance)
         {
-            if (!__instance.handDot.GetPress(CrossDevice.button_grabTip))
+            if (Main.savedVertices != null && !__instance.handDot.GetPress(CrossDevice.button_grabTip))
             {
+                var undoVertices = new List<Main.UndoVertex>();
+                Vector3[] meshVertices = __instance.mesh.vertices;
+                for (int i=0; i<Main.savedVertices.Length; ++i) {
+                    if (!meshVertices[i].Equals(Main.savedVertices[i])) {
+                        undoVertices.Add(new Main.UndoVertex(i, Main.savedVertices[i]));
+                    }
+                }
+                if (Main.undoStack is null)
+                    Main.undoStack = new Stack<Main.UndoVertex[]>();
+                Main.undoStack.Push(undoVertices.ToArray());
                 Main.savedVertices = null;
             }
         }
