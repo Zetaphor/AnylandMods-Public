@@ -5,6 +5,7 @@ using System.Text;
 using Harmony;
 using UnityModManagerNet;
 using UnityEngine;
+using System.Reflection;
 
 namespace AnylandMods
 {
@@ -28,6 +29,29 @@ namespace AnylandMods
             return true;
         }
     }
+
+    /*public class MethodReplaceTranspiler {
+        private MethodInfo oldMethod, newMethod;
+
+        public MethodReplaceTranspiler(MethodInfo oldMethod, MethodInfo newMethod)
+        {
+            this.oldMethod = oldMethod;
+            this.newMethod = newMethod;
+        }
+
+        public MethodReplaceTranspiler(Type oldType, string oldMethodName, Type newType, string newMethodName)
+        {
+            this.oldMethod = AccessTools.Method(oldType, oldMethodName);
+            this.newMethod = AccessTools.Method(newType, newMethodName);
+        }
+
+        public IEnumerable<CodeInstruction> Transpiler(IEnumerable<CodeInstruction> code)
+        {
+            foreach (CodeInstruction inst in code) {
+
+            }
+        }
+    }*/
 
     [HarmonyPatch(typeof(MainDialog), nameof(MainDialog.Start))]
     public static class AddModMenuButton {
