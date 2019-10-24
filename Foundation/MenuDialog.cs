@@ -5,7 +5,7 @@ using System.Text;
 using UnityEngine;
 
 namespace AnylandMods {
-    class MenuDialog : Dialog {
+    class MenuDialog : CustomDialog {
         private Menu menu;
         private int currentPage = 0;
         private int pageCount = 1;
@@ -31,23 +31,14 @@ namespace AnylandMods {
             }
         }
 
-        public static GameObject SwitchTo(DialogManager manager, Menu menu, Hand hand = null, string tabName = "")
+        protected internal override void InitCustomDialog(object arg = null)
         {
-            if (hand == null) {
-                hand = manager.GetDialogHand();
-            }
-            if (hand.currentDialog != null) {
-                UnityEngine.Object.Destroy(hand.currentDialog);
-            }
-            hand.currentDialog = new GameObject("Dialog");
-            hand.currentDialog.AddComponent<MenuDialog>().Menu = menu;
-            hand.currentDialog.gameObject.name = "MenuDialog";
-            hand.currentDialog.transform.parent = hand.transform;
-            hand.currentDialog.SetActive(true);
-            Dialog component = hand.currentDialog.GetComponent<Dialog>();
-            component.tabName = tabName;
-            hand.TriggerHapticPulse(Universe.miniBurstPulse);
-            return hand.currentDialog;
+            Menu = (Menu)arg;
+        }
+
+        public static GameObject SwitchTo(Menu menu, Hand hand = null, string tabName = "")
+        {
+            return Foundation.SwitchToDialog<MenuDialog>(menu, hand, tabName);
         }
 
         public void Start()

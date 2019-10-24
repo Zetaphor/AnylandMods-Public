@@ -72,6 +72,7 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="CustomDialogSupport.cs" />
     <Compile Include="Foundation.cs" />
     <Compile Include="Menu.cs" />
     <Compile Include="MenuItem.cs" />

@@ -9,7 +9,7 @@ using System.Reflection;
 
 namespace AnylandMods
 {
-    public static class Foundation
+    public static partial class Foundation
     {
         public static bool enabled;
         public static UnityModManager.ModEntry mod;
@@ -66,7 +66,7 @@ namespace AnylandMods
         public static void Postfix(MainDialog __instance, string contextName, string contextId, bool state, GameObject thisButton)
         {
             if (contextName.Equals("modMenu")) {
-                MenuDialog.SwitchTo(Managers.dialogManager, Foundation.ModMenu, __instance.hand());
+                MenuDialog.SwitchTo(Foundation.ModMenu, __instance.hand());
             }
         }
     }
