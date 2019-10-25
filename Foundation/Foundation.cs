@@ -18,7 +18,6 @@ namespace AnylandMods
         static Foundation()
         {
             ModMenu = new Menu();
-            ModMenu.AddBackButton(DialogType.Main);
         }
 
         public static bool Load(UnityModManager.ModEntry modEntry)
@@ -67,6 +66,7 @@ namespace AnylandMods
         public static void Postfix(MainDialog __instance, string contextName, string contextId, bool state, GameObject thisButton)
         {
             if (contextName.Equals("modMenu")) {
+                Foundation.ModMenu.SetBackButton(DialogType.Main);
                 MenuDialog.SwitchTo(Foundation.ModMenu, __instance.hand());
             }
         }

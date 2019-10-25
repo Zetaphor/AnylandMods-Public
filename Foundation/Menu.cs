@@ -68,25 +68,27 @@ namespace AnylandMods {
             itemsById = new Dictionary<string, MenuItem>();
         }
 
-        public void AddBackButton(ButtonAction onClickAction)
+        public void SetBackButton(ButtonAction onClickAction)
         {
-            if (backButtonAction is null)
-                backButtonAction = onClickAction;
-            else
-                throw new InvalidOperationException("AddBackButton called after Back button was already initialized.");
+            backButtonAction = onClickAction;
         }
 
-        public void AddBackButton(DialogType dialogType)
+        public void RemoveBackButton()
+        {
+            backButtonAction = null;
+        }
+
+        public void SetBackButton(DialogType dialogType)
         {
             backButtonAction = new BackToVanillaDialog(dialogType).HandleBackButton;
         }
 
-        public void AddBackButton(Type dialogClass, object dialogArg = null)
+        public void SetBackButton(Type dialogClass, object dialogArg = null)
         {
             backButtonAction = new BackToCustomDialog(dialogClass, dialogArg).HandleBackButton;
         }
 
-        public void AddBackButton(Menu menu)
+        public void SetBackButton(Menu menu)
         {
             backButtonAction = new BackToMenuDialog(menu).HandleBackButton;
         }
