@@ -8,7 +8,7 @@ using UnityEngine;
 namespace AnylandMods.PersonalizedUI {
     class Config {
         public bool HideFundament { get; private set; }
-        public string FundamentTID { get; private set; }
+        public string FundamentTID { get; set; }
 
         private static bool ParseBool(string str) => (new string[] { "1", "yes", "true", "on" }).Contains(str.ToLower());
 

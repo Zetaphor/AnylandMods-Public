@@ -52,8 +52,27 @@ namespace AnylandMods.PersonalizedUI
                     fundament: __instance.transform,
                     position: Vector3.zero,
                     scale: 1.0f,
-                    useDefaultRotation: true
+                    useDefaultRotation: true,
+                    isGift: true  // to enable collision
                 );
+            }
+        }
+    }
+
+    [HarmonyPatch(typeof(ThingDialog), "AddBacksideButtons")]
+    public static class SetAsFundamentButton {
+        public static void Postfix(ThingDialog __instance)
+        {
+            __instance.AddButton("setAsFundament", null, "Use for Dialogs...", "ButtonCompactNoIcon", 0, -420, textColor: TextColor.Blue, isOnBackside: true);
+        }
+    }
+
+    [HarmonyPatch(typeof(ThingDialog), nameof(ThingDialog.OnClick))]
+    public static class HandleSetAsFundamentClick {
+        public static void Postfix(ThingDialog __instance, string contextName, string contextId, bool state, GameObject thisButton)
+        {
+            if (contextName.Equals("setAsFundament")) {
+                Main.config.FundamentTID = __instance.thing.thingId;
             }
         }
     }
