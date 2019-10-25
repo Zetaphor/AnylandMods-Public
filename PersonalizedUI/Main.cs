@@ -12,7 +12,7 @@ namespace AnylandMods.PersonalizedUI
     {
         public static bool enabled;
         public static UnityModManager.ModEntry mod;
-        internal static Config config;
+        internal static ConfigFile config;
 
         public static bool Load(UnityModManager.ModEntry modEntry)
         {
@@ -20,7 +20,7 @@ namespace AnylandMods.PersonalizedUI
             harmony.PatchAll();
             mod = modEntry;
 
-            config = new Config();
+            config = new ConfigFile(mod);
             config.Load();
 
             var btnReload = new MenuButton("personalizedUiReloadConfig", "Reload UI Config");
@@ -53,7 +53,7 @@ namespace AnylandMods.PersonalizedUI
                     position: Vector3.zero,
                     scale: 1.0f,
                     useDefaultRotation: true,
-                    isGift: true  // to enable collision
+                    isGift: Main.config.Dynamic
                 );
             }
         }
@@ -73,6 +73,7 @@ namespace AnylandMods.PersonalizedUI
         {
             if (contextName.Equals("setAsFundament")) {
                 Main.config.FundamentTID = __instance.thing.thingId;
+                Main.config.Save();
             }
         }
     }
