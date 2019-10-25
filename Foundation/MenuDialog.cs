@@ -5,7 +5,7 @@ using System.Text;
 using UnityEngine;
 
 namespace AnylandMods {
-    class MenuDialog : CustomDialog {
+    public class MenuDialog : CustomDialog {
         private Menu menu;
         private int currentPage = 0;
         private int pageCount = 1;
@@ -46,6 +46,8 @@ namespace AnylandMods {
             Init(gameObject);
             AddFundament();
             AddCloseButton();
+            if (menu.backButtonAction != null)
+                AddBackButton();
             AddMenuItems();
             AddDefaultPagingButtons();
         }
@@ -86,6 +88,9 @@ namespace AnylandMods {
                     break;
                 case "close":
                     CloseDialog();
+                    break;
+                case "back":
+                    menu.backButtonAction(this, hand, tabName);
                     break;
                 default:
                     if (Menu.Contains(contextName)) {

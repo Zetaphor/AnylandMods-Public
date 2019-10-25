@@ -18,6 +18,7 @@ namespace AnylandMods
         static Foundation()
         {
             ModMenu = new Menu();
+            ModMenu.AddBackButton(DialogType.Main);
         }
 
         public static bool Load(UnityModManager.ModEntry modEntry)
