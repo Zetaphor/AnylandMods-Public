@@ -57,14 +57,14 @@ namespace AnylandMods.BetterVertexMover
         {
             if (!(Main.undoStack is null))
                 Main.undoStack.Clear();
-            __instance.AddButton("undo", null, null, "ButtonVerySmall", 0, 420, "undo");
-            __instance.AddButton("falloffSmooth", null, "Smooth", "ButtonSmallCentered", 250, -225, textSizeFactor: 0.75f, textColor: TextColor.Blue);
-            __instance.AddButton("falloffDome", null, "Dome", "ButtonSmallCentered", 350, -225, textColor: TextColor.Blue);
-            __instance.AddButton("falloffLinear", null, "Linear", "ButtonSmallCentered", 450, -225, textSizeFactor: 0.75f, textColor: TextColor.Blue);
-            __instance.AddButton("falloffSharp", null, "Sharp", "ButtonSmallCentered", 250, -150, textColor: TextColor.Blue);
-            __instance.AddButton("falloffConstant", null, "Constant", "ButtonSmallCentered", 350, -150, textSizeFactor: 0.6f, textColor: TextColor.Blue);
-            __instance.AddButton("invert", null, "Invert", "ButtonSmallCentered", 450, -150, textSizeFactor: 0.75f, textColor: TextColor.Blue);
-            __instance.AddSlider("Area Radius: ", "", 0, 30, 0, 4, false, Main.falloff.Radius, new Action<float>(RadiusSliderChange));
+            __instance.AddButton("undo", null, null, "ButtonVerySmall", 450, -25, "undo");
+            __instance.AddButton("falloffSmooth", null, "Smooth", "ButtonSmallCentered", -275, -420, textSizeFactor: 0.75f, textColor: TextColor.Blue);
+            __instance.AddButton("falloffDome", null, "Dome", "ButtonSmallCentered", -175, -420, textColor: TextColor.Blue);
+            __instance.AddButton("falloffLinear", null, "Linear", "ButtonSmallCentered", -75, -420, textSizeFactor: 0.75f, textColor: TextColor.Blue);
+            __instance.AddButton("falloffSharp", null, "Sharp", "ButtonSmallCentered", 25, -420, textColor: TextColor.Blue);
+            __instance.AddButton("falloffConstant", null, "Constant", "ButtonSmallCentered", 125, -420, textSizeFactor: 0.6f, textColor: TextColor.Blue);
+            __instance.AddButton("invert", null, "Invert", "ButtonSmallCentered", 450, -125, textSizeFactor: 0.75f, textColor: TextColor.Blue);
+            __instance.AddSlider("Effect Area: ", "", 0, 30, 0, 4, false, Main.falloff.Radius, new Action<float>(RadiusSliderChange));
         }
     }
 
