@@ -6,11 +6,12 @@ using UnityEngine;
 
 namespace AnylandMods
 {
-    public abstract class MenuItem {
+    public abstract class MenuItem : IComparable<MenuItem> {
         public string Id { get; private set; }
         public string Text { get; set; }
         public delegate void ItemAction(string id, Dialog dialog);
         public event ItemAction Action;
+        public int SortWeight { get; set; } = 0;
 
         public MenuItem(string id, string text)
         {
@@ -25,6 +26,10 @@ namespace AnylandMods
         }
 
         public abstract GameObject Create(Dialog dialog, int xOnFundament, int yOnFundament);
+        
+        public override bool Equals(object obj) => obj is MenuItem mi && Id.Equals(mi.Id);
+        public int CompareTo(MenuItem other) => SortWeight == other.SortWeight ? Id.CompareTo(other.Id) : Math.Sign(SortWeight - other.SortWeight);
+        public override int GetHashCode() => Id.GetHashCode();
     }
 
     public abstract class MenuDataItem<TValue> : MenuItem {

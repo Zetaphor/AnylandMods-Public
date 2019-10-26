@@ -18,9 +18,7 @@ namespace AnylandMods.ScriptableControls {
             harmony.PatchAll();
             mod = modEntry;
 
-            MenuButton btnBodyMotions = new MenuButton("bodyMotions", "Body Motions...");
-            btnBodyMotions.Action += BtnBodyMotions_Action;
-            Foundation.ModMenu.Add(btnBodyMotions);
+            ModMenu.AddButton(harmony, "Body Motions...", BtnBodyMotions_Action);
 
             return true;
         }

@@ -51,10 +51,7 @@ namespace AnylandMods.GodMode
             harmony = HarmonyInstance.Create(modEntry.Info.Id);
             harmony.PatchAll();
 
-            MenuCheckbox gmEnableCheckbox = new MenuCheckbox("godMode", "Enable God Mode");
-            gmEnableCheckbox.ExtraIcon = ExtraIcon.Unlocked;
-            gmEnableCheckbox.Action += GmEnableCheckbox_Action;
-            Foundation.ModMenu.Add(gmEnableCheckbox);
+            ModMenu.AddCheckbox(harmony, "Enable God Mode", GmEnableCheckbox_Action).ExtraIcon = ExtraIcon.Unlocked;
 
             MethodInfo[] methods = new MethodInfo[]
             {
@@ -81,7 +78,6 @@ namespace AnylandMods.GodMode
 
         private static void GmEnableCheckbox_Action(string id, Dialog dialog, bool value)
         {
-            FileLog.Log("God mode turned " + (value ? "on" : "off"));
             Main.gmEnabled = value;
         }
     }

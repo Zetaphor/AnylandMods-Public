@@ -23,9 +23,7 @@ namespace AnylandMods.PersonalizedUI
             config = new ConfigFile(mod);
             config.Load();
 
-            var btnReload = new MenuButton("personalizedUiReloadConfig", "Reload UI Config");
-            btnReload.Action += BtnReload_Action;
-            Foundation.ModMenu.Add(btnReload);
+            ModMenu.AddButton(harmony, "Reload UI Config", BtnReload_Action);
 
             return true;
         }
@@ -64,7 +62,7 @@ namespace AnylandMods.PersonalizedUI
         public static bool Prefix(ThingRequestContext thingRequestContext)
         {
             // Philipp said he'd rather not have the server get unusual requests.
-            // Not sure if malformed thing ID's would count, but just in case...
+            // Not sure if this would count, but just in case...
             return thingRequestContext != ThingRequestContext.LocalTest;
         }
     }
