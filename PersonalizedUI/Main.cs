@@ -23,14 +23,15 @@ namespace AnylandMods.PersonalizedUI
             config = new ConfigFile(mod);
             config.Load();
 
-            ModMenu.AddButton(harmony, "Reload UI Config", BtnReload_Action);
+            ModMenu.AddButton(harmony, "Change UI Bkgd...", BtnCustomize_Action);
 
             return true;
         }
 
-        private static void BtnReload_Action(string id, Dialog dialog)
+        private static void BtnCustomize_Action(string id, Dialog dialog)
         {
             config.Load();
+            MenuDialog.SwitchTo(UIMenu.Menu, dialog.hand(), dialog.tabName);
         }
     }
 
@@ -64,25 +65,6 @@ namespace AnylandMods.PersonalizedUI
             // Philipp said he'd rather not have the server get unusual requests.
             // Not sure if this would count, but just in case...
             return thingRequestContext != ThingRequestContext.LocalTest;
-        }
-    }
-
-    [HarmonyPatch(typeof(ThingDialog), "AddBacksideButtons")]
-    public static class SetAsFundamentButton {
-        public static void Postfix(ThingDialog __instance)
-        {
-            __instance.AddButton("setAsFundament", null, "Use for Dialogs...", "ButtonCompactNoIcon", 0, -420, textColor: TextColor.Blue, isOnBackside: true);
-        }
-    }
-
-    [HarmonyPatch(typeof(ThingDialog), nameof(ThingDialog.OnClick))]
-    public static class HandleSetAsFundamentClick {
-        public static void Postfix(ThingDialog __instance, string contextName, string contextId, bool state, GameObject thisButton)
-        {
-            if (contextName.Equals("setAsFundament")) {
-                Main.config.FundamentTID = __instance.thing.thingId;
-                Main.config.Save();
-            }
         }
     }
 }
