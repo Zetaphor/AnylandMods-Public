@@ -59,6 +59,16 @@ namespace AnylandMods.PersonalizedUI
         }
     }
 
+    [HarmonyPatch(typeof(ServerManager), nameof(ServerManager.ReportMissingThing))]
+    public static class SuppressMissingThingRptIfLocalTest {
+        public static bool Prefix(ThingRequestContext thingRequestContext)
+        {
+            // Philipp said he'd rather not have the server get unusual requests.
+            // Not sure if malformed thing ID's would count, but just in case...
+            return thingRequestContext != ThingRequestContext.LocalTest;
+        }
+    }
+
     [HarmonyPatch(typeof(ThingDialog), "AddBacksideButtons")]
     public static class SetAsFundamentButton {
         public static void Postfix(ThingDialog __instance)
