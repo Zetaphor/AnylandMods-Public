@@ -51,7 +51,8 @@ namespace AnylandMods.PersonalizedUI {
         private static void btnSetFundamentTID_Action(string id, Dialog dialog)
         {
             string clipboard = GUIUtility.systemCopyBuffer;
-            var par = new SetFundamentTIDDialog.Params(thingIDRegex.IsMatch(clipboard), clipboard);
+            var mode = thingIDRegex.IsMatch(clipboard) ? SetFundamentTIDDialog.Mode.PreviewNewFundament : SetFundamentTIDDialog.Mode.ThingIDNotInClipboard;
+            var par = new SetFundamentTIDDialog.Params(mode, clipboard);
             Foundation.SwitchToDialog<SetFundamentTIDDialog>(par, dialog.hand(), dialog.tabName);
         }
 
@@ -63,8 +64,13 @@ namespace AnylandMods.PersonalizedUI {
 
         private static void chkDynamic_Action(string id, Dialog dialog, bool value)
         {
-            Main.config.Dynamic = value;
-            Main.config.Save();
+            if (value) {
+                var par = new SetFundamentTIDDialog.Params(SetFundamentTIDDialog.Mode.ConfirmCollision, Main.config.FundamentTID);
+                Foundation.SwitchToDialog<SetFundamentTIDDialog>(par, dialog.hand(), dialog.tabName);
+            } else {
+                Main.config.Dynamic = false;
+                Main.config.Save();
+            }
         }
     }
 }
