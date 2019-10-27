@@ -53,7 +53,7 @@ namespace AnylandMods.PersonalizedUI {
             string clipboard = GUIUtility.systemCopyBuffer;
             var mode = thingIDRegex.IsMatch(clipboard) ? SetFundamentTIDDialog.Mode.PreviewNewFundament : SetFundamentTIDDialog.Mode.ThingIDNotInClipboard;
             var par = new SetFundamentTIDDialog.Params(mode, clipboard);
-            Foundation.SwitchToDialog<SetFundamentTIDDialog>(par, dialog.hand(), dialog.tabName);
+            CustomDialog.SwitchTo<SetFundamentTIDDialog>(par, dialog.hand(), dialog.tabName);
         }
 
         private static void chkHideFundament_Action(string id, Dialog dialog, bool value)
@@ -66,7 +66,7 @@ namespace AnylandMods.PersonalizedUI {
         {
             if (value) {
                 var par = new SetFundamentTIDDialog.Params(SetFundamentTIDDialog.Mode.ConfirmCollision, Main.config.FundamentTID);
-                Foundation.SwitchToDialog<SetFundamentTIDDialog>(par, dialog.hand(), dialog.tabName);
+                CustomDialog.SwitchTo<SetFundamentTIDDialog>(par, dialog.hand(), dialog.tabName);
             } else {
                 Main.config.Dynamic = false;
                 Main.config.Save();

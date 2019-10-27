@@ -6,13 +6,10 @@ using System.Reflection;
 using UnityEngine;
 
 namespace AnylandMods {
-    public static partial class Foundation {
-        private static int CompareByFirstKey<T1, T2>(Tuple<T1, T2> a, Tuple<T1, T2> b) where T1 : IComparable
-        {
-            return a.Item1.CompareTo(b.Item1);
-        }
+    public abstract class CustomDialog : Dialog {
+        protected abstract void InitCustomDialog(object arg = null);
 
-        public static GameObject SwitchToDialog<TDialog>(object arg = null, Hand hand = null, string tabName = "") where TDialog : CustomDialog
+        public static GameObject SwitchTo<TDialog>(object arg = null, Hand hand = null, string tabName = "") where TDialog : CustomDialog
         {
             if (hand == null) {
                 hand = Managers.dialogManager.GetDialogHand();
@@ -31,13 +28,9 @@ namespace AnylandMods {
             return hand.currentDialog;
         }
 
-        public static GameObject SwitchToDialog<TDialog>(Hand hand = null, string tabName = "") where TDialog : CustomDialog
+        public static GameObject SwitchTo<TDialog>(Hand hand = null, string tabName = "") where TDialog : CustomDialog
         {
-            return SwitchToDialog<TDialog>(null, hand, tabName);
+            return SwitchTo<TDialog>(null, hand, tabName);
         }
-    }
-
-    public abstract class CustomDialog : Dialog {
-        protected internal abstract void InitCustomDialog(object arg = null);
     }
 }

@@ -30,7 +30,7 @@ namespace AnylandMods {
 
             public BackToCustomDialog(Type dialogClass, object dialogArg = null)
             {
-                method = typeof(Foundation).GetMethod(nameof(Foundation.SwitchToDialog), BindingFlags.Public | BindingFlags.Static)
+                method = typeof(CustomDialog).GetMethod(nameof(CustomDialog.SwitchTo), BindingFlags.Public | BindingFlags.Static)
                     .MakeGenericMethod(new Type[] { dialogClass });
                 arg = dialogArg;
             }

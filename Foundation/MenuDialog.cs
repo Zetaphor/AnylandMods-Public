@@ -31,14 +31,14 @@ namespace AnylandMods {
             }
         }
 
-        protected internal override void InitCustomDialog(object arg = null)
+        protected override void InitCustomDialog(object arg = null)
         {
             Menu = (Menu)arg;
         }
 
         public static GameObject SwitchTo(Menu menu, Hand hand = null, string tabName = "")
         {
-            return Foundation.SwitchToDialog<MenuDialog>(menu, hand, tabName);
+            return CustomDialog.SwitchTo<MenuDialog>(menu, hand, tabName);
         }
 
         public void Start()
