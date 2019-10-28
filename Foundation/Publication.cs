@@ -9,8 +9,8 @@ namespace AnylandMods
 {
     public static class Publication
     {
-        private const BindingFlags InstanceNonPub = BindingFlags.Instance | BindingFlags.NonPublic;
-        private const BindingFlags StaticNonPub = BindingFlags.Static | BindingFlags.NonPublic;
+        public const BindingFlags InstanceNonPub = BindingFlags.Instance | BindingFlags.NonPublic;
+        public const BindingFlags StaticNonPub = BindingFlags.Static | BindingFlags.NonPublic;
 
         static Publication()
         {
@@ -92,6 +92,18 @@ namespace AnylandMods
         public static VertexMover vertexMover(this VertexMoverDialog dialog)
         {
             return (VertexMover)typeof(VertexMoverDialog).GetField("vertexMover", InstanceNonPub).GetValue(dialog);
+        }
+
+        // BodyMotionsDialog
+
+        public static List<ThingPart> GetMyThingParts(this BodyMotionsDialog dialog)
+        {
+            return (List<ThingPart>)typeof(BodyMotionsDialog).GetMethod("GetMyThingParts", InstanceNonPub).Invoke(dialog, new object[] { });
+        }
+
+        public static List<string> GetTellBodyDataBodyIsListeningFor(this BodyMotionsDialog dialog, List<ThingPart> thingParts)
+        {
+            return (List<string>)typeof(BodyMotionsDialog).GetMethod("GetTellBodyDataBodyIsListeningFor", InstanceNonPub).Invoke(dialog, new object[] { });
         }
     }
 }

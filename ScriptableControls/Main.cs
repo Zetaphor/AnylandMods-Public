@@ -20,6 +20,8 @@ namespace AnylandMods.ScriptableControls {
 
             ModMenu.AddButton(harmony, "Body Motions...", BtnBodyMotions_Action);
 
+            BodyTellManager.OnUpdate += HandDotUpdateHook.UpdateTests;
+
             return true;
         }
 
@@ -36,18 +38,22 @@ namespace AnylandMods.ScriptableControls {
 
     [HarmonyPatch(typeof(HandDot), "Update")]
     public static class HandDotUpdateHook {
-        private const int TouchPadSectorCount = 4;
-        private const float TouchPadSectorSize = 2.0f * (float)Math.PI / TouchPadSectorCount;
+        private static List<Tuple<IFlagTest, string>> tests;
+        private static UInt64 flags = 0;
 
-        private enum StatusFlags {
-            None = 0,
-            StickDown = 1,
-            FingersClosed = 2
+        static HandDotUpdateHook()
+        {
+            tests = new List<Tuple<IFlagTest, string>>();
         }
 
-        internal static SteamVR_Controller.Device leftController = null;
-        private static StatusFlags statusL = StatusFlags.None;
-        private static StatusFlags statusR = StatusFlags.None;
+        public static void UpdateTests()
+        {
+            tests.Clear();
+            foreach (string tell in BodyTellManager.BodyTellList) {
+                IFlagTest test = ControlState.ParseTellString(tell);
+                tests.Add(new Tuple<IFlagTest, string>(test, tell));
+            }
+        }
 
         private static void SendPressMsgs(HandDot handDot, EVRButtonId button, string name)
         {
@@ -63,40 +69,35 @@ namespace AnylandMods.ScriptableControls {
         {
             if (__instance.controller is null)
                 return;
+
+            bool context = CrossDevice.GetPress(__instance.controller, CrossDevice.button_context, __instance.side);
+            bool delete = CrossDevice.GetPress(__instance.controller, CrossDevice.button_delete, __instance.side);
+            bool fingers = __instance.controller.GetAxis(EVRButtonId.k_EButton_Axis2).x > 0.9f;
+            bool grab = CrossDevice.GetPress(__instance.controller, CrossDevice.button_grab, __instance.side);
+            bool legs = CrossDevice.GetPress(__instance.controller, CrossDevice.button_legPuppeteering, __instance.side);
+            bool teleport = CrossDevice.GetPress(__instance.controller, CrossDevice.button_teleport, __instance.side);
+            bool trigger = CrossDevice.GetPress(__instance.controller, CrossDevice.button_grabTip, __instance.side);
+
+            UInt64 myFlags = 0;
+            if (context) myFlags += ControlState.Flags.ContextLaser;
+            if (delete) myFlags += ControlState.Flags.Delete;
+            if (fingers) myFlags += ControlState.Flags.FingersClosed;
+            if (grab) myFlags += ControlState.Flags.Grab;
+            if (legs) myFlags += ControlState.Flags.LegControl;
+            if (teleport) myFlags += ControlState.Flags.TeleportLaser;
+            if (trigger) myFlags += ControlState.Flags.Trigger;
+
             if (__instance.side == Side.Left) {
-                leftController = __instance.controller;
-            }
-            Vector2 stick = __instance.controller.GetAxis(EVRButtonId.k_EButton_Axis0);
-            float fingers = __instance.controller.GetAxis(EVRButtonId.k_EButton_Axis2).x;
-            string sideLetter = (__instance.side == Side.Left) ? "l" : "r";
-
-            if (CrossDevice.GetPressDown(__instance.controller, CrossDevice.button_delete, __instance.side)) {
-                Main.TellBody(sideLetter + "del1");
-            } else if (CrossDevice.GetPressUp(__instance.controller, CrossDevice.button_delete, __instance.side)) {
-                Main.TellBody(sideLetter + "del0");
+                flags = (flags & ControlState.Flags.RightMask) | (myFlags << ControlState.Flags.BitsToShiftForLeft);
+            } else {
+                flags = (flags & ControlState.Flags.LeftMask) | myFlags;
             }
 
-            StatusFlags oldFlags = (__instance.side == Side.Left) ? statusL : statusR;
-            StatusFlags newFlags = StatusFlags.None;
-
-            if (Math.Abs(stick.x) < 0.5f && stick.y < -0.8f)
-                newFlags |= StatusFlags.StickDown;
-
-            if (fingers > 0.9f)
-                newFlags |= StatusFlags.FingersClosed;
-
-            StatusFlags edge = oldFlags ^ newFlags;
-
-            if ((edge & StatusFlags.StickDown) != StatusFlags.None)
-                Main.TellBody(sideLetter + "stdn" + ((newFlags & StatusFlags.StickDown) != StatusFlags.None ? "1" : "0"));
-
-            if ((edge & StatusFlags.FingersClosed) != StatusFlags.None)
-                Main.TellBody(sideLetter + "close" + ((newFlags & StatusFlags.FingersClosed) != StatusFlags.None ? "1" : "0"));
-
-            if (__instance.side == Side.Left)
-                statusL = newFlags;
-            else
-                statusR = newFlags;
+            foreach (Tuple<IFlagTest, string> test in tests) {
+                if (test.Item1.Evaluate(flags)) {
+                    BodyTellManager.Trigger(test.Item2);
+                }
+            }
         }
     }
 }

@@ -13,7 +13,10 @@ namespace AnylandMods.ScriptableControls {
             public const UInt64 LegControl = 8;
             public const UInt64 TeleportLaser = 16;
             public const UInt64 Trigger = 32;
-            public const int BitsToShiftForLeft = 6;
+            public const UInt64 Grab = 64;
+            public const int BitsToShiftForLeft = 7;
+            public const UInt64 RightMask = 0b1111111;
+            public const UInt64 LeftMask = RightMask << BitsToShiftForLeft;
 
             public static UInt64 BitValueForLetter(char letter)
             {
@@ -21,6 +24,7 @@ namespace AnylandMods.ScriptableControls {
                     case 'c': return ContextLaser;
                     case 'd': return Delete;
                     case 'f': return FingersClosed;
+                    case 'g': return Grab;
                     case 'l': return LegControl;
                     case 'p': return TeleportLaser;
                     case 't': return Trigger;
@@ -33,7 +37,7 @@ namespace AnylandMods.ScriptableControls {
         
         static ControlState()
         {
-            tellRegex = new Regex("^xc([blr]?)([01]) ?([cdflpt]*)-?([cdflpt]*)$");
+            tellRegex = new Regex("^xc([blr]?)([01]) ?([cdfglpt]*)-?([cdfglpt]*)$");
         }
 
         public static IFlagTest ParseTellString(string tell)
