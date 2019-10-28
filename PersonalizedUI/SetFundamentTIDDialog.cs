@@ -77,7 +77,7 @@ namespace AnylandMods.PersonalizedUI {
                     AddCollisionTestButton(0, -300, 17.5f, 6.0f);
                     AddCollisionTestButton(0, 300, 17.5f, 6.0f);
                     AddButton("back", null, "Cancel", "ButtonBigCreateThing", 0, -600, textSizeFactor: 1.5f);
-                    AddButton("confirmCollision", null, "Confirm", "BigCreateThing", 0, 0, textSizeFactor: 1.5f, textColor: TextColor.Red);
+                    AddButton("confirmCollision", null, "Confirm", "ButtonBigCreateThing", 0, 0, textSizeFactor: 1.5f, textColor: TextColor.Red);
                     break;
             }
         }
