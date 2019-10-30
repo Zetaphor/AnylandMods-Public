@@ -10,6 +10,8 @@ namespace AnylandMods {
         private List<string> lines = null;
         private Dictionary<string, string> keyValuePairs = null;
         private Dictionary<string, int> valueLineNumbers;
+        private Dictionary<string, string> originalCaps = null;
+        private Dictionary<string, string> defaults = null;
         private StringBuilder defaultText;
         private UnityModManager.ModEntry mod;
 
@@ -19,6 +21,8 @@ namespace AnylandMods {
             Filename = filename;
             defaultText = new StringBuilder();
             valueLineNumbers = new Dictionary<string, int>();
+            originalCaps = new Dictionary<string, string>();
+            defaults = new Dictionary<string, string>();
         }
 
         public string Filename { get; set; }
@@ -48,7 +52,14 @@ namespace AnylandMods {
 
         public string this[string key] {
             get {
-                return keyValuePairs[key];
+                string v;
+                if (keyValuePairs.TryGetValue(key, out v)) {
+                    return v;
+                } else if (defaults.TryGetValue(key, out v)) {
+                    return v;
+                } else {
+                    return String.Empty;
+                }
             }
             set {
                 SetKeyValueInternally(key, value);
@@ -71,7 +82,9 @@ namespace AnylandMods {
                     if (line.Length == 0 || line[0] == '#') continue;
                     int equals = line.IndexOf('=');
                     if (equals != -1) {
-                        string key = line.Substring(0, equals).ToLower();
+                        string key_case = line.Substring(0, equals);
+                        string key = key_case.ToLower();
+                        originalCaps[key] = key_case;
                         string value = line.Substring(equals + 1);
                         keyValuePairs[key] = value;
                         valueLineNumbers[key] = lines.Count - 1;
@@ -90,10 +103,22 @@ namespace AnylandMods {
             }
         }
 
+        public void AddDefaultValue(string key, string value = "", bool addDefaultLine = true)
+        {
+            defaults[key.ToLower()] = value;
+            if (addDefaultLine) {
+                AddDefaultLine(String.Format("{0}={1}", key, value));
+            }
+        }
+
         protected void SetKeyValueInternally(string key, string value)
         {
+            key = key.ToLower();
             keyValuePairs[key] = value;
-            string line = String.Format("{0}={1}", key, value);
+            if (!originalCaps.ContainsKey(key)) {
+                originalCaps[key] = key;
+            }
+            string line = String.Format("{0}={1}", originalCaps[key], value);
             if (valueLineNumbers.ContainsKey(key)) {
                 lines[valueLineNumbers[key]] = line;
             } else {

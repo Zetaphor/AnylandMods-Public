@@ -12,16 +12,19 @@ namespace AnylandMods.PersonalizedUI {
 
         public ConfigFile(UnityModManager.ModEntry mod) : base(mod)
         {
-            AddDefaultLine("# Set this to 1 to disable the original dialog background.");
-            AddDefaultLine("HideFundament=0");
+            AddDefaultLine("# Set this to True to disable the original dialog background.");
+            AddDefaultValue("HideFundament", "False");
             AddDefaultLine();
             AddDefaultLine("# Fill in a thing ID to use it as the default background for dialogs.");
-            AddDefaultLine("FundamentTID=");
+            AddDefaultValue("FundamentTID");
             AddDefaultLine();
-            AddDefaultLine("# Set this to 1 to enable collision and scripting. Useful for adding interactive functionality.");
-            AddDefaultLine("Dynamic=0");
+            AddDefaultLine("# Set this to True to enable collision and scripting. Useful for adding interactive functionality.");
+            AddDefaultValue("Dynamic", "False");
             AddDefaultLine("");
-            AddDefaultLine("ButtonColor=");
+            AddDefaultLine("# Syntax is R,G,B (e.g. \"ButtonColor=0,192,255\")");
+            AddDefaultValue("ButtonColor");
+            AddDefaultValue("CheckboxColor");
+            AddDefaultValue("TextColor");
         }
 
         protected override void ValueChanged(string key, string newValue)
