@@ -13,6 +13,7 @@ namespace AnylandMods.PersonalizedUI
         public static bool enabled;
         public static UnityModManager.ModEntry mod;
         internal static ConfigFile config;
+        internal static bool enableCustomColors = true;
 
         public static bool Load(UnityModManager.ModEntry modEntry)
         {
@@ -72,7 +73,7 @@ namespace AnylandMods.PersonalizedUI
     public static class CustomButtonColor {
         public static void Prefix(ref string buttonColor)
         {
-            if (buttonColor.Length == 0) {
+            if (Main.enableCustomColors && buttonColor.Length == 0) {
                 buttonColor = Main.config.ButtonColor;
             }
         }
@@ -83,20 +84,36 @@ namespace AnylandMods.PersonalizedUI
         public static void Postfix(Dialog __instance, GameObject __result)
         {
             string colorstr = Main.config.CheckboxColor;
-            if (colorstr.Length > 0) {
+            if (Main.enableCustomColors && colorstr.Length > 0) {
                 __instance.SetButtonColor(__result, Misc.ColorStringToColor(colorstr));
             }
         }
     }
 
-    // [HarmonyPatch(typeof(Dialog), "ApplyTextSizeFactor")]
+    [HarmonyPatch(typeof(Dialog), "ApplyTextSizeFactor")]
     public static class CustomTextColor {
         public static void Postfix(Transform textPart)
         {
             string colorstr = Main.config.TextColor;
-            if (colorstr.Length > 0) {
+            if (Main.enableCustomColors && colorstr.Length > 0) {
                 textPart.GetComponent<TextMesh>().GetComponent<Renderer>().material.color = Misc.ColorStringToColor(colorstr);
             }
+        }
+    }
+
+    [HarmonyPatch(typeof(KeyboardDialog), nameof(KeyboardDialog.Start))]
+    public static class DisableCustomColorsForKeyboard {
+        public static void Prefix()
+        {
+            Main.enableCustomColors = false;
+        }
+    }
+
+    [HarmonyPatch(typeof(KeyboardDialog), nameof(KeyboardDialog.HandleAndCloseDialog))]
+    public static class RestoreCustomColorsAfterKeyboard {
+        public static void Postfix()
+        {
+            Main.enableCustomColors = true;
         }
     }
 }
