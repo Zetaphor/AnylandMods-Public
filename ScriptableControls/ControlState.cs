@@ -5,7 +5,7 @@ using System.Text;
 using System.Text.RegularExpressions;
 
 namespace AnylandMods.ScriptableControls {
-    static class ControlState {
+    class ControlState {
         public static class Flags {
             public const UInt64 ContextLaser = 1;
             public const UInt64 Delete = 2;
@@ -34,7 +34,9 @@ namespace AnylandMods.ScriptableControls {
         }
 
         private static Regex tellRegex;
-        
+
+        #region Static stuff
+
         static ControlState()
         {
             tellRegex = new Regex("^xc([blr]?)([01]) ?([cdfglpt]*)-?([cdfglpt]*)$");
@@ -86,6 +88,46 @@ namespace AnylandMods.ScriptableControls {
                     default: return false;
                 }
             }
+        }
+
+        #endregion
+
+        public IFlagTest Test { get; set; }
+        public bool State { get; set; }
+        public string Label { get; set; }
+        public bool Edge { get; private set; }
+
+        public ControlState(string label, IFlagTest test)
+        {
+            Label = label;
+            Test = test;
+            State = false;
+            Edge = false;
+        }
+
+        public ControlState(string label)
+        {
+            Label = label;
+            State = false;
+            Edge = false;
+
+            IFlagTest test;
+            if (TryParseTellString(label, out test)) {
+                Test = test;
+            } else {
+                Test = null;
+            }
+        }
+
+        public void Update(UInt64 flags)
+        {
+            bool oldState = State;
+            if (Test is null) {
+                State = false;
+            } else {
+                State = Test.Evaluate(flags);
+            }
+            Edge = (State != oldState);
         }
     }
 }

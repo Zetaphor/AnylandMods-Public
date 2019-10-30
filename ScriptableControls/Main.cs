@@ -39,12 +39,12 @@ namespace AnylandMods.ScriptableControls {
 
     [HarmonyPatch(typeof(HandDot), "Update")]
     public static class HandDotUpdateHook {
-        private static List<Tuple<IFlagTest, string>> tests;
+        private static List<ControlState> tests;
         private static UInt64 flags = 0;
 
         static HandDotUpdateHook()
         {
-            tests = new List<Tuple<IFlagTest, string>>();
+            tests = new List<ControlState>();
         }
 
         public static void UpdateTests()
@@ -56,7 +56,7 @@ namespace AnylandMods.ScriptableControls {
                 Harmony.FileLog.Log("Parsing " + tell);
                 if (ControlState.TryParseTellString(tell, out test)) {
                     Harmony.FileLog.Log("It works! " + test.ToString());
-                    tests.Add(new Tuple<IFlagTest, string>(test, tell));
+                    tests.Add(new ControlState(tell, test));
                 } else {
                     Harmony.FileLog.Log("No luck there.");
                 }
@@ -101,9 +101,10 @@ namespace AnylandMods.ScriptableControls {
                 flags = (flags & ControlState.Flags.LeftMask) | myFlags;
             }
 
-            foreach (Tuple<IFlagTest, string> test in tests) {
-                if (test.Item1.Evaluate(flags)) {
-                    BodyTellManager.Trigger(test.Item2);
+            foreach (ControlState test in tests) {
+                test.Update(flags);
+                if (test.Edge && test.State) {
+                    BodyTellManager.Trigger(test.Label);
                 }
             }
         }
