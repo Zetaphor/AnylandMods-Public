@@ -80,6 +80,27 @@ namespace AnylandMods.ScriptableControls {
             var tests = new IFlagTest[] { a, b };
             return new CompoundTest(tests, BooleanOp.And);
         }
+
+        public override string ToString()
+        {
+            var chars = new Stack<char>();
+            const int bits = ControlState.Flags.BitsToShiftForLeft * 2;
+            UInt64 ftemp = Flags;
+            UInt64 mtemp = Mask;
+            for (int i=0; i<bits; ++i) {
+                if ((mtemp & 1) == 1) {
+                    chars.Push((ftemp & 1) == 1 ? '1' : '0');
+                } else {
+                    chars.Push('X');
+                }
+            }
+
+            StringBuilder sb = new StringBuilder("<");
+            while (chars.Count > 0) {
+                sb.Append(chars.Pop());
+            }
+            return sb.ToString();
+        }
     }
 
     class CompoundTest : IFlagTest {
@@ -121,6 +142,19 @@ namespace AnylandMods.ScriptableControls {
                 ct.mode = MaskTest.OppositeMode(mode);
                 return ct;
             }
+        }
+
+        public override string ToString()
+        {
+            string oper = (mode == BooleanOp.And) ? " & " : " | ";
+            StringBuilder sb = new StringBuilder("(");
+            bool first = true;
+            foreach (var test in tests) {
+                if (!first)
+                    sb.Append(oper);
+                sb.Append(test.ToString());
+            }
+            return sb.ToString();
         }
 
         IFlagTest IFlagTest.Complement {

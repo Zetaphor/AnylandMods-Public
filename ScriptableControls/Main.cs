@@ -27,6 +27,7 @@ namespace AnylandMods.ScriptableControls {
 
         private static void BtnBodyMotions_Action(string id, Dialog dialog)
         {
+            BodyTellManager.Update();
             Managers.dialogManager.SwitchToNewDialog(DialogType.BodyMotions, dialog.hand(), dialog.tabName);
         }
 
@@ -48,10 +49,17 @@ namespace AnylandMods.ScriptableControls {
 
         public static void UpdateTests()
         {
+            Harmony.FileLog.Log("UpdateTests called");
             tests.Clear();
             foreach (string tell in BodyTellManager.BodyTellList) {
-                IFlagTest test = ControlState.ParseTellString(tell);
-                tests.Add(new Tuple<IFlagTest, string>(test, tell));
+                IFlagTest test;
+                Harmony.FileLog.Log("Parsing " + tell);
+                if (ControlState.TryParseTellString(tell, out test)) {
+                    Harmony.FileLog.Log("It works! " + test.ToString());
+                    tests.Add(new Tuple<IFlagTest, string>(test, tell));
+                } else {
+                    Harmony.FileLog.Log("No luck there.");
+                }
             }
         }
 

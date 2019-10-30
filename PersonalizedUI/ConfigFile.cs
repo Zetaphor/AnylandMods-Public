@@ -20,6 +20,8 @@ namespace AnylandMods.PersonalizedUI {
             AddDefaultLine();
             AddDefaultLine("# Set this to 1 to enable collision and scripting. Useful for adding interactive functionality.");
             AddDefaultLine("Dynamic=0");
+            AddDefaultLine("");
+            AddDefaultLine("ButtonColor=");
         }
 
         protected override void ValueChanged(string key, string newValue)
@@ -57,6 +59,33 @@ namespace AnylandMods.PersonalizedUI {
             set {
                 dynamic = value;
                 SetKeyValueInternally("dynamic", value.ToString());
+            }
+        }
+
+        public string ButtonColor {
+            get {
+                return this["buttoncolor"];
+            }
+            set {
+                this["buttoncolor"] = value;
+            }
+        }
+
+        public string CheckboxColor {
+            get {
+                return this["checkboxcolor"];
+            }
+            set {
+                this["checkboxcolor"] = value;
+            }
+        }
+
+        public string TextColor {
+            get {
+                return this["textcolor"];
+            }
+            set {
+                this["textcolor"] = value;
             }
         }
     }

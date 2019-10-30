@@ -40,15 +40,16 @@ namespace AnylandMods.ScriptableControls {
             tellRegex = new Regex("^xc([blr]?)([01]) ?([cdfglpt]*)-?([cdfglpt]*)$");
         }
 
-        public static IFlagTest ParseTellString(string tell)
+        public static bool TryParseTellString(string tell, out IFlagTest test)
         {
+            test = null;
             Match match = tellRegex.Match(tell);
-            if (!match.Success) return MaskTest.Falsehood;
+            if (!match.Success) return false;
 
-            string p_side = match.Captures[0].Value;
-            char p_state = match.Captures[1].Value[0];
-            string p_true = match.Captures[2].Value;
-            string p_false = match.Captures[3].Value;
+            string p_side = match.Groups[1].Value;
+            char p_state = match.Groups[2].Value[0];
+            string p_true = match.Groups[3].Value;
+            string p_false = match.Groups[4].Value;
 
             UInt64 flags = 0;
             UInt64 mask = 0;
@@ -61,7 +62,7 @@ namespace AnylandMods.ScriptableControls {
                 UInt64 bit = Flags.BitValueForLetter(c);
                 if ((flags & bit) != 0) {
                     // None of them can ever be both true and false.
-                    return MaskTest.Falsehood;
+                    return false;
                 }
             }
 
@@ -70,19 +71,19 @@ namespace AnylandMods.ScriptableControls {
 
             if (p_state == '1') {
                 switch (p_side) {
-                    case "b": return left & right;
-                    case "l": return left;
-                    case "r": return right;
-                    case "": return left | right;
-                    default: return MaskTest.Falsehood;
+                    case "b": test = left & right; return true;
+                    case "l": test = left; return true;
+                    case "r": test = right; return true;
+                    case "": test = left | right; return true;
+                    default: return false;
                 }
             } else {
                 switch (p_side) {
-                    case "b": return !(left & right);
-                    case "l": return !left;
-                    case "r": return !right;
-                    case "": return !(left | right);
-                    default: return MaskTest.Falsehood;
+                    case "b": test = !(left & right); return true;
+                    case "l": test = !left; return true;
+                    case "r": test = !right; return true;
+                    case "": test = !(left | right); return true;
+                    default: return false;
                 }
             }
         }

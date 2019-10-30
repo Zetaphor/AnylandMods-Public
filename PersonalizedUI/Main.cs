@@ -67,4 +67,36 @@ namespace AnylandMods.PersonalizedUI
             return thingRequestContext != ThingRequestContext.LocalTest;
         }
     }
+
+    [HarmonyPatch(typeof(Dialog), nameof(Dialog.AddButton))]
+    public static class CustomButtonColor {
+        public static void Prefix(ref string buttonColor)
+        {
+            if (buttonColor.Length == 0) {
+                buttonColor = Main.config.ButtonColor;
+            }
+        }
+    }
+
+    [HarmonyPatch(typeof(Dialog), "AddCheckbox")]
+    public static class CustomCheckboxColor {
+        public static void Postfix(Dialog __instance, GameObject __result)
+        {
+            string colorstr = Main.config.CheckboxColor;
+            if (colorstr.Length > 0) {
+                __instance.SetButtonColor(__result, Misc.ColorStringToColor(colorstr));
+            }
+        }
+    }
+
+    // [HarmonyPatch(typeof(Dialog), "ApplyTextSizeFactor")]
+    public static class CustomTextColor {
+        public static void Postfix(Transform textPart)
+        {
+            string colorstr = Main.config.TextColor;
+            if (colorstr.Length > 0) {
+                textPart.GetComponent<TextMesh>().GetComponent<Renderer>().material.color = Misc.ColorStringToColor(colorstr);
+            }
+        }
+    }
 }

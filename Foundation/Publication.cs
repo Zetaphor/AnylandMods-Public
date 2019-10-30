@@ -46,6 +46,11 @@ namespace AnylandMods
             return (Hand)typeof(Dialog).GetField("hand", InstanceNonPub).GetValue(dialog);
         }
 
+        public static void SetButtonColor(this Dialog dialog, GameObject button, Color color)
+        {
+            typeof(Dialog).GetMethod("SetButtonColor", InstanceNonPub).Invoke(dialog, new object[] { button, color });
+        }
+
         // DialogManager
         
         public static Hand GetDialogHand(this DialogManager manager)
@@ -103,7 +108,7 @@ namespace AnylandMods
 
         public static List<string> GetTellBodyDataBodyIsListeningFor(this BodyMotionsDialog dialog, List<ThingPart> thingParts)
         {
-            return (List<string>)typeof(BodyMotionsDialog).GetMethod("GetTellBodyDataBodyIsListeningFor", InstanceNonPub).Invoke(dialog, new object[] { });
+            return (List<string>)typeof(BodyMotionsDialog).GetMethod("GetTellBodyDataBodyIsListeningFor", InstanceNonPub).Invoke(dialog, new object[] { thingParts });
         }
     }
 }
