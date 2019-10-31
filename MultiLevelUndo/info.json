@@ -1,0 +1,7 @@
+﻿{
+  "Id": "MultiLevelUndo",
+  "DisplayName": "Multi-Level Undo",
+  "Author": "flarn2006",
+  "Version": "1.0.0",
+  "EntryMethod": "AnylandMods.MultiLevelUndo.Main.Load"
+}
