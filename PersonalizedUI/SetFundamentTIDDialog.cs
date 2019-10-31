@@ -55,7 +55,6 @@ namespace AnylandMods.PersonalizedUI {
                     AddLabel("Is this good?", textSizeFactor: 2.5f, align: TextAlignment.Center, anchor: TextAnchor.MiddleCenter);
                     AddButton("back", null, "No", "ButtonMainDialog", -235, 300, textSizeFactor: 1.5f);
                     AddButton("confirm", null, "Yes", "ButtonMainDialog", 235, 300, textSizeFactor: 1.5f);
-                    AddBrush();
                     break;
                 case Mode.ThingIDNotInClipboard:
                     AddFundament();
