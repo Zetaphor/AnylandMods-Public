@@ -94,6 +94,7 @@ namespace AnylandMods.MultiLevelUndo
             } else {
                 Managers.soundManager.Play("no", __instance.transform, 0.5f, false, false);
             }
+            DebugLog.Log(String.Format("UndoCount={0} RedoCount={1}", Main.thingPartStateHistory.UndoCount(tuple), Main.thingPartStateHistory.RedoCount(tuple)));
 
             return false;
         }
@@ -117,7 +118,7 @@ namespace AnylandMods.MultiLevelUndo
             ThingPart tp = __instance.thingPart();
             var tuple = Main.GetThingPartStateTuple(tp);
             if (Main.thingPartStateHistory.RedoCount(tuple) > 0) {
-                int xOnFundament = (!tp.isText && !__instance.showSubThings()) ? 510 : 300;
+                int xOnFundament = (!tp.isText && !__instance.showSubThings()) ? 500 : 290;
                 redoButton = __instance.AddButton("redo", null, null, "ButtonVerySmall", xOnFundament, 420, "undo");
 
                 // Flip the icon horizontally
@@ -128,6 +129,7 @@ namespace AnylandMods.MultiLevelUndo
                 UnityEngine.Object.Destroy(redoButton);
                 redoButton = null;
             }
+            DebugLog.Log(String.Format("UndoCount={0} RedoCount={1}", Main.thingPartStateHistory.UndoCount(tuple), Main.thingPartStateHistory.RedoCount(tuple)));
         }
     }
 
