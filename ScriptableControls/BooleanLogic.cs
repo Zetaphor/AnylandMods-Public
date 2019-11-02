@@ -93,12 +93,15 @@ namespace AnylandMods.ScriptableControls {
                 } else {
                     chars.Push('X');
                 }
+                ftemp >>= 1;
+                mtemp >>= 1;
             }
 
-            StringBuilder sb = new StringBuilder("<");
+            StringBuilder sb = new StringBuilder((Mode == BooleanOp.Or) ? "<v" : "<&");
             while (chars.Count > 0) {
                 sb.Append(chars.Pop());
             }
+            sb.Append(">");
             return sb.ToString();
         }
     }
@@ -150,8 +153,10 @@ namespace AnylandMods.ScriptableControls {
             StringBuilder sb = new StringBuilder("(");
             bool first = true;
             foreach (var test in tests) {
-                if (!first)
+                if (!first) {
                     sb.Append(oper);
+                    first = false;
+                }
                 sb.Append(test.ToString());
             }
             return sb.ToString();

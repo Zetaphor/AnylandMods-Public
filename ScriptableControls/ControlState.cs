@@ -53,6 +53,8 @@ namespace AnylandMods.ScriptableControls {
             string p_true = match.Groups[3].Value;
             string p_false = match.Groups[4].Value;
 
+            DebugLog.Log(String.Format("p_side={0} p_state={1} p_true={2} p_false={3}", p_side, p_state, p_true, p_false));
+
             UInt64 flags = 0;
             UInt64 mask = 0;
 
@@ -66,7 +68,9 @@ namespace AnylandMods.ScriptableControls {
                     // None of them can ever be both true and false.
                     return false;
                 }
+                mask |= bit;
             }
+            DebugLog.Log("flags={0} mask={1}", flags, mask);
 
             var left = new MaskTest(flags << Flags.BitsToShiftForLeft, mask << Flags.BitsToShiftForLeft);
             var right = new MaskTest(flags, mask);

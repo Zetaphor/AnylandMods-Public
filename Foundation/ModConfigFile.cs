@@ -90,7 +90,7 @@ namespace AnylandMods {
                         valueLineNumbers[key] = lines.Count - 1;
                         ValueChanged(key, value);
                     } else {
-                        Harmony.FileLog.Log(String.Format("[{0}] Warning: Improperly formatted configuration line \"{1}\"", mod.Info.DisplayName, line));
+                        DebugLog.Log(String.Format("[{0}] Warning: Improperly formatted configuration line \"{1}\"", mod.Info.DisplayName, line));
                     }
                 }
             } catch (FileNotFoundException) {

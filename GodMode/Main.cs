@@ -40,7 +40,7 @@ namespace AnylandMods.GodMode
                         }
                     } else
                     {
-                        FileLog.Log("Warning: operand " + inst.operand.ToString() + " is not FieldInfo!");
+                        DebugLog.Log("Warning: operand " + inst.operand.ToString() + " is not FieldInfo!");
                     }
                 }
             }
@@ -67,8 +67,8 @@ namespace AnylandMods.GodMode
                     harmony.Patch(method, transpiler: new HarmonyMethod(typeof(Main), "ForceClonableTranspiler"));
                 } catch (TargetInvocationException ex)
                 {
-                    FileLog.Log("Warning: Unable to patch " + method.Name);
-                    FileLog.Log(ex.ToString());
+                    DebugLog.Log("Warning: Unable to patch " + method.Name);
+                    DebugLog.Log(ex.ToString());
                 }
             }
 
@@ -132,7 +132,6 @@ namespace AnylandMods.GodMode
                 if (inst.opcode == OpCodes.Ldftn)
                 {
                     MethodBase method = (MethodBase)inst.operand;
-                    FileLog.Log("(NoSizeLimit) Patching method " + method.Name);
                     Main.harmony.Patch(method, transpiler: new HarmonyMethod(typeof(NoSizeLimit), nameof(InnerTranspiler)));
                 }
             }

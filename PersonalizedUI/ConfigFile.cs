@@ -22,6 +22,7 @@ namespace AnylandMods.PersonalizedUI {
             AddDefaultValue("Dynamic", "False");
             AddDefaultLine("");
             AddDefaultLine("# Syntax is R,G,B (e.g. \"ButtonColor=0,192,255\")");
+            AddDefaultLine("# Note: These options sometimes break.");
             AddDefaultValue("ButtonColor");
             AddDefaultValue("CheckboxColor");
             AddDefaultValue("TextColor");

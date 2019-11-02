@@ -37,7 +37,15 @@ namespace AnylandMods {
 
     namespace FoundationPatches {
         [HarmonyPatch(typeof(PersonManager), nameof(PersonManager.DoAttachThing))]
-        public static class UpdateBodyTellListWhenNeeded {
+        public static class UpdateBodyTellListWhenNeeded1 {
+            public static void Postfix()
+            {
+                BodyTellManager.Update();
+            }
+        }
+
+        [HarmonyPatch(typeof(PersonManager), nameof(PersonManager.InitializeOurPerson))]
+        public static class UpdateBodyTellListWhenNeeded2 {
             public static void Postfix()
             {
                 BodyTellManager.Update();

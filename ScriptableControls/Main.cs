@@ -49,16 +49,16 @@ namespace AnylandMods.ScriptableControls {
 
         public static void UpdateTests()
         {
-            Harmony.FileLog.Log("UpdateTests called");
+            DebugLog.Log("UpdateTests called");
             tests.Clear();
             foreach (string tell in BodyTellManager.BodyTellList) {
                 IFlagTest test;
-                Harmony.FileLog.Log("Parsing " + tell);
+                DebugLog.Log("Parsing " + tell);
                 if (ControlState.TryParseTellString(tell, out test)) {
-                    Harmony.FileLog.Log("It works! " + test.ToString());
+                    DebugLog.Log("It works! " + test.ToString());
                     tests.Add(new ControlState(tell, test));
                 } else {
-                    Harmony.FileLog.Log("No luck there.");
+                    DebugLog.Log("No luck there.");
                 }
             }
         }

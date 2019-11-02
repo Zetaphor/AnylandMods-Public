@@ -74,6 +74,7 @@
   <ItemGroup>
     <Compile Include="BodyTellManager.cs" />
     <Compile Include="CustomDialogSupport.cs" />
+    <Compile Include="DebugLog.cs" />
     <Compile Include="Main.cs" />
     <Compile Include="Menu.cs" />
     <Compile Include="MenuItem.cs" />

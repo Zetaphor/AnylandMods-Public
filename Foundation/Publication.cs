@@ -110,5 +110,17 @@ namespace AnylandMods
         {
             return (List<string>)typeof(BodyMotionsDialog).GetMethod("GetTellBodyDataBodyIsListeningFor", InstanceNonPub).Invoke(dialog, new object[] { thingParts });
         }
+
+        // ThingPartDialog
+
+        public static ThingPart thingPart(this ThingPartDialog dialog)
+        {
+            return (ThingPart)typeof(ThingPartDialog).GetField("thingPart", InstanceNonPub).GetValue(dialog);
+        }
+
+        public static bool showSubThings(this ThingPartDialog dialog)
+        {
+            return (bool)typeof(ThingPartDialog).GetField("showSubThings", InstanceNonPub).GetValue(dialog);
+        }
     }
 }
