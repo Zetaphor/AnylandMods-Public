@@ -6,6 +6,8 @@ using Harmony;
 using UnityModManagerNet;
 using UnityEngine;
 using Valve.VR;
+using System.Reflection;
+using System.Reflection.Emit;
 
 namespace AnylandMods.ScriptableControls {
     public static class Main {
@@ -37,6 +39,21 @@ namespace AnylandMods.ScriptableControls {
         }
     }
 
+    [HarmonyPatch(typeof(Hand), "HandleTeleportLaser")]
+    public static class FreeUpTeleportButtonWhenStickCanBeUsedInstead {
+        public static IEnumerable<CodeInstruction> Transpiler(IEnumerable<CodeInstruction> code)
+        {
+            foreach (CodeInstruction inst in code) {
+                yield return inst;
+                if (inst.opcode == OpCodes.Call && ((MethodInfo)inst.operand).Name.Equals("GetPress")) {
+                    yield return new CodeInstruction(OpCodes.Ldsfld, AccessTools.Field(typeof(CrossDevice), "hasStick"));
+                    yield return new CodeInstruction(OpCodes.Not);
+                    yield return new CodeInstruction(OpCodes.And);
+                }
+            }
+        }
+    }
+
     [HarmonyPatch(typeof(HandDot), "Update")]
     public static class HandDotUpdateHook {
         private static List<ControlState> tests;
@@ -63,16 +80,6 @@ namespace AnylandMods.ScriptableControls {
             }
         }
 
-        private static void SendPressMsgs(HandDot handDot, EVRButtonId button, string name)
-        {
-            string sideLetter = (handDot.side == Side.Left) ? "l" : "r";
-            if (handDot.controller.GetPressDown(button)) {
-                Main.TellBody(sideLetter + name + "1");
-            } else if (handDot.controller.GetPressUp(button)) {
-                Main.TellBody(sideLetter + name + "0");
-            }
-        }
-
         public static void Postfix(HandDot __instance)
         {
             if (__instance.controller is null)
@@ -85,6 +92,11 @@ namespace AnylandMods.ScriptableControls {
             bool legs = CrossDevice.GetPress(__instance.controller, CrossDevice.button_legPuppeteering, __instance.side);
             bool teleport = CrossDevice.GetPress(__instance.controller, CrossDevice.button_teleport, __instance.side);
             bool trigger = CrossDevice.GetPress(__instance.controller, CrossDevice.button_grabTip, __instance.side);
+
+            if (CrossDevice.hasStick && (Managers.browserManager is null || !Managers.browserManager.CursorIsInBrowser())) {
+                Vector2 stick = __instance.controller.GetAxis(EVRButtonId.k_EButton_Axis0);
+                legs = (stick.y <= -0.7f && Mathf.Abs(stick.x) <= 0.5f);
+            }
 
             UInt64 myFlags = 0;
             if (context) myFlags += ControlState.Flags.ContextLaser;
@@ -103,6 +115,9 @@ namespace AnylandMods.ScriptableControls {
 
             foreach (ControlState test in tests) {
                 test.Update(flags);
+                if (test.Edge) {
+                    DebugLog.Log("{0} Edge {1} {2}", test.State, test.Label, test.Test);
+                }
                 if (test.Edge && test.State) {
                     BodyTellManager.Trigger(test.Label);
                 }
