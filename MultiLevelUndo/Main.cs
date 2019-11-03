@@ -67,7 +67,7 @@ namespace AnylandMods.MultiLevelUndo
                 }
                 var tuple = Main.GetThingPartStateTuple(__instance);
                 Main.thingPartStateHistory.PushState(tuple, new ThingPartStateHistoryEntry(__instance.states[__instance.currentState]));
-                DebugLog.Log(String.Format("UndoCount={0} RedoCount={1}", Main.thingPartStateHistory.UndoCount(tuple), Main.thingPartStateHistory.RedoCount(tuple)));
+                DebugLog.Log(String.Format("M4U UndoCount={0} RedoCount={1}", Main.thingPartStateHistory.UndoCount(tuple), Main.thingPartStateHistory.RedoCount(tuple)));
             }
             return false;
         }
@@ -94,7 +94,7 @@ namespace AnylandMods.MultiLevelUndo
             } else {
                 Managers.soundManager.Play("no", __instance.transform, 0.5f, false, false);
             }
-            DebugLog.Log(String.Format("UndoCount={0} RedoCount={1}", Main.thingPartStateHistory.UndoCount(tuple), Main.thingPartStateHistory.RedoCount(tuple)));
+            DebugLog.Log(String.Format("[U] UndoCount={0} RedoCount={1}", Main.thingPartStateHistory.UndoCount(tuple), Main.thingPartStateHistory.RedoCount(tuple)));
 
             return false;
         }
@@ -129,7 +129,7 @@ namespace AnylandMods.MultiLevelUndo
                 UnityEngine.Object.Destroy(redoButton);
                 redoButton = null;
             }
-            DebugLog.Log(String.Format("UndoCount={0} RedoCount={1}", Main.thingPartStateHistory.UndoCount(tuple), Main.thingPartStateHistory.RedoCount(tuple)));
+            DebugLog.Log(String.Format("UUB UndoCount={0} RedoCount={1}", Main.thingPartStateHistory.UndoCount(tuple), Main.thingPartStateHistory.RedoCount(tuple)));
         }
     }
 
@@ -159,10 +159,15 @@ namespace AnylandMods.MultiLevelUndo
                     tp.transform.localEulerAngles = saved.rotation;
                     tp.transform.localScale = saved.scale;
                     tp.material.color = saved.color;
+
+                    RewriteThingPartMemorizeForUndo.disableMemorize = true;
                     tp.SetStatePropertiesByTransform(false);
+                    RewriteThingPartMemorizeForUndo.disableMemorize = false;
 
                     if (tp.materialType == MaterialTypes.Transparent)
                         tp.UpdateMaterial();
+
+                    DebugLog.Log(String.Format("[R] UndoCount={0} RedoCount={1}", Main.thingPartStateHistory.UndoCount(tuple), Main.thingPartStateHistory.RedoCount(tuple)));
                 } else {
                     Managers.soundManager.Play("no", __instance.transform, 0.5f, false, false);
                 }
