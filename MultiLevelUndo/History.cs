@@ -27,6 +27,11 @@ namespace AnylandMods.MultiLevelUndo {
             scale = state.scale;
             color = state.color;
         }
+
+        public override string ToString()
+        {
+            return String.Format("P{0} R{1} S{2} C{3}", position, rotation, scale, color);
+        }
     }
 
     public class UndoHistory<T> {
@@ -50,17 +55,17 @@ namespace AnylandMods.MultiLevelUndo {
             }
         }
 
-        public T Undo()
+        public T Undo(T currentState)
         {
             T state = past.Pop();
-            future.Push(state);
+            future.Push(currentState);
             return state;
         }
 
-        public T Redo()
+        public T Redo(T currentState)
         {
             T state = future.Pop();
-            past.Push(state);
+            past.Push(currentState);
             return state;
         }
 
@@ -98,8 +103,8 @@ namespace AnylandMods.MultiLevelUndo {
 
         public int UndoCount(TSubject subject) => GetHistory(subject).UndoCount;
         public int RedoCount(TSubject subject) => GetHistory(subject).RedoCount;
-        public THistEntry Undo(TSubject subject) => GetHistory(subject).Undo();
-        public THistEntry Redo(TSubject subject) => GetHistory(subject).Redo();
+        public THistEntry Undo(TSubject subject, THistEntry currentState) => GetHistory(subject).Undo(currentState);
+        public THistEntry Redo(TSubject subject, THistEntry currentState) => GetHistory(subject).Redo(currentState);
         public void PushState(TSubject subject, THistEntry state) => GetHistory(subject).PushState(state);
     }
 

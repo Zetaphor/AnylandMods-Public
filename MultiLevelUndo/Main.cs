@@ -79,7 +79,8 @@ namespace AnylandMods.MultiLevelUndo
         {
             var tuple = Main.GetThingPartStateTuple(__instance);
             if (Main.thingPartStateHistory.UndoCount(tuple) > 0) {
-                ThingPartStateHistoryEntry saved = Main.thingPartStateHistory.Undo(tuple);
+                ThingPartStateHistoryEntry saved = Main.thingPartStateHistory.Undo(tuple, new ThingPartStateHistoryEntry(__instance.states[__instance.currentState]));
+                DebugLog.Log("Undoing to {0}", saved);
                 __instance.transform.localPosition = saved.position;
                 __instance.transform.localEulerAngles = saved.rotation;
                 __instance.transform.localScale = saved.scale;
@@ -155,7 +156,8 @@ namespace AnylandMods.MultiLevelUndo
                 ThingPart tp = __instance.thingPart();
                 var tuple = Main.GetThingPartStateTuple(tp);
                 if (Main.thingPartStateHistory.RedoCount(tuple) > 0) {
-                    ThingPartStateHistoryEntry saved = Main.thingPartStateHistory.Redo(tuple);
+                    ThingPartStateHistoryEntry saved = Main.thingPartStateHistory.Redo(tuple, new ThingPartStateHistoryEntry(tp.states[tp.currentState]));
+                    DebugLog.Log("Redoing to {0}", saved);
                     tp.transform.localPosition = saved.position;
                     tp.transform.localEulerAngles = saved.rotation;
                     tp.transform.localScale = saved.scale;
