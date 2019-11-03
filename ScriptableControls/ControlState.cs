@@ -26,7 +26,7 @@ namespace AnylandMods.ScriptableControls {
                     case 'f': return FingersClosed;
                     case 'g': return Grab;
                     case 'l': return LegControl;
-                    case 'p': return TeleportLaser;
+                    case 'r': return TeleportLaser;
                     case 't': return Trigger;
                     default: return 0;
                 }
@@ -39,7 +39,7 @@ namespace AnylandMods.ScriptableControls {
 
         static ControlState()
         {
-            tellRegex = new Regex("^xc([blr]?)([01]) ?([cdfglpt]*)-?([cdfglpt]*)$");
+            tellRegex = new Regex("^xc([blr]?)([01]) ?([cdfglrt]*)-?([cdfglrt]*)$");
         }
 
         public static bool TryParseTellString(string tell, out IFlagTest test)
