@@ -56,6 +56,8 @@ namespace AnylandMods.ScriptableControls {
 
     [HarmonyPatch(typeof(HandDot), "Update")]
     public static class HandDotUpdateHook {
+        private const float XThreshold = 0.3f;
+
         private static List<ControlState> tests;
         private static UInt64 flags = 0;
 
@@ -89,6 +91,7 @@ namespace AnylandMods.ScriptableControls {
             bool delete = CrossDevice.GetPress(__instance.controller, CrossDevice.button_delete, __instance.side);
             bool fingers = __instance.controller.GetAxis(EVRButtonId.k_EButton_Axis2).x > 0.9f;
             bool grab = CrossDevice.GetPress(__instance.controller, CrossDevice.button_grab, __instance.side);
+            bool holding = __instance.currentlyHeldObject != null;
             bool legs = CrossDevice.GetPress(__instance.controller, CrossDevice.button_legPuppeteering, __instance.side);
             bool teleport = CrossDevice.GetPress(__instance.controller, CrossDevice.button_teleport, __instance.side);
             bool trigger = CrossDevice.GetPress(__instance.controller, CrossDevice.button_grabTip, __instance.side);
@@ -106,6 +109,22 @@ namespace AnylandMods.ScriptableControls {
             if (legs) myFlags += ControlState.Flags.LegControl;
             if (teleport) myFlags += ControlState.Flags.TeleportLaser;
             if (trigger) myFlags += ControlState.Flags.Trigger;
+
+            Vector3 headpos = Managers.personManager.ourPerson.Head.transform.position;
+            Quaternion headrot = Managers.personManager.ourPerson.Head.transform.rotation;
+            Vector3 handpos = __instance.transform.position;
+            Vector3 handpos_local = Quaternion.Inverse(headrot) * (handpos - headpos);
+            if (teleport) {
+                DebugLog.LogTemp("handpos_local ~= {0}, {1}, {2}", handpos_local.x, handpos_local.y, handpos_local.z);
+            }
+            
+            if (handpos_local.x >= XThreshold) {
+                myFlags += ControlState.Flags.PosX2;
+            } else if (handpos_local.x <= -XThreshold) {
+                myFlags += ControlState.Flags.PosX0;
+            } else {
+                myFlags += ControlState.Flags.PosX1;
+            }
 
             if (__instance.side == Side.Left) {
                 flags = (flags & ControlState.Flags.RightMask) | (myFlags << ControlState.Flags.BitsToShiftForLeft);

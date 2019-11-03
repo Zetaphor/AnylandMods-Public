@@ -14,8 +14,18 @@ namespace AnylandMods.ScriptableControls {
             public const UInt64 TeleportLaser = 16;
             public const UInt64 Trigger = 32;
             public const UInt64 Grab = 64;
-            public const int BitsToShiftForLeft = 7;
-            public const UInt64 RightMask = 0b1111111;
+            public const UInt64 Holding = 128;
+            public const UInt64 PosX0 = 256;
+            public const UInt64 PosX1 = 512;
+            public const UInt64 PosX2 = 1024;
+            public const UInt64 PosY0 = 2048;
+            public const UInt64 PosY1 = 4096;
+            public const UInt64 PosY2 = 8192;
+            public const UInt64 PosZ0 = 16384;
+            public const UInt64 PosZ1 = 32768;
+            public const UInt64 PosZ2 = 65536;
+            public const int BitsToShiftForLeft = 17;
+            public const UInt64 RightMask = 0b11111111111111111;
             public const UInt64 LeftMask = RightMask << BitsToShiftForLeft;
 
             public static UInt64 BitValueForLetter(char letter)
@@ -25,6 +35,7 @@ namespace AnylandMods.ScriptableControls {
                     case 'd': return Delete;
                     case 'f': return FingersClosed;
                     case 'g': return Grab;
+                    case 'h': return Holding;
                     case 'l': return LegControl;
                     case 'r': return TeleportLaser;
                     case 't': return Trigger;
@@ -39,7 +50,37 @@ namespace AnylandMods.ScriptableControls {
 
         static ControlState()
         {
-            tellRegex = new Regex("^xc([blr]?)([01]) ?([cdfglrt]*)-?([cdfglrt]*)$");
+            tellRegex = new Regex("^xc([blr]?)([01]) ?([cdfglrtp012]*)-?([cdfglrtp012]*)$");
+        }
+
+        private static UInt64 StringToFlags(string str)
+        {
+            UInt64 flags = 0;
+            char mode = 'p';
+            char axis = 'x';
+            foreach (char c in str) {
+                if (c == 'p' || c == 'v' || c == 'q') {
+                    mode = c;
+                } else if (c == 'x' || c == 'y' || c == 'z') {
+                    axis = c;
+                } else if (c == '0' || c == '1' || c == '2') {
+                    var seq = new string(new char[] { mode, axis, c });
+                    switch (seq) {
+                        case "px0": flags |= Flags.PosX0; break;
+                        case "px1": flags |= Flags.PosX1; break;
+                        case "px2": flags |= Flags.PosX2; break;
+                        case "py0": flags |= Flags.PosY0; break;
+                        case "py1": flags |= Flags.PosY1; break;
+                        case "py2": flags |= Flags.PosY2; break;
+                        case "pz0": flags |= Flags.PosZ0; break;
+                        case "pz1": flags |= Flags.PosZ1; break;
+                        case "pz2": flags |= Flags.PosZ2; break;
+                    }
+                } else {
+                    flags |= Flags.BitValueForLetter(c);
+                }
+            }
+            return flags;
         }
 
         public static bool TryParseTellString(string tell, out IFlagTest test)
@@ -55,21 +96,11 @@ namespace AnylandMods.ScriptableControls {
 
             DebugLog.Log(String.Format("p_side={0} p_state={1} p_true={2} p_false={3}", p_side, p_state, p_true, p_false));
 
-            UInt64 flags = 0;
-            UInt64 mask = 0;
-
-            foreach (char c in p_true) {
-                flags |= Flags.BitValueForLetter(c);
-            }
-            mask = flags;
-            foreach (char c in p_false) {
-                UInt64 bit = Flags.BitValueForLetter(c);
-                if ((flags & bit) != 0) {
-                    // None of them can ever be both true and false.
-                    return false;
-                }
-                mask |= bit;
-            }
+            UInt64 f_true = StringToFlags(p_true);
+            UInt64 f_false = StringToFlags(p_false);
+            UInt64 flags = f_true;
+            UInt64 mask = f_true | f_false;
+            
             DebugLog.Log("flags={0} mask={1}", flags, mask);
 
             var left = new MaskTest(flags << Flags.BitsToShiftForLeft, mask << Flags.BitsToShiftForLeft);

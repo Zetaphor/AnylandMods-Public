@@ -35,14 +35,21 @@ namespace AnylandMods {
             LogText = sb.ToString();
         }
 
-        public static void Log(string format, params object[] args)
+        public static string LogTemp(string format, params object[] args)
         {
             string text = String.Format(format, args);
             lines.Add(text);
             if (lines.Count > maxLines)
                 lines.RemoveAt(0);
             UpdateLogText();
+            return text;
+        }
+
+        public static string Log(string format, params object[] args)
+        {
+            string text = LogTemp(format, args);
             FileLog.Log(text);
+            return text;
         }
     }
 

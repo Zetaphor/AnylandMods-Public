@@ -44,7 +44,7 @@ namespace AnylandMods.ScriptableControls {
             if (Mode == BooleanOp.And)
                 return (currentFlags & Mask) == (Flags & Mask);
             else // Mode.Or
-                return Mask != 0 && (~(currentFlags ^ Flags) & Mask) == 0;
+                return Mask != 0 && ((currentFlags ^ Flags) & Mask) == 0;
         }
 
         internal static BooleanOp OppositeMode(BooleanOp mode)
@@ -173,16 +173,27 @@ namespace AnylandMods.ScriptableControls {
             return target.Complement;
         }
 
+        private static CompoundTest BinaryBoolOperator(CompoundTest a, IFlagTest b, BooleanOp op)
+        {
+            IFlagTest[] tests;
+            if (a.mode == op && b is CompoundTest bc) {
+                tests = new IFlagTest[bc.tests.Length + 1];
+                a.tests.CopyTo(tests, 0);
+                tests[tests.Length - 1] = b;
+            } else {
+                tests = new IFlagTest[] { a, b };
+            }
+            return new CompoundTest(tests, op);
+        }
+
         public static CompoundTest operator|(CompoundTest a, IFlagTest b)
         {
-            var tests = new IFlagTest[] { a, b };
-            return new CompoundTest(tests, BooleanOp.Or);
+            return BinaryBoolOperator(a, b, BooleanOp.Or);
         }
 
         public static CompoundTest operator&(CompoundTest a, IFlagTest b)
         {
-            var tests = new IFlagTest[] { a, b };
-            return new CompoundTest(tests, BooleanOp.And);
+            return BinaryBoolOperator(a, b, BooleanOp.And);
         }
     }
 }
