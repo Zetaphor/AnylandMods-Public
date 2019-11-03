@@ -117,6 +117,10 @@ namespace AnylandMods.MultiLevelUndo
         {
             ThingPart tp = __instance.thingPart();
             var tuple = Main.GetThingPartStateTuple(tp);
+            if (redoButton != null) {
+                UnityEngine.Object.Destroy(redoButton);
+                redoButton = null;
+            }
             if (Main.thingPartStateHistory.RedoCount(tuple) > 0) {
                 int xOnFundament = (!tp.isText && !__instance.showSubThings()) ? 500 : 290;
                 redoButton = __instance.AddButton("redo", null, null, "ButtonVerySmall", xOnFundament, 420, "undo");
@@ -125,9 +129,6 @@ namespace AnylandMods.MultiLevelUndo
                 Transform iconQuad = redoButton.transform.Find("IconQuad");
                 Vector3 scale = iconQuad.localScale;
                 iconQuad.localScale = new Vector3(-scale.x, scale.y, scale.z);
-            } else if (redoButton != null) {
-                UnityEngine.Object.Destroy(redoButton);
-                redoButton = null;
             }
             DebugLog.Log(String.Format("UUB UndoCount={0} RedoCount={1}", Main.thingPartStateHistory.UndoCount(tuple), Main.thingPartStateHistory.RedoCount(tuple)));
         }
