@@ -60,7 +60,7 @@ namespace AnylandMods.ScriptableControls {
         private const float YThreshold = 0.3f;
         private const float ZThreshold = 0.1f;
         private const float VelocityThreshold1 = 0.7f;
-        private const float VelocityThreshold2 = 2.0f;
+        private const float VelocityThreshold2 = 2.5f;
 
         private static List<ControlState> tests;
         private static List<string> tells;
@@ -124,6 +124,7 @@ namespace AnylandMods.ScriptableControls {
             Quaternion headrot = Managers.personManager.ourPerson.Head.transform.rotation;
             Vector3 handpos = __instance.transform.position;
             Vector3 handpos_local = Quaternion.Inverse(headrot) * (handpos - headpos);
+            handpos_local /= Managers.personManager.GetOurScale();
             
             if (handpos_local.x >= XThreshold) {
                 myFlags |= ControlState.Flags.PosX2;
