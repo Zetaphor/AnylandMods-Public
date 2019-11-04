@@ -112,13 +112,13 @@ namespace AnylandMods.ScriptableControls {
             }
 
             UInt64 myFlags = 0;
-            if (context) myFlags += ControlState.Flags.ContextLaser;
-            if (delete) myFlags += ControlState.Flags.Delete;
-            if (fingers) myFlags += ControlState.Flags.FingersClosed;
-            if (grab) myFlags += ControlState.Flags.Grab;
-            if (legs) myFlags += ControlState.Flags.LegControl;
-            if (teleport) myFlags += ControlState.Flags.TeleportLaser;
-            if (trigger) myFlags += ControlState.Flags.Trigger;
+            if (context) myFlags |= ControlState.Flags.ContextLaser;
+            if (delete) myFlags |= ControlState.Flags.Delete;
+            if (fingers) myFlags |= ControlState.Flags.FingersClosed;
+            if (grab) myFlags |= ControlState.Flags.Grab;
+            if (legs) myFlags |= ControlState.Flags.LegControl;
+            if (teleport) myFlags |= ControlState.Flags.TeleportLaser;
+            if (trigger) myFlags |= ControlState.Flags.Trigger;
 
             Vector3 headpos = Managers.personManager.ourPerson.Head.transform.position;
             Quaternion headrot = Managers.personManager.ourPerson.Head.transform.rotation;
@@ -126,27 +126,27 @@ namespace AnylandMods.ScriptableControls {
             Vector3 handpos_local = Quaternion.Inverse(headrot) * (handpos - headpos);
             
             if (handpos_local.x >= XThreshold) {
-                myFlags += ControlState.Flags.PosX2;
+                myFlags |= ControlState.Flags.PosX2;
             } else if (handpos_local.x <= -XThreshold) {
-                myFlags += ControlState.Flags.PosX0;
+                myFlags |= ControlState.Flags.PosX0;
             } else {
-                myFlags += ControlState.Flags.PosX1;
+                myFlags |= ControlState.Flags.PosX1;
             }
 
             if (handpos_local.y >= YThreshold) {
-                myFlags += ControlState.Flags.PosY2;
+                myFlags |= ControlState.Flags.PosY2;
             } else if (handpos_local.y <= -YThreshold) {
-                myFlags += ControlState.Flags.PosY0;
+                myFlags |= ControlState.Flags.PosY0;
             } else {
-                myFlags += ControlState.Flags.PosY1;
+                myFlags |= ControlState.Flags.PosY1;
             }
 
             if (handpos_local.z >= 2.0f * ZThreshold) {
-                myFlags += ControlState.Flags.PosZ2;
+                myFlags |= ControlState.Flags.PosZ2;
             } else if (handpos_local.z >= ZThreshold) {
-                myFlags += ControlState.Flags.PosZ1;
+                myFlags |= ControlState.Flags.PosZ1;
             } else {
-                myFlags += ControlState.Flags.PosZ0;
+                myFlags |= ControlState.Flags.PosZ0;
             }
 
             var lasttime = __instance.side == Side.Left ? lasttimeLeft : lasttimeRight;
@@ -157,19 +157,19 @@ namespace AnylandMods.ScriptableControls {
                 velocity = (handpos_local - lastpos) / (Time.time - lasttime);
 
                 if (velocity.magnitude >= VelocityThreshold1) {
-                    myFlags += ControlState.Flags.Moving;
+                    myFlags |= ControlState.Flags.Moving;
                     if (velocity.magnitude >= VelocityThreshold2) {
-                        myFlags += ControlState.Flags.MovingFast;
+                        myFlags |= ControlState.Flags.MovingFast;
                     }
                 }
 
                 float absx = Mathf.Abs(velocity.x), absy = Mathf.Abs(velocity.y), absz = Mathf.Abs(velocity.z);
                 if (absx > absy && absx > absz) {
-                    myFlags += (velocity.x > 0) ? ControlState.Flags.DirRight : ControlState.Flags.DirLeft;
+                    myFlags |= (velocity.x > 0) ? ControlState.Flags.DirRight : ControlState.Flags.DirLeft;
                 } else if (absy > absx && absy > absz) {
-                    myFlags += (velocity.y > 0) ? ControlState.Flags.DirUp : ControlState.Flags.DirDown;
+                    myFlags |= (velocity.y > 0) ? ControlState.Flags.DirUp : ControlState.Flags.DirDown;
                 } else if (absz > absx && absz > absy) {
-                    myFlags += (velocity.z > 0) ? ControlState.Flags.DirFwd : ControlState.Flags.DirBack;
+                    myFlags |= (velocity.z > 0) ? ControlState.Flags.DirFwd : ControlState.Flags.DirBack;
                 }
 
                 if (teleport) {
