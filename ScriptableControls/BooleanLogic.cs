@@ -44,7 +44,7 @@ namespace AnylandMods.ScriptableControls {
             if (Mode == BooleanOp.And)
                 return (currentFlags & Mask) == (Flags & Mask);
             else // Mode.Or
-                return Mask != 0 && ((currentFlags ^ Flags) & Mask) == 0;
+                return Mask != 0 && (~(currentFlags ^ Flags) & Mask) != 0;
         }
 
         internal static BooleanOp OppositeMode(BooleanOp mode)

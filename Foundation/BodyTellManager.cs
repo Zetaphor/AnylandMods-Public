@@ -51,5 +51,13 @@ namespace AnylandMods {
                 BodyTellManager.Update();
             }
         }
+
+        [HarmonyPatch(typeof(HeldThingsRegistrar), nameof(HeldThingsRegistrar.RegisterHold))]
+        public static class UpdateBodyTellListWhenNeeded3 {
+            public static void Postfix()
+            {
+                BodyTellManager.Update();
+            }
+        }
     }
 }

@@ -57,27 +57,36 @@ namespace AnylandMods.ScriptableControls {
     [HarmonyPatch(typeof(HandDot), "Update")]
     public static class HandDotUpdateHook {
         private const float XThreshold = 0.3f;
+        private const float YThreshold = 0.3f;
+        private const float ZThreshold = 0.1f;
+        private const float VelocityThreshold = 1f;
 
         private static List<ControlState> tests;
+        private static List<string> tells;
         private static UInt64 flags = 0;
+        private static Vector3 lastposLeft, lastposRight;
+        private static float lasttimeLeft, lasttimeRight;
 
         static HandDotUpdateHook()
         {
             tests = new List<ControlState>();
+            tells = new List<string>();
         }
 
         public static void UpdateTests()
         {
             DebugLog.Log("UpdateTests called");
-            tests.Clear();
             foreach (string tell in BodyTellManager.BodyTellList) {
-                IFlagTest test;
-                DebugLog.Log("Parsing " + tell);
-                if (ControlState.TryParseTellString(tell, out test)) {
-                    DebugLog.Log("It works! " + test.ToString());
-                    tests.Add(new ControlState(tell, test));
-                } else {
-                    DebugLog.Log("No luck there.");
+                if (!tells.Contains(tell)) {
+                    IFlagTest test;
+                    DebugLog.Log("Parsing " + tell);
+                    if (ControlState.TryParseTellString(tell, out test)) {
+                        DebugLog.Log("It works! " + test.ToString());
+                        tests.Add(new ControlState(tell, test));
+                    } else {
+                        DebugLog.Log("No luck there.");
+                    }
+                    tells.Add(tell);
                 }
             }
         }
@@ -114,9 +123,6 @@ namespace AnylandMods.ScriptableControls {
             Quaternion headrot = Managers.personManager.ourPerson.Head.transform.rotation;
             Vector3 handpos = __instance.transform.position;
             Vector3 handpos_local = Quaternion.Inverse(headrot) * (handpos - headpos);
-            if (teleport) {
-                DebugLog.LogTemp("handpos_local ~= {0}, {1}, {2}", handpos_local.x, handpos_local.y, handpos_local.z);
-            }
             
             if (handpos_local.x >= XThreshold) {
                 myFlags += ControlState.Flags.PosX2;
@@ -126,10 +132,47 @@ namespace AnylandMods.ScriptableControls {
                 myFlags += ControlState.Flags.PosX1;
             }
 
+            if (handpos_local.y >= YThreshold) {
+                myFlags += ControlState.Flags.PosY2;
+            } else if (handpos_local.y <= -YThreshold) {
+                myFlags += ControlState.Flags.PosY0;
+            } else {
+                myFlags += ControlState.Flags.PosY1;
+            }
+
+            if (handpos_local.z >= 2.0f * ZThreshold) {
+                myFlags += ControlState.Flags.PosZ2;
+            } else if (handpos_local.z >= ZThreshold) {
+                myFlags += ControlState.Flags.PosZ1;
+            } else {
+                myFlags += ControlState.Flags.PosZ0;
+            }
+
+            var lasttime = __instance.side == Side.Left ? lasttimeLeft : lasttimeRight;
+            var lastpos = __instance.side == Side.Left ? lastposLeft : lastposRight;
+
+            if (Time.time != lasttime) {
+                Vector3 velocity = Vector3.zero;
+                velocity = (handpos_local - lastpos) / (Time.time - lasttime);
+
+                if (velocity.magnitude >= VelocityThreshold) {
+                    myFlags += ControlState.Flags.Moving;
+                }
+
+                if (teleport) {
+                    DebugLog.LogTemp("t:{0}->{1} p:{2}->{3} v:{4}", lasttime, Time.time, lastpos, handpos_local, velocity);
+                    DebugLog.LogTemp("{0} flags = {1:X}", __instance.side, myFlags);
+                }
+            }
+
             if (__instance.side == Side.Left) {
                 flags = (flags & ControlState.Flags.RightMask) | (myFlags << ControlState.Flags.BitsToShiftForLeft);
+                lastposLeft = handpos_local;
+                lasttimeLeft = Time.time;
             } else {
                 flags = (flags & ControlState.Flags.LeftMask) | myFlags;
+                lastposRight = handpos_local;
+                lasttimeRight = Time.time;
             }
 
             foreach (ControlState test in tests) {

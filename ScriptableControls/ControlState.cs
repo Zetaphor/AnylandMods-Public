@@ -15,17 +15,25 @@ namespace AnylandMods.ScriptableControls {
             public const UInt64 Trigger = 32;
             public const UInt64 Grab = 64;
             public const UInt64 Holding = 128;
-            public const UInt64 PosX0 = 256;
-            public const UInt64 PosX1 = 512;
-            public const UInt64 PosX2 = 1024;
-            public const UInt64 PosY0 = 2048;
-            public const UInt64 PosY1 = 4096;
-            public const UInt64 PosY2 = 8192;
-            public const UInt64 PosZ0 = 16384;
-            public const UInt64 PosZ1 = 32768;
-            public const UInt64 PosZ2 = 65536;
-            public const int BitsToShiftForLeft = 17;
-            public const UInt64 RightMask = 0b11111111111111111;
+            public const UInt64 Moving = 256;
+            public const UInt64 PosX0 = 512;
+            public const UInt64 PosX1 = 1024;
+            public const UInt64 PosX2 = 2048;
+            public const UInt64 PosY0 = 4096;
+            public const UInt64 PosY1 = 8192;
+            public const UInt64 PosY2 = 16384;
+            public const UInt64 PosZ0 = 32768;
+            public const UInt64 PosZ1 = 65536;
+            public const UInt64 PosZ2 = 131072;
+            public const UInt64 DirLeft = 262144;
+            public const UInt64 DirRight = 524288;
+            public const UInt64 DirUp = 1048576;
+            public const UInt64 DirDown = 2097152;
+            public const UInt64 DirFwd = 4194304;
+            public const UInt64 DirBack = 8388608;
+            
+            public const int BitsToShiftForLeft = 24;
+            public const UInt64 RightMask = 0b111111111111111111111111;
             public const UInt64 LeftMask = RightMask << BitsToShiftForLeft;
 
             public static UInt64 BitValueForLetter(char letter)
@@ -37,6 +45,7 @@ namespace AnylandMods.ScriptableControls {
                     case 'g': return Grab;
                     case 'h': return Holding;
                     case 'l': return LegControl;
+                    case 'm': return Moving;
                     case 'r': return TeleportLaser;
                     case 't': return Trigger;
                     default: return 0;
@@ -44,13 +53,15 @@ namespace AnylandMods.ScriptableControls {
             }
         }
 
-        private static Regex tellRegex;
-
         #region Static stuff
+
+        private static Regex tellRegex;
+        private static Dictionary<string, IFlagTest> testcache;
 
         static ControlState()
         {
-            tellRegex = new Regex("^xc([blr]?)([01]) ?([cdfglrtp012]*)-?([cdfglrtp012]*)$");
+            tellRegex = new Regex("^xc([blr]?)([01]) ?([cdfglmrtpqxyz0-5]*)-?([cdfglmrtpqxyz0-5]*)$");
+            testcache = new Dictionary<string, IFlagTest>();
         }
 
         private static UInt64 StringToFlags(string str)
@@ -59,22 +70,33 @@ namespace AnylandMods.ScriptableControls {
             char mode = 'p';
             char axis = 'x';
             foreach (char c in str) {
-                if (c == 'p' || c == 'v' || c == 'q') {
+                if (c == 'p' || c == 'q') {
                     mode = c;
                 } else if (c == 'x' || c == 'y' || c == 'z') {
                     axis = c;
-                } else if (c == '0' || c == '1' || c == '2') {
-                    var seq = new string(new char[] { mode, axis, c });
-                    switch (seq) {
-                        case "px0": flags |= Flags.PosX0; break;
-                        case "px1": flags |= Flags.PosX1; break;
-                        case "px2": flags |= Flags.PosX2; break;
-                        case "py0": flags |= Flags.PosY0; break;
-                        case "py1": flags |= Flags.PosY1; break;
-                        case "py2": flags |= Flags.PosY2; break;
-                        case "pz0": flags |= Flags.PosZ0; break;
-                        case "pz1": flags |= Flags.PosZ1; break;
-                        case "pz2": flags |= Flags.PosZ2; break;
+                } else if ('0' <= c && c <= '5') {
+                    if (mode == 'p') {
+                        var seq = new string(new char[] { axis, c });
+                        switch (seq) {
+                            case "x0": flags |= Flags.PosX0; break;
+                            case "x1": flags |= Flags.PosX1; break;
+                            case "x2": flags |= Flags.PosX2; break;
+                            case "y0": flags |= Flags.PosY0; break;
+                            case "y1": flags |= Flags.PosY1; break;
+                            case "y2": flags |= Flags.PosY2; break;
+                            case "z0": flags |= Flags.PosZ0; break;
+                            case "z1": flags |= Flags.PosZ1; break;
+                            case "z2": flags |= Flags.PosZ2; break;
+                        }
+                    } else if (mode == 'q') {
+                        switch (c) {
+                            case '0': flags |= Flags.DirLeft; break;
+                            case '1': flags |= Flags.DirRight; break;
+                            case '2': flags |= Flags.DirDown; break;
+                            case '3': flags |= Flags.DirUp; break;
+                            case '4': flags |= Flags.DirBack; break;
+                            case '5': flags |= Flags.DirFwd; break;
+                        }
                     }
                 } else {
                     flags |= Flags.BitValueForLetter(c);
@@ -85,9 +107,16 @@ namespace AnylandMods.ScriptableControls {
 
         public static bool TryParseTellString(string tell, out IFlagTest test)
         {
+            if (testcache.TryGetValue(tell, out test)) {
+                return true;
+            }
+
             test = null;
             Match match = tellRegex.Match(tell);
-            if (!match.Success) return false;
+            if (!match.Success) {
+                testcache[tell] = null;
+                return false;
+            }
 
             string p_side = match.Groups[1].Value;
             char p_state = match.Groups[2].Value[0];
@@ -106,23 +135,20 @@ namespace AnylandMods.ScriptableControls {
             var left = new MaskTest(flags << Flags.BitsToShiftForLeft, mask << Flags.BitsToShiftForLeft);
             var right = new MaskTest(flags, mask);
 
-            if (p_state == '1') {
-                switch (p_side) {
-                    case "b": test = left & right; return true;
-                    case "l": test = left; return true;
-                    case "r": test = right; return true;
-                    case "": test = left | right; return true;
-                    default: return false;
-                }
-            } else {
-                switch (p_side) {
-                    case "b": test = !(left & right); return true;
-                    case "l": test = !left; return true;
-                    case "r": test = !right; return true;
-                    case "": test = !(left | right); return true;
-                    default: return false;
-                }
+            switch (p_side) {
+                case "b": test = left & right; break;
+                case "l": test = left; break;
+                case "r": test = right; break;
+                case "": test = left | right; break;
+                default: return false;
             }
+
+            if (p_state == '0')
+                test = test.Complement;
+
+            testcache[tell] = test;
+
+            return true;
         }
 
         #endregion
