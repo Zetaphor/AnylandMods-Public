@@ -163,6 +163,15 @@ namespace AnylandMods.ScriptableControls {
                     }
                 }
 
+                float absx = Mathf.Abs(velocity.x), absy = Mathf.Abs(velocity.y), absz = Mathf.Abs(velocity.z);
+                if (absx > absy && absx > absz) {
+                    myFlags += (velocity.x > 0) ? ControlState.Flags.DirRight : ControlState.Flags.DirLeft;
+                } else if (absy > absx && absy > absz) {
+                    myFlags += (velocity.y > 0) ? ControlState.Flags.DirUp : ControlState.Flags.DirDown;
+                } else if (absz > absx && absz > absy) {
+                    myFlags += (velocity.z > 0) ? ControlState.Flags.DirFwd : ControlState.Flags.DirBack;
+                }
+
                 if (teleport) {
                     DebugLog.LogTemp("t:{0}->{1} p:{2}->{3} v:{4}", lasttime, Time.time, lastpos, handpos_local, velocity);
                     DebugLog.LogTemp("{0} flags = {1:X}", __instance.side, myFlags);
