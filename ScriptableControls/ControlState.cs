@@ -16,6 +16,7 @@ namespace AnylandMods.ScriptableControls {
             public const UInt64 Grab = 64;
             public const UInt64 Holding = 128;
             public const UInt64 Moving = 256;
+            public const UInt64 MovingFast = 16777216;
             public const UInt64 PosX0 = 512;
             public const UInt64 PosX1 = 1024;
             public const UInt64 PosX2 = 2048;
@@ -32,8 +33,8 @@ namespace AnylandMods.ScriptableControls {
             public const UInt64 DirFwd = 4194304;
             public const UInt64 DirBack = 8388608;
             
-            public const int BitsToShiftForLeft = 24;
-            public const UInt64 RightMask = 0b111111111111111111111111;
+            public const int BitsToShiftForLeft = 25;
+            public const UInt64 RightMask = 0b1111111111111111111111111;
             public const UInt64 LeftMask = RightMask << BitsToShiftForLeft;
 
             public static UInt64 BitValueForLetter(char letter)
@@ -46,6 +47,7 @@ namespace AnylandMods.ScriptableControls {
                     case 'h': return Holding;
                     case 'l': return LegControl;
                     case 'm': return Moving;
+                    case 'n': return MovingFast;
                     case 'r': return TeleportLaser;
                     case 't': return Trigger;
                     default: return 0;

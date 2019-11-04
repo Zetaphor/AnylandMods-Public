@@ -59,7 +59,8 @@ namespace AnylandMods.ScriptableControls {
         private const float XThreshold = 0.3f;
         private const float YThreshold = 0.3f;
         private const float ZThreshold = 0.1f;
-        private const float VelocityThreshold = 1f;
+        private const float VelocityThreshold1 = 0.7f;
+        private const float VelocityThreshold2 = 2.0f;
 
         private static List<ControlState> tests;
         private static List<string> tells;
@@ -155,8 +156,11 @@ namespace AnylandMods.ScriptableControls {
                 Vector3 velocity = Vector3.zero;
                 velocity = (handpos_local - lastpos) / (Time.time - lasttime);
 
-                if (velocity.magnitude >= VelocityThreshold) {
+                if (velocity.magnitude >= VelocityThreshold1) {
                     myFlags += ControlState.Flags.Moving;
+                    if (velocity.magnitude >= VelocityThreshold2) {
+                        myFlags += ControlState.Flags.MovingFast;
+                    }
                 }
 
                 if (teleport) {
