@@ -62,7 +62,7 @@ namespace AnylandMods.ScriptableControls {
 
         static ControlState()
         {
-            tellRegex = new Regex("^xc([blr]?)([01]) ?([cdfglmrtpqxyz0-5]*)-?([cdfglmrtpqxyz0-5]*)$");
+            tellRegex = new Regex("^xc([blr]?)([01]) ?([cdfglmnrtpqxyz0-5]*)-?([cdfglmnrtpqxyz0-5]*)$");
             testcache = new Dictionary<string, IFlagTest>();
         }
 
