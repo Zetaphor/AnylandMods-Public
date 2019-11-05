@@ -79,14 +79,8 @@ namespace AnylandMods.ScriptableControls {
             DebugLog.Log("UpdateTests called");
             foreach (string tell in BodyTellManager.BodyTellList) {
                 if (!tells.Contains(tell)) {
-                    IFlagTest test;
-                    DebugLog.Log("Parsing " + tell);
-                    if (ControlState.TryParseTellString(tell, out test)) {
-                        DebugLog.Log("It works! " + test.ToString());
-                        tests.Add(new ControlState(tell, test));
-                    } else {
-                        DebugLog.Log("No luck there.");
-                    }
+                    if (ControlState.TryParseTellString(tell, out ControlState state))
+                        tests.Add(state);
                     tells.Add(tell);
                 }
             }
@@ -192,9 +186,10 @@ namespace AnylandMods.ScriptableControls {
             foreach (ControlState test in tests) {
                 test.Update(flags);
                 if (test.Edge) {
-                    DebugLog.Log("{0} Edge {1} {2}", test.State, test.Label, test.Test);
+                    DebugLog.LogTemp("{0} Edge {1} {2}", test.State, test.Label, test.Test);
+                    DebugLog.LogTemp("@edge={0:X} req={3:X} lastflags={1:X} pass={2:X}", test.FlagsAtEdge, test.LastFlags, test.AtRequiredEdge, test.RequireEdge);
                 }
-                if (test.Edge && test.State) {
+                if (test.ShouldTrigger) {
                     BodyTellManager.Trigger(test.Label);
                 }
             }

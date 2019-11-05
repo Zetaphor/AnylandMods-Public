@@ -32,7 +32,7 @@ namespace AnylandMods.ScriptableControls {
             public const UInt64 DirDown = 2097152;
             public const UInt64 DirFwd = 4194304;
             public const UInt64 DirBack = 8388608;
-            
+
             public const int BitsToShiftForLeft = 25;
             public const UInt64 RightMask = 0b1111111111111111111111111;
             public const UInt64 LeftMask = RightMask << BitsToShiftForLeft;
@@ -58,12 +58,12 @@ namespace AnylandMods.ScriptableControls {
         #region Static stuff
 
         private static Regex tellRegex;
-        private static Dictionary<string, IFlagTest> testcache;
+        private static Dictionary<string, ControlState> testcache;
 
         static ControlState()
         {
-            tellRegex = new Regex("^xc([blr]?)([01]) ?([cdfglmnrtpqxyz0-5]*)-?([cdfglmnrtpqxyz0-5]*)$");
-            testcache = new Dictionary<string, IFlagTest>();
+            tellRegex = new Regex("^xc([blr]?)([0-3]) ?([cdfglmnrtpqxyz0-5]*)-?([cdfglmnrtpqxyz0-5]*)-?([cdfglmnrtpqxyz0-5]*)$");
+            testcache = new Dictionary<string, ControlState>();
         }
 
         private static UInt64 StringToFlags(string str)
@@ -107,13 +107,13 @@ namespace AnylandMods.ScriptableControls {
             return flags;
         }
 
-        public static bool TryParseTellString(string tell, out IFlagTest test)
+        public static bool TryParseTellString(string tell, out ControlState state)
         {
-            if (testcache.TryGetValue(tell, out test)) {
-                return true;
+            if (testcache.TryGetValue(tell, out state)) {
+                return state != null;
             }
 
-            test = null;
+            state = null;
             Match match = tellRegex.Match(tell);
             if (!match.Success) {
                 testcache[tell] = null;
@@ -124,19 +124,21 @@ namespace AnylandMods.ScriptableControls {
             char p_state = match.Groups[2].Value[0];
             string p_true = match.Groups[3].Value;
             string p_false = match.Groups[4].Value;
+            string p_edge = match.Groups[5].Value;
 
-            DebugLog.Log(String.Format("p_side={0} p_state={1} p_true={2} p_false={3}", p_side, p_state, p_true, p_false));
+            DebugLog.Log(String.Format("p_side={0} p_state={1} p_true={2} p_false={3} p_edge={4}", p_side, p_state, p_true, p_false, p_edge));
 
             UInt64 f_true = StringToFlags(p_true);
             UInt64 f_false = StringToFlags(p_false);
             UInt64 flags = f_true;
             UInt64 mask = f_true | f_false;
-            
+
             DebugLog.Log("flags={0} mask={1}", flags, mask);
 
             var left = new MaskTest(flags << Flags.BitsToShiftForLeft, mask << Flags.BitsToShiftForLeft);
             var right = new MaskTest(flags, mask);
 
+            IFlagTest test;
             switch (p_side) {
                 case "b": test = left & right; break;
                 case "l": test = left; break;
@@ -145,10 +147,11 @@ namespace AnylandMods.ScriptableControls {
                 default: return false;
             }
 
-            if (p_state == '0')
+            if (p_state == '0' || p_state == '2')
                 test = test.Complement;
 
-            testcache[tell] = test;
+            bool constantTrigger = p_state == '2' || p_state == '3';
+            testcache[tell] = state = new ControlState(tell, test, StringToFlags(p_edge), constantTrigger);
 
             return true;
         }
@@ -159,27 +162,32 @@ namespace AnylandMods.ScriptableControls {
         public bool State { get; set; }
         public string Label { get; set; }
         public bool Edge { get; private set; }
+        public bool ConstantTrigger { get; set; }
+        public UInt64 RequireEdge { get; set; }
+        public UInt64 LastFlags { get; private set; }
+        public UInt64 FlagsAtEdge { get; private set; }
+        
+        public bool AtRequiredEdge {
+            get {
+                return (FlagsAtEdge & RequireEdge) == RequireEdge;
+            }
+        }
 
-        public ControlState(string label, IFlagTest test)
+        public bool ShouldTrigger {
+            get {
+                return (ConstantTrigger || Edge) && State && AtRequiredEdge;
+            }
+        }
+
+        public ControlState(string label, IFlagTest test, UInt64 requireEdge, bool constantTrigger)
         {
             Label = label;
             Test = test;
             State = false;
             Edge = false;
-        }
-
-        public ControlState(string label)
-        {
-            Label = label;
-            State = false;
-            Edge = false;
-
-            IFlagTest test;
-            if (TryParseTellString(label, out test)) {
-                Test = test;
-            } else {
-                Test = null;
-            }
+            RequireEdge = requireEdge;
+            ConstantTrigger = constantTrigger;
+            LastFlags = 0;
         }
 
         public void Update(UInt64 flags)
@@ -191,6 +199,8 @@ namespace AnylandMods.ScriptableControls {
                 State = Test.Evaluate(flags);
             }
             Edge = (State != oldState);
+            FlagsAtEdge = flags ^ LastFlags;
+            LastFlags = flags;
         }
     }
 }
