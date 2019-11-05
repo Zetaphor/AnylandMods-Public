@@ -137,4 +137,13 @@ namespace AnylandMods.GodMode
             }
         }
     }
+
+    [HarmonyPatch(typeof(Hand), "GetLaserDistanceMultiplier")]
+    public static class DoNotClampAirLaserDistance {
+        public static void Prefix(ref bool isForAirLaser)
+        {
+            if (Main.gmEnabled)
+                isForAirLaser = false;
+        }
+    }
 }
