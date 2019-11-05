@@ -33,8 +33,8 @@ namespace AnylandMods.ScriptableControls {
             public const UInt64 DirFwd = 0x800000;
             public const UInt64 DirBack = 0x1000000;
 
-            public const int BitsToShiftForLeft = 25;
-            public const UInt64 RightMask = 0b1111111111111111111111111;
+            public const int BitsToShiftForLeft = 32;
+            public const UInt64 RightMask = 0b11111111111111111111111111111111;
             public const UInt64 LeftMask = RightMask << BitsToShiftForLeft;
 
             public static UInt64 BitValueForLetter(char letter)
