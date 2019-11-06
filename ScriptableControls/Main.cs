@@ -61,6 +61,7 @@ namespace AnylandMods.ScriptableControls {
         private const float ZThreshold = 0.1f;
         private const float VelocityThreshold1 = 0.7f;
         private const float VelocityThreshold2 = 2.5f;
+        private const float FingersClosedThreshold = 0.25f;
 
         private static List<ControlState> tests;
         private static List<string> tells;
@@ -93,7 +94,7 @@ namespace AnylandMods.ScriptableControls {
 
             bool context = CrossDevice.GetPress(__instance.controller, CrossDevice.button_context, __instance.side);
             bool delete = CrossDevice.GetPress(__instance.controller, CrossDevice.button_delete, __instance.side);
-            bool fingers = __instance.controller.GetAxis(EVRButtonId.k_EButton_Axis2).x > 0.9f;
+            bool fingers = __instance.controller.GetAxis(EVRButtonId.k_EButton_Axis2).x >= FingersClosedThreshold;
             bool grab = CrossDevice.GetPress(__instance.controller, CrossDevice.button_grab, __instance.side);
             bool holding = __instance.currentlyHeldObject != null;
             bool legs = CrossDevice.GetPress(__instance.controller, CrossDevice.button_legPuppeteering, __instance.side);
