@@ -169,7 +169,7 @@ namespace AnylandMods.ScriptableControls {
         
         public bool AtRequiredEdge {
             get {
-                return (FlagsAtEdge & RequireEdge) == RequireEdge;
+                return (FlagsAtEdge & RequireEdge) != 0;
             }
         }
 
