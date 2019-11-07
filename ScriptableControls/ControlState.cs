@@ -62,23 +62,20 @@ namespace AnylandMods.ScriptableControls {
 
         static ControlState()
         {
-            tellRegex = new Regex("^xc([blr]?)([0-3]) ?([cdfglmnrtpqxyz0-5]*)-?([cdfglmnrtpqxyz0-5]*)-?([cdfglmnrtpqxyz0-5]*)$");
+            tellRegex = new Regex("^xc([blr]?)([0-3]) ?([cdfglmnrtqxyz0-5]*)-?([cdfglmnrtqxyz0-5]*)-?([cdfglmnrtqxyz0-5]*)$");
             testcache = new Dictionary<string, ControlState>();
         }
 
         private static UInt64 StringToFlags(string str)
         {
             UInt64 flags = 0;
-            char mode = 'p';
-            char axis = 'x';
+            char mode = '-';
             foreach (char c in str) {
-                if (c == 'p' || c == 'q') {
+                if (c == 'q' || c == 'x' || c == 'y' || c == 'z') {
                     mode = c;
-                } else if (c == 'x' || c == 'y' || c == 'z') {
-                    axis = c;
                 } else if ('0' <= c && c <= '5') {
-                    if (mode == 'p') {
-                        var seq = new string(new char[] { axis, c });
+                    if (mode == 'x' || mode == 'y' || mode == 'z') {
+                        var seq = new string(new char[] { mode, c });
                         switch (seq) {
                             case "x0": flags |= Flags.PosX0; break;
                             case "x1": flags |= Flags.PosX1; break;
@@ -169,7 +166,7 @@ namespace AnylandMods.ScriptableControls {
         
         public bool AtRequiredEdge {
             get {
-                return (FlagsAtEdge & RequireEdge) != 0;
+                return RequireEdge == 0 || (FlagsAtEdge & RequireEdge) != 0;
             }
         }
 
