@@ -58,7 +58,9 @@ namespace AnylandMods {
         public static class AddDebugLogPlaceholder {
             public static void Postfix(string s, ref string __result)
             {
-                __result = __result.ReplaceCaseInsensitive("[mod debug log]", DebugLog.LogText);
+                if (__result != null) {
+                    __result = __result.ReplaceCaseInsensitive("[mod debug log]", DebugLog.LogText);
+                }
             }
         }
     }
