@@ -191,7 +191,11 @@ namespace AnylandMods.ScriptableControls {
                     DebugLog.LogTemp("@edge={0:X} req={3:X} lastflags={1:X} pass={2:X}", test.FlagsAtEdge, test.LastFlags, test.AtRequiredEdge, test.RequireEdge);
                 }
                 if (test.ShouldTrigger) {
-                    BodyTellManager.Trigger(test.Label);
+                    float t = Time.time;
+                    if (!test.ConstantTrigger || t - test.LastTrigTime >= 0.1f) {
+                        test.LastTrigTime = t;
+                        BodyTellManager.Trigger(test.Label);
+                    }
                 }
             }
         }

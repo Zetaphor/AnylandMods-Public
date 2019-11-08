@@ -163,6 +163,7 @@ namespace AnylandMods.ScriptableControls {
         public UInt64 RequireEdge { get; set; }
         public UInt64 LastFlags { get; private set; }
         public UInt64 FlagsAtEdge { get; private set; }
+        public float LastTrigTime { get; set; }
         
         public bool AtRequiredEdge {
             get {
@@ -185,6 +186,7 @@ namespace AnylandMods.ScriptableControls {
             RequireEdge = requireEdge;
             ConstantTrigger = constantTrigger;
             LastFlags = 0;
+            LastTrigTime = -1;
         }
 
         public void Update(UInt64 flags)
