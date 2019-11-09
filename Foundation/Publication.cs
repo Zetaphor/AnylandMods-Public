@@ -15,6 +15,7 @@ namespace AnylandMods
         static Publication()
         {
             VertexMoverInit();
+            HandInit();
         }
 
         // Dialog
@@ -121,6 +122,25 @@ namespace AnylandMods
         public static bool showSubThings(this ThingPartDialog dialog)
         {
             return (bool)typeof(ThingPartDialog).GetField("showSubThings", InstanceNonPub).GetValue(dialog);
+        }
+
+        // Hand
+
+        private static FieldInfo previousPosField;
+
+        private static void HandInit()
+        {
+            previousPosField = typeof(Hand).GetField("previousPosition", InstanceNonPub);
+        }
+
+        public static Vector3 previousPosition(this Hand hand)
+        {
+            return (Vector3)previousPosField.GetValue(hand);
+        }
+
+        public static void previousPosition(this Hand hand, Vector3 newPos)
+        {
+            previousPosField.SetValue(hand, newPos);
         }
     }
 }

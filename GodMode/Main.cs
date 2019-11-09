@@ -146,4 +146,18 @@ namespace AnylandMods.GodMode
                 isForAirLaser = false;
         }
     }
+
+    [HarmonyPatch(typeof(Hand), "HandleLegPuppeteerMovement")]
+    public static class ExponentialLegPuppeteering {
+        public static void Prefix(Hand __instance)
+        {
+            const float Base = 16.0f;
+            DebugLog.LogTemp("leg={0}", __instance.leg.position);
+            Vector3 delta = __instance.transform.position - __instance.previousPosition();
+            Vector3 leg_linear = __instance.leg.position.normalized * Mathf.Log(__instance.leg.position.magnitude, Base);
+            leg_linear += delta;
+            Vector3 leg_exp = leg_linear.normalized * Mathf.Pow(Base, leg_linear.magnitude);
+            __instance.previousPosition(__instance.leg.position + __instance.transform.position - leg_exp);
+        }
+    }
 }
