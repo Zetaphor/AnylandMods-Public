@@ -4,5 +4,5 @@
   "Author": "flarn2006",
   "Version": "1.0.0",
   "EntryMethod": "AnylandMods.PersonalizedUI.Main.Load",
-  "Requirements": "Foundation"
+  "Requirements": ["Foundation"]
 }
