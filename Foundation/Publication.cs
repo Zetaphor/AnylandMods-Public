@@ -36,10 +36,10 @@ namespace AnylandMods
             return (GameObject)typeof(Dialog).GetMethod("SwitchTo", InstanceNonPub).Invoke(dialog, new object[] { dialogType, tabName });
         }
 
-        public static GameObject AddSlider(this Dialog dialog, string valuePrefix = "", string valueSuffix = "", int x = 0, int y = 0, float minValue = 0f, float maxValue = 100f, bool roundValues = false, float value = 0f, Action<float> onValueChange = null, bool showValue = true, float textSizeFactor = 1f)
+        public static DialogSlider AddSlider(this Dialog dialog, string valuePrefix = "", string valueSuffix = "", int x = 0, int y = 0, float minValue = 0f, float maxValue = 100f, bool roundValues = false, float value = 0f, Action<float> onValueChange = null, bool showValue = true, float textSizeFactor = 1f)
         {
             object[] args = new object[] { valuePrefix, valueSuffix, x, y, minValue, maxValue, roundValues, value, onValueChange, showValue, textSizeFactor };
-            return (GameObject)typeof(Dialog).GetMethod("AddSlider", InstanceNonPub).Invoke(dialog, args);
+            return (DialogSlider)typeof(Dialog).GetMethod("AddSlider", InstanceNonPub).Invoke(dialog, args);
         }
 
         public static Hand hand(this Dialog dialog)
@@ -127,10 +127,14 @@ namespace AnylandMods
         // Hand
 
         private static FieldInfo previousPosField;
+        private static FieldInfo handDotNormalPositionField;
+        private static FieldInfo handObjectsWhilePuppeteeringField;
 
         private static void HandInit()
         {
             previousPosField = typeof(Hand).GetField("previousPosition", InstanceNonPub);
+            handDotNormalPositionField = typeof(Hand).GetField("handDotNormalPosition", InstanceNonPub);
+            handObjectsWhilePuppeteeringField = typeof(Hand).GetField("handObjectsWhilePuppeteering", InstanceNonPub);
         }
 
         public static Vector3 previousPosition(this Hand hand)
@@ -141,6 +145,16 @@ namespace AnylandMods
         public static void previousPosition(this Hand hand, Vector3 newPos)
         {
             previousPosField.SetValue(hand, newPos);
+        }
+
+        public static Vector3 handDotNormalPosition(this Hand hand)
+        {
+            return (Vector3)handDotNormalPositionField.GetValue(hand);
+        }
+
+        public static GameObject handObjectsWhilePuppeteering(this Hand hand)
+        {
+            return (GameObject)handObjectsWhilePuppeteeringField.GetValue(hand);
         }
     }
 }

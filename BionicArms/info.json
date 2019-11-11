@@ -1,0 +1,8 @@
+﻿{
+  "Id": "BionicArms",
+  "DisplayName": "Bionic Arms",
+  "Author": "flarn2006",
+  "Version": "1.0.0",
+  "EntryMethod": "AnylandMods.BionicArms.Main.Load",
+  "Requirements": ["Foundation"]
+}

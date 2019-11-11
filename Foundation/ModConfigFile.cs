@@ -63,7 +63,7 @@ namespace AnylandMods {
             }
             set {
                 SetKeyValueInternally(key, value);
-                ValueChanged(key, value);
+                ValueChanged(key.ToLower(), value);
             }
         }
 
@@ -113,10 +113,11 @@ namespace AnylandMods {
 
         protected void SetKeyValueInternally(string key, string value)
         {
+            string key_case = key;
             key = key.ToLower();
             keyValuePairs[key] = value;
             if (!originalCaps.ContainsKey(key)) {
-                originalCaps[key] = key;
+                originalCaps[key] = key_case;
             }
             string line = String.Format("{0}={1}", originalCaps[key], value);
             if (valueLineNumbers.ContainsKey(key)) {
