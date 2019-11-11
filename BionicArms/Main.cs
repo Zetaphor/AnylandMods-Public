@@ -22,12 +22,16 @@ namespace AnylandMods.BionicArms
             config = new ConfigFile(modEntry);
 
             menu = new Menu();
-            var miMoveHand = new MenuCheckbox("moveHand", "Move Hand to Leg");
-            miMoveHand.Footnote = "While Moving";
+            menu.SetBackButton(ModMenu.Menu);
+
+            var miMoveHand = new MenuCheckbox("moveHand", "Move HandDot");
+            miMoveHand.Footnote = "With Leg";
+            miMoveHand.ExtraIcon = ExtraIcon.TouchUncollidable;
             miMoveHand.Action += MiMoveHand_Action;
             var miExpEnabled = new MenuCheckbox("expEnabled", "Move Exponentially");
             miExpEnabled.Action += MiExpEnabled_Action;
-            var miExpBase = new MenuSlider("Exp. Base: ", 2.0f, Main.config.ExpBase, 100.0f, "^distance");
+            var miExpBase = new MenuSlider("Exp. Base: ", 2.0f, Main.config.ExpBase, 1000.0f, "^distance");
+            miExpBase.RoundValues = true;
             miExpBase.Action += MiExpBase_Action;
 
             menu.Add(miExpEnabled);
