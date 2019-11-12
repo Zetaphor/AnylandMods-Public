@@ -38,15 +38,19 @@ namespace AnylandMods.PersonalizedUI
 
     [HarmonyPatch(typeof(Dialog), "AddFundament")]
     public static class FundamentalReplacement {
+        private static bool ShouldApplyToDialog(Dialog dialog)
+        {
+            return !(dialog.isBig || dialog is GiftsDialog || dialog is JoystickDialog);
+        }
         public static bool Prefix(Dialog __instance)
         {
             // GiftsDialog breaks when AddFundament is patched out.
-            return !Main.config.HideFundament || __instance.GetType() == typeof(GiftsDialog);
+            return !Main.config.HideFundament || !ShouldApplyToDialog(__instance);
         }
 
         public static void Postfix(Dialog __instance)
         {
-            if (Main.config.FundamentTID.Length > 0 && __instance.GetType() != typeof(GiftsDialog)) {
+            if (Main.config.FundamentTID.Length > 0 && ShouldApplyToDialog(__instance)) {
                 Managers.thingManager.InstantiateThingOnDialogViaCache(
                     ThingRequestContext.LocalTest,
                     thingId: Main.config.FundamentTID,
