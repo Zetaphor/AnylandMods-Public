@@ -124,6 +124,13 @@ namespace AnylandMods
             return (bool)typeof(ThingPartDialog).GetField("showSubThings", InstanceNonPub).GetValue(dialog);
         }
 
+        // ProfileDialog
+
+        public static Person personThisIsOf(this ProfileDialog dialog)
+        {
+            return (Person)typeof(ProfileDialog).GetField("personThisIsOf", InstanceNonPub).GetValue(dialog);
+        }
+
         // Hand
 
         private static FieldInfo previousPosField;

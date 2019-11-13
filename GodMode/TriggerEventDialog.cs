@@ -19,17 +19,47 @@ namespace AnylandMods.GodMode {
         }
 
         private Thing thing;
+        private Person person;
+        private bool isPerson;
         private StateListener.EventType eventType;
 
         protected override void InitCustomDialog(object arg = null)
         {
             base.InitCustomDialog(eventMenu);
-            thing = (Thing)arg;
+            if (arg is Thing) {
+                thing = (Thing)arg;
+                isPerson = false;
+            } else {
+                person = (Person)arg;
+                isPerson = true;
+            }
         }
 
         private void StringCallback(string data)
         {
-            thing.TriggerEventAsStateAuthority(eventType, data);
+            var things = new List<Thing>();
+            if (isPerson) {
+                foreach (string name in Enum.GetNames(typeof(AttachmentPointId))) {
+                    if (!name.Equals("None")) {
+                        var pointId = (AttachmentPointId)Enum.Parse(typeof(AttachmentPointId), name);
+                        try {
+                            GameObject gobj = person.GetThingOnAttachmentPointById(pointId);
+                            if (gobj != null) {
+                                Thing thing = gobj.GetComponent<Thing>();
+                                if (thing != null) {
+                                    things.Add(thing);
+                                }
+                            }
+                        } catch (NullReferenceException) { }
+                    }
+                }
+            } else {
+                things.Add(thing);
+            }
+
+            foreach (Thing thing in things) {
+                thing.TriggerEventAsStateAuthority(eventType, data);
+            }
             CustomDialog.SwitchTo<TriggerEventDialog>(thing, hand, tabName);
         }
 

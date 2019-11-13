@@ -30,7 +30,7 @@ namespace AnylandMods.BionicArms
             miMoveHand.Action += MiMoveHand_Action;
             var miExpEnabled = new MenuCheckbox("expEnabled", "Move Exponentially");
             miExpEnabled.Action += MiExpEnabled_Action;
-            var miExpBase = new MenuSlider("Exp. Base: ", 2.0f, Main.config.ExpBase, 1000.0f, "^distance");
+            var miExpBase = new MenuSlider("Exp. Base: ", 2.0f, Main.config.ExpBase, 10000.0f, "^distance");
             miExpBase.RoundValues = true;
             miExpBase.Action += MiExpBase_Action;
 
