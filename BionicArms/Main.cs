@@ -13,6 +13,7 @@ namespace AnylandMods.BionicArms
         public static UnityModManager.ModEntry mod;
         internal static ConfigFile config;
         internal static Menu menu;
+        internal static bool perspectiveGrab = false;
 
         public static bool Load(UnityModManager.ModEntry modEntry)
         {
@@ -33,14 +34,22 @@ namespace AnylandMods.BionicArms
             var miExpBase = new MenuSlider("Exp. Base: ", 2.0f, Main.config.ExpBase, 10000.0f, "^distance");
             miExpBase.RoundValues = true;
             miExpBase.Action += MiExpBase_Action;
+            var miPerspectiveGrab = new MenuCheckbox("perspectiveGrab", "Perspective Grab");
+            miPerspectiveGrab.Action += MiPerspectiveGrab_Action;
 
             menu.Add(miExpEnabled);
             menu.Add(miMoveHand);
             menu.Add(miExpBase);
+            menu.Add(miPerspectiveGrab);
 
             ModMenu.AddButton(harmony, "Leg Options...", LegOptions_Action);
 
             return true;
+        }
+
+        private static void MiPerspectiveGrab_Action(string id, Dialog dialog, bool value)
+        {
+            perspectiveGrab = value;
         }
 
         private static void MiExpBase_Action(string id, Dialog dialog, float value)

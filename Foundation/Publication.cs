@@ -163,5 +163,12 @@ namespace AnylandMods
         {
             return (GameObject)handObjectsWhilePuppeteeringField.GetValue(hand);
         }
+
+        // HandDot
+
+        public static void StorePickupPosition(this HandDot handDot, GameObject gameObject)
+        {
+            typeof(HandDot).GetMethod("StorePickupPosition", InstanceNonPub).Invoke(handDot, new object[] { gameObject });
+        }
     }
 }
