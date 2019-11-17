@@ -17,7 +17,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PersonalizedUI", "Personali
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MultiLevelUndo", "MultiLevelUndo\MultiLevelUndo.csproj", "{86919A48-D2DD-4A1D-AEAC-36587F03B62B}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DistanceTools", "BionicArms\DistanceTools.csproj", "{EFF6824C-228F-4A14-93BD-54745811B1CC}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DistanceTools", "DistanceTools\DistanceTools.csproj", "{EFF6824C-228F-4A14-93BD-54745811B1CC}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
