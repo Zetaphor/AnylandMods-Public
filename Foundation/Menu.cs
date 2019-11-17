@@ -63,11 +63,12 @@ namespace AnylandMods {
         public int Count => itemsById.Count;
         public bool IsReadOnly => false;
 
-        public string Title { get; set; } = "Mod Functions";
+        public string Title { get; set; }
 
-        public Menu()
+        public Menu(string title = "Mod Functions")
         {
             itemsById = new Dictionary<string, MenuItem>();
+            Title = title;
         }
 
         public void SetBackButton(ButtonAction onClickAction)
