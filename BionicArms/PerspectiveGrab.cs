@@ -33,29 +33,23 @@ namespace AnylandMods.BionicArms.PerspectiveGrab {
                 try {
 
                     RaycastHit hit = hits.OrderBy(h => h.distance).First(h => h.collider.gameObject.tag.Equals("ThingPart"));
-                    DebugLog.Log("hit: {0}", hit.collider.gameObject);
                     HeldThing = hit.collider.gameObject.GetComponent<ThingPart>().transform.parent.gameObject.GetComponent<Thing>().GetMyRootThing();
                     var ttf = HeldThing.GetComponent<TransformTargetFollower>();
                     if (ttf is null)
                         ttf = HeldThing.gameObject.AddComponent<TransformTargetFollower>();
-                    DebugLog.Log("held: {0}", HeldThing);
                     var handDot = Hand.handDot.GetComponent<HandDot>();
-                    handDot.currentlyHeldObject = /*handDot.holdableInHand =*/ HeldThing.gameObject;
-                    //HeldThing.gameObject.transform.parent = handDot.transform;
-                    handDot.StorePickupPosition(HeldThing.gameObject);
-                    try {
-                        Managers.personManager.DoEditHold(Hand.gameObject, HeldThing.gameObject);
-                    } catch (Exception ex) {
-                        DebugLog.Log("DoHoldFromHand failed: {0}", ex);
-                    }
+                    handDot.currentlyHeldObject = HeldThing.gameObject;
                     float scale = HeldThing.transform.localScale.x;
-                    float proportion = eyeToHand.magnitude / hit.distance;
+                    float proportion = eyeToHand.magnitude / (eyeToHand.magnitude + hit.distance);
                     DebugLog.Log("{0} * {1}", scale, proportion);
                     scale *= proportion;
-                    ttf.targetScale = new Vector3(scale, scale, scale);
+                    DebugLog.Log("= {0}", scale);
                     // TODO: Sync new scale
                     Vector3 hitOffset = hit.point - HeldThing.transform.position;
-                    //ttf.targetPosition = Hand.transform.position - hitOffset * proportion;
+                    HeldThing.transform.position = Hand.transform.position - hitOffset * proportion;
+                    handDot.StorePickUpPosition(HeldThing.gameObject);
+                    Managers.personManager.DoEditHold(Hand.gameObject, HeldThing.gameObject);
+                    HeldThing.transform.localScale = new Vector3(scale, scale, scale);
                     return HeldThing;
                 } catch (InvalidOperationException) {
                     return null;
@@ -68,30 +62,34 @@ namespace AnylandMods.BionicArms.PerspectiveGrab {
         public void LetGo()
         {
             if (HeldThing != null) {
-                const float maxScale = 250.0f;
-                Vector3 eyeToHand = Hand.transform.position - Eye.position;
-                float originalScale = HeldThing.transform.localScale.x;
-                float maxDist = maxScale * eyeToHand.magnitude / originalScale;  // whatever distance will make it the max scale (250x)
-                RaycastHit[] hits = Physics.RaycastAll(Hand.transform.position, eyeToHand, maxDist);
-                
-                Vector3 newPos;
-                float newScale;
                 try {
-                    RaycastHit hit = hits.OrderBy(h => h.distance).First(h => h.collider != HeldThing.transform);
-                    newPos = hit.point;
-                    newScale = originalScale * (newPos - Eye.position).magnitude / eyeToHand.magnitude;
-                } catch (InvalidOperationException) {
-                    newPos = eyeToHand.normalized * maxScale;
-                    newScale = maxScale;
+                    const float maxScale = 250.0f;
+                    Vector3 eyeToHand = Hand.transform.position - Eye.position;
+                    float originalScale = HeldThing.transform.localScale.x;
+                    float maxDist = maxScale * eyeToHand.magnitude / originalScale;  // whatever distance will make it the max scale (250x)
+                    RaycastHit[] hits = Physics.RaycastAll(Hand.transform.position, eyeToHand, maxDist);
+
+                    Vector3 newPos;
+                    float newScale;
+                    try {
+                        RaycastHit hit = hits.OrderBy(h => h.distance).First(h => h.collider != HeldThing.transform);
+                        newPos = hit.point;
+                        newScale = originalScale * (newPos - Eye.position).magnitude / eyeToHand.magnitude;
+                    } catch (InvalidOperationException) {
+                        newPos = eyeToHand.normalized * maxScale;
+                        newScale = maxScale;
+                    }
+
+                    DebugLog.Log("{0} -> {1} @ {2}", originalScale, newScale, newPos);
+
+                    var ttf = HeldThing.GetComponent<TransformTargetFollower>();
+                    if (ttf is null)
+                        ttf = HeldThing.gameObject.AddComponent<TransformTargetFollower>();
+                    ttf.targetPosition = newPos;
+                    ttf.targetScale = new Vector3(newScale, newScale, newScale);
+                } finally {
+                    HeldThing = null;
                 }
-
-                DebugLog.Log("{0} -> {1} @ {2}", originalScale, newScale, newPos);
-
-                var ttf = HeldThing.GetComponent<TransformTargetFollower>();
-                if (ttf is null)
-                    ttf = HeldThing.gameObject.AddComponent<TransformTargetFollower>();
-                ttf.targetPosition = newPos;
-                ttf.targetScale = new Vector3(newScale, newScale, newScale);
             }
         }
     }

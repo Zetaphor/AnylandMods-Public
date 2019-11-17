@@ -166,9 +166,10 @@ namespace AnylandMods
 
         // HandDot
 
-        public static void StorePickupPosition(this HandDot handDot, GameObject gameObject)
+        public static void StorePickUpPosition(this HandDot handDot, GameObject gameObject)
         {
-            typeof(HandDot).GetMethod("StorePickupPosition", InstanceNonPub).Invoke(handDot, new object[] { gameObject });
+            DebugLog.Log("{0}.{1}({2})", handDot, typeof(HandDot).GetMethod("StorePickUpPosition", InstanceNonPub).Name, gameObject);
+            typeof(HandDot).GetMethod("StorePickUpPosition", InstanceNonPub).Invoke(handDot, new object[] { gameObject });
         }
     }
 }
