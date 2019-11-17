@@ -77,7 +77,9 @@
   <ItemGroup>
     <Compile Include="ConfigFile.cs" />
     <Compile Include="Main.cs" />
+    <Compile Include="PerspectiveEditDialog.cs" />
     <Compile Include="PerspectiveGrab.cs" />
+    <Compile Include="PerspectiveOptions.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>

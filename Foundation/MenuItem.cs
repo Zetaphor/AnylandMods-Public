@@ -9,6 +9,7 @@ namespace AnylandMods
     public abstract class MenuItem : IComparable<MenuItem> {
         public string Id { get; private set; }
         public string Text { get; set; }
+        public GameObject GameObject { get; protected set; }
         public delegate void ItemAction(string id, Dialog dialog);
         public event ItemAction Action;
         public int SortWeight { get; set; } = 0;
@@ -63,7 +64,7 @@ namespace AnylandMods
 
         public override GameObject Create(Dialog dialog, int xOnFundament, int yOnFundament)
         {
-            return dialog.AddButton(Id, null, Text, "ButtonCompact", xOnFundament, yOnFundament, Icon, textColor: TextColor, align: TextAlignment.Center);
+            return GameObject = dialog.AddButton(Id, null, Text, "ButtonCompact", xOnFundament, yOnFundament, Icon, textColor: TextColor, align: TextAlignment.Center);
         }
     }
 
@@ -76,7 +77,7 @@ namespace AnylandMods
 
         public override GameObject Create(Dialog dialog, int xOnFundament, int yOnFundament)
         {
-            return dialog.AddCheckbox(Id, null, Text, xOnFundament, yOnFundament, Value, textColor: TextColor, footnote: Footnote, extraIcon: ExtraIcon);
+            return GameObject = dialog.AddCheckbox(Id, null, Text, xOnFundament, yOnFundament, Value, textColor: TextColor, footnote: Footnote, extraIcon: ExtraIcon);
         }
     }
 
@@ -111,7 +112,7 @@ namespace AnylandMods
         {
             this.dialog = dialog;
             GameObject x = dialog.AddSlider(LabelPrefix, LabelSuffix, xOnFundament, yOnFundament, MinValue, MaxValue, RoundValues, Value, SliderAction, ShowValue).gameObject;
-            return x;
+            return GameObject = x;
         }
 
         private void SliderAction(float value)
