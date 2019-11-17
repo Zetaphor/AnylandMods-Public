@@ -31,12 +31,8 @@ namespace AnylandMods.DistanceTools.PerspectiveGrab {
             RaycastHit[] hits = Physics.RaycastAll(Hand.transform.position, eyeToHand);
             if (hits.Length > 0) {
                 try {
-
                     RaycastHit hit = hits.OrderBy(h => h.distance).First(h => h.collider.gameObject.tag.Equals("ThingPart"));
                     HeldThing = hit.collider.gameObject.GetComponent<ThingPart>().transform.parent.gameObject.GetComponent<Thing>().GetMyRootThing();
-                    var ttf = HeldThing.GetComponent<TransformTargetFollower>();
-                    if (ttf is null)
-                        ttf = HeldThing.gameObject.AddComponent<TransformTargetFollower>();
                     var handDot = Hand.handDot.GetComponent<HandDot>();
                     handDot.currentlyHeldObject = HeldThing.gameObject;
                     float scale = HeldThing.transform.localScale.x;
