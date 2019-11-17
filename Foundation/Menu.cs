@@ -63,6 +63,8 @@ namespace AnylandMods {
         public int Count => itemsById.Count;
         public bool IsReadOnly => false;
 
+        public string Title { get; set; } = "Mod Functions";
+
         public Menu()
         {
             itemsById = new Dictionary<string, MenuItem>();

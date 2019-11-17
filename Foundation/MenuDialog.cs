@@ -55,7 +55,7 @@ namespace AnylandMods {
         private void AddMenuItems()
         {
             RemoveMenuItems();
-            AddLabel("Mod Functions", 0, -420, 2.0f, textColor: TextColor.Blue, align: TextAlignment.Center, anchor: TextAnchor.MiddleCenter);
+            AddLabel(Menu.Title, 0, -420, 2.0f, textColor: TextColor.Blue, align: TextAlignment.Center, anchor: TextAnchor.MiddleCenter);
             int start = ItemsPerPage * currentPage;
             int end = Math.Min(start + ItemsPerPage, Menu.Count);
             for (int i = start; i < end; ++i) {
