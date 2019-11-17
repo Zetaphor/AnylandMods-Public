@@ -1,8 +1,8 @@
 ﻿{
-  "Id": "BionicArms",
-  "DisplayName": "Bionic Arms",
+  "Id": "DistanceTools",
+  "DisplayName": "Distance Interaction Tools",
   "Author": "flarn2006",
   "Version": "1.0.0",
-  "EntryMethod": "AnylandMods.BionicArms.Main.Load",
+  "EntryMethod": "AnylandMods.DistanceTools.Main.Load",
   "Requirements": ["Foundation"]
 }

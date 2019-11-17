@@ -5,7 +5,7 @@ using System.Text;
 using Harmony;
 using UnityEngine;
 
-namespace AnylandMods.BionicArms.PerspectiveGrab {
+namespace AnylandMods.DistanceTools.PerspectiveGrab {
     class GrabHand {
         public static GrabHand Left { get; set; }
         public static GrabHand Right { get; set; }

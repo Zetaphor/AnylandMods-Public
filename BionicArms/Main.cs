@@ -6,7 +6,7 @@ using UnityModManagerNet;
 using Harmony;
 using UnityEngine;
 
-namespace AnylandMods.BionicArms
+namespace AnylandMods.DistanceTools
 {
     public static class Main {
         public static bool enabled;

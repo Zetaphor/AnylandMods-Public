@@ -7,8 +7,8 @@
     <ProjectGuid>{EFF6824C-228F-4A14-93BD-54745811B1CC}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>AnylandMods.BionicArms</RootNamespace>
-    <AssemblyName>BionicArms</AssemblyName>
+    <RootNamespace>AnylandMods.DistanceTools</RootNamespace>
+    <AssemblyName>DistanceTools</AssemblyName>
     <TargetFrameworkVersion>v3.5</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <Deterministic>true</Deterministic>

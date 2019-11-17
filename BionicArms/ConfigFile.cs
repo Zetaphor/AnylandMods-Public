@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using UnityModManagerNet;
 
-namespace AnylandMods.BionicArms {
+namespace AnylandMods.DistanceTools {
     class ConfigFile : ModConfigFile {
         private bool expEnabled;
         private bool moveHandDot;
