@@ -11,7 +11,7 @@ namespace AnylandMods.GodMode {
         
         static TriggerEventDialog()
         {
-            eventMenu = new Menu();
+            eventMenu = new Menu("Trigger Event");
             eventMenu.SetBackButton(DialogType.Thing);
             foreach (string item in Enum.GetNames(typeof(StateListener.EventType))) {
                 eventMenu.Add(new MenuButton(item, item));

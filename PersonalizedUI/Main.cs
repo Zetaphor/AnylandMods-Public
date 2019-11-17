@@ -24,7 +24,7 @@ namespace AnylandMods.PersonalizedUI
             config = new ConfigFile(mod);
             config.Load();
 
-            ModMenu.AddButton(harmony, "Change UI Bkgd...", BtnCustomize_Action);
+            ModMenu.AddButton(harmony, "GUI Appearance...", BtnCustomize_Action);
 
             return true;
         }

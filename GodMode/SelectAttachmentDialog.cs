@@ -30,7 +30,7 @@ namespace AnylandMods.GodMode {
         {
             things = new Dictionary<string, Thing>();
             var person = (Person)arg;
-            var menu = new Menu();
+            var menu = new Menu("Attachments");
             menu.SetBackButton(DialogType.Thing);
 
             foreach (Thing thing in person.Rig.GetComponentsInChildren<Thing>()) {

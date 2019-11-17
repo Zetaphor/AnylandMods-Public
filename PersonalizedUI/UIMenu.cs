@@ -30,7 +30,7 @@ namespace AnylandMods.PersonalizedUI {
             MenuButton btnResetBackground = new MenuButton("resetFundamentTID", "Reset Background");
             btnResetBackground.Action += btnResetBackground_Action;
 
-            Menu = new Menu();
+            Menu = new Menu("GUI Appearance");
             Menu.Add(chkHideFundament);
             Menu.Add(chkDynamic);
             Menu.Add(btnSetFundamentTID);
