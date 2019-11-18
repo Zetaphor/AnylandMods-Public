@@ -9,14 +9,14 @@ namespace AnylandMods.DistanceTools {
         private bool expEnabled;
         private bool moveHandDot;
         private float expbase;
-        private Side eyeToUse;
+        private float ipd;
 
         public ConfigFile(UnityModManager.ModEntry mod) : base(mod)
         {
             AddDefaultValue("MoveHand", "False");
             AddDefaultValue("ExpEnabled", "False");
             AddDefaultValue("ExpBase", "2");
-            AddDefaultValue("EyeToUse", "Right");
+            AddDefaultValue("IPD", "60.4");
             Load();
         }
 
@@ -44,11 +44,11 @@ namespace AnylandMods.DistanceTools {
             }
         }
 
-        public Side EyeToUse {
-            get => eyeToUse;
+        public float IPD {
+            get => ipd;
             set {
-                eyeToUse = value;
-                SetKeyValueInternally("EyeToUse", value.ToString());
+                ipd = value;
+                SetKeyValueInternally("IPD", value.ToString());
             }
         }
 
@@ -63,17 +63,16 @@ namespace AnylandMods.DistanceTools {
                     break;
                 case "expbase":
                     if (!float.TryParse(newValue, out expbase)) {
-                        DebugLog.Log("ExpBase={0} is not a valid floating point value. Resetting to default.");
+                        DebugLog.Log("ExpBase={0} is not a valid floating point value. Resetting to default.", newValue);
                         ExpBase = 20.0f;
                         Save();
                     }
                     break;
-                case "eyetouse":
-                    try {
-                        eyeToUse = (Side)Enum.Parse(typeof(Side), newValue);
-                    } catch (ArgumentException) {
-                        DebugLog.Log("WARNING: \"{0}\" is not a valid option for EyeToUse. Use either Left or Right.", newValue);
-                        EyeToUse = Side.Right;
+                case "ipd":
+                    if (!float.TryParse(newValue, out ipd)) {
+                        DebugLog.Log("IPD={0} is not a valid floating point value. Resetting to default.", newValue);
+                        IPD = 60.4f;
+                        Save();
                     }
                     break;
             }

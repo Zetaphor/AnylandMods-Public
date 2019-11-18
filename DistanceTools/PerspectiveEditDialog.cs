@@ -27,21 +27,11 @@ namespace AnylandMods.DistanceTools.Perspective {
             chkPreferRaycast.Action += ChkPreferRaycast_Action;
             chkPreferRaycast.ExtraIcon = ExtraIcon.ScalesUniformly;
 
-            var chkLeftEye = new MenuCheckbox("useLeftEye", "Use Left Eye");
-            chkLeftEye.Footnote = "☐=Right";
-            chkLeftEye.Action += ChkLeftEye_Action;
-
             menu.Add(sldDistance);
             menu.Add(chkPreserve);
             menu.Add(chkPreferRaycast);
-            //menu.Add(chkLeftEye);
 
             base.InitCustomDialog(menu);
-        }
-
-        private void ChkLeftEye_Action(string id, Dialog dialog, bool value)
-        {
-            Main.config.EyeToUse = value ? Side.Left : Side.Right;
         }
 
         private void SldDistance_Action(string id, Dialog dialog, float value)

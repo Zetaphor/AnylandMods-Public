@@ -24,19 +24,22 @@ namespace AnylandMods.DistanceTools.Perspective {
         private float preservedDistance;
         private Vector3 grabOffset;
 
-        public Transform Eye { get; private set; }
+        public Transform Head { get; private set; }
         public Hand Hand { get; private set; }
         public Thing HeldThing { get; private set; } = null;
 
         public GrabHand(Person person, Side handSide)
         {
-            Eye = person.Head.transform;
+            Head = person.Head.transform;
             Hand = person.GetHandBySide(handSide).GetComponent<Hand>();
         }
 
         public Thing StartGrab()
         {
-            Vector3 eyeToHand = Hand.transform.position - Eye.position;
+            Vector3 headToEye = Head.right * (Main.config.IPD / 2000.0f);
+            if (Hand.side == Side.Left) headToEye = -headToEye;
+            Vector3 eyePos = Head.position + headToEye;
+            Vector3 eyeToHand = Hand.transform.position - eyePos;
             RaycastHit[] hits = Physics.RaycastAll(Hand.transform.position, eyeToHand);
             if (hits.Length > 0) {
                 try {
@@ -46,7 +49,7 @@ namespace AnylandMods.DistanceTools.Perspective {
                     handDot.currentlyHeldObject = HeldThing.gameObject;
                     float scale = HeldThing.transform.localScale.x;
                     float proportion = eyeToHand.magnitude / (eyeToHand.magnitude + hit.distance);
-                    preservedDistance = (hit.point - Eye.position).magnitude;
+                    preservedDistance = (hit.point - eyePos).magnitude;
                     DebugLog.Log("{0} * {1}", scale, proportion);
                     scale *= proportion;
                     DebugLog.Log("= {0}", scale);
@@ -66,14 +69,28 @@ namespace AnylandMods.DistanceTools.Perspective {
             }
         }
 
+        private static RaycastHit? FindCorrectRayHit(IEnumerable<RaycastHit> hits)
+        {
+            try {
+                return hits.OrderBy(h => h.distance)
+                    .First(h => h.collider.gameObject.tag.Equals("ThingPart")
+                    && h.collider.gameObject.GetComponent<ThingPart>().IsPartOfPlacement());
+            } catch (InvalidOperationException) {
+                return null;
+            }
+        }
+        
         public void LetGo(bool withoutMoving = false)
         {
+            Vector3 headToEye = Head.right * (Main.config.IPD / 2000.0f);
+            if (Hand.side == Side.Left) headToEye = -headToEye;
+            Vector3 eyePos = Head.position + headToEye;
             if (HeldThing != null) {
                 try {
                     if (withoutMoving) return;
 
                     const float maxScale = 250.0f;
-                    Vector3 eyeToHand = Hand.transform.position - Eye.position;
+                    Vector3 eyeToHand = Hand.transform.position - eyePos;
                     float scaleInHand = HeldThing.transform.localScale.x;
 
                     float maxDist;
@@ -97,26 +114,25 @@ namespace AnylandMods.DistanceTools.Perspective {
                     Vector3 newPos;
                     float newScale = 1.0f;
                     Vector3 dropOffset = grabOffset;
+                    Collider heldCollider = null;
                     if (Main.perspectiveOpts.PreferCloserRaycast) {
-                        try {
-                            RaycastHit hit = hits.OrderBy(h => h.distance).First(h =>
-                                h.collider.gameObject.tag.Equals("ThingPart")
-                                && h.collider.gameObject.GetComponent<ThingPart>().IsPartOfPlacement()
-                            );
+                        RaycastHit? hit_ = FindCorrectRayHit(hits);
+                        if (hit_.HasValue) {
+                            RaycastHit hit = hit_.Value;
                             newPos = hit.point;
-                            var heldCollider = HeldThing.GetComponent<Collider>();
+                            heldCollider = HeldThing.GetComponent<Collider>();
                             if (heldCollider != null) {
                                 dropOffset -= heldCollider.ClosestPoint(newPos) - HeldThing.transform.position;
                             }
-                        } catch (InvalidOperationException) {
-                            newPos = Eye.position + eyeToHand.normalized * maxDist;
+                        } else {
+                            newPos = eyePos + eyeToHand.normalized * maxDist;
                         }
                     } else {
-                        newPos = Eye.position + eyeToHand.normalized * maxDist;
+                        newPos = eyePos + eyeToHand.normalized * maxDist;
                     }
                     Vector3 newPosWithoutOffset = newPos;
                     for (var i = 0; i < 16; ++i) {
-                        newScale = scaleInHand * (newPos - Eye.position).magnitude / (HeldThing.transform.position - Eye.position).magnitude;
+                        newScale = scaleInHand * (newPos - eyePos).magnitude / (HeldThing.transform.position - eyePos).magnitude;
                         newPos = newPosWithoutOffset - dropOffset * newScale / scaleInHand;
                         DebugLog.LogTemp("[{0}] {1} @ {2} - {3} = {4}", i, newScale, newPosWithoutOffset, dropOffset * newScale / scaleInHand, newPos);
                     }
