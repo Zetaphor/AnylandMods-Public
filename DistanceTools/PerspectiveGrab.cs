@@ -95,7 +95,8 @@ namespace AnylandMods.DistanceTools.Perspective {
 
                     RaycastHit[] hits = Physics.RaycastAll(Hand.transform.position, eyeToHand, maxDist);
                     Vector3 newPos;
-                    float newScale;
+                    float newScale = 1.0f;
+                    Vector3 dropOffset = grabOffset;
                     if (Main.perspectiveOpts.PreferCloserRaycast) {
                         try {
                             RaycastHit hit = hits.OrderBy(h => h.distance).First(h =>
@@ -103,15 +104,22 @@ namespace AnylandMods.DistanceTools.Perspective {
                                 && h.collider.gameObject.GetComponent<ThingPart>().IsPartOfPlacement()
                             );
                             newPos = hit.point;
+                            var heldCollider = HeldThing.GetComponent<Collider>();
+                            if (heldCollider != null) {
+                                dropOffset -= heldCollider.ClosestPoint(newPos) - HeldThing.transform.position;
+                            }
                         } catch (InvalidOperationException) {
                             newPos = Eye.position + eyeToHand.normalized * maxDist;
                         }
                     } else {
                         newPos = Eye.position + eyeToHand.normalized * maxDist;
                     }
-                    newScale = scaleInHand * (newPos - Eye.position).magnitude / (HeldThing.transform.position - Eye.position).magnitude;
-                    newPos -= grabOffset * newScale / scaleInHand;
-                    newScale = scaleInHand * (newPos - Eye.position).magnitude / (HeldThing.transform.position - Eye.position).magnitude;
+                    Vector3 newPosWithoutOffset = newPos;
+                    for (var i = 0; i < 16; ++i) {
+                        newScale = scaleInHand * (newPos - Eye.position).magnitude / (HeldThing.transform.position - Eye.position).magnitude;
+                        newPos = newPosWithoutOffset - dropOffset * newScale / scaleInHand;
+                        DebugLog.LogTemp("[{0}] {1} @ {2} - {3} = {4}", i, newScale, newPosWithoutOffset, dropOffset * newScale / scaleInHand, newPos);
+                    }
 
                     DebugLog.Log("{0} -> {1} @ {2}", scaleInHand, newScale, newPos);
 

@@ -9,12 +9,14 @@ namespace AnylandMods.DistanceTools {
         private bool expEnabled;
         private bool moveHandDot;
         private float expbase;
+        private Side eyeToUse;
 
         public ConfigFile(UnityModManager.ModEntry mod) : base(mod)
         {
             AddDefaultValue("MoveHand", "False");
             AddDefaultValue("ExpEnabled", "False");
             AddDefaultValue("ExpBase", "2");
+            AddDefaultValue("EyeToUse", "Right");
             Load();
         }
 
@@ -42,6 +44,14 @@ namespace AnylandMods.DistanceTools {
             }
         }
 
+        public Side EyeToUse {
+            get => eyeToUse;
+            set {
+                eyeToUse = value;
+                SetKeyValueInternally("EyeToUse", value.ToString());
+            }
+        }
+
         protected override void ValueChanged(string key, string newValue)
         {
             switch (key) {
@@ -56,6 +66,14 @@ namespace AnylandMods.DistanceTools {
                         DebugLog.Log("ExpBase={0} is not a valid floating point value. Resetting to default.");
                         ExpBase = 20.0f;
                         Save();
+                    }
+                    break;
+                case "eyetouse":
+                    try {
+                        eyeToUse = (Side)Enum.Parse(typeof(Side), newValue);
+                    } catch (ArgumentException) {
+                        DebugLog.Log("WARNING: \"{0}\" is not a valid option for EyeToUse. Use either Left or Right.", newValue);
+                        EyeToUse = Side.Right;
                     }
                     break;
             }
