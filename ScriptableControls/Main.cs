@@ -92,6 +92,9 @@ namespace AnylandMods.ScriptableControls {
             if (__instance.controller is null)
                 return;
 
+            float distanceBetweenHands = (__instance.transform.position - __instance.otherDot.transform.position).magnitude;
+            bool apart = distanceBetweenHands >= 1.0f;
+            bool both_together = distanceBetweenHands < 0.1f;
             bool context = CrossDevice.GetPress(__instance.controller, CrossDevice.button_context, __instance.side);
             bool delete = CrossDevice.GetPress(__instance.controller, CrossDevice.button_delete, __instance.side);
             bool fingers = __instance.controller.GetAxis(EVRButtonId.k_EButton_Axis2).x >= FingersClosedThreshold;
@@ -107,10 +110,13 @@ namespace AnylandMods.ScriptableControls {
             }
 
             UInt64 myFlags = 0;
+            if (apart) myFlags |= ControlState.Flags.HandsApart;
+            if (both_together) myFlags |= ControlState.Flags.BothTogether;
             if (context) myFlags |= ControlState.Flags.ContextLaser;
             if (delete) myFlags |= ControlState.Flags.Delete;
             if (fingers) myFlags |= ControlState.Flags.FingersClosed;
             if (grab) myFlags |= ControlState.Flags.Grab;
+            if (holding) myFlags |= ControlState.Flags.Holding;
             if (legs) myFlags |= ControlState.Flags.LegControl;
             if (teleport) myFlags |= ControlState.Flags.TeleportLaser;
             if (trigger) myFlags |= ControlState.Flags.Trigger;
@@ -149,8 +155,7 @@ namespace AnylandMods.ScriptableControls {
             var lastpos = __instance.side == Side.Left ? lastposLeft : lastposRight;
 
             if (Time.time != lasttime) {
-                Vector3 velocity = Vector3.zero;
-                velocity = (handpos_local - lastpos) / (Time.time - lasttime);
+                Vector3 velocity = (handpos_local - lastpos) / (Time.time - lasttime);
 
                 if (velocity.magnitude >= VelocityThreshold1) {
                     myFlags |= ControlState.Flags.Moving;

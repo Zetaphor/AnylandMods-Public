@@ -32,6 +32,8 @@ namespace AnylandMods.ScriptableControls {
             public const UInt64 DirDown = 0x400000;
             public const UInt64 DirFwd = 0x800000;
             public const UInt64 DirBack = 0x1000000;
+            public const UInt64 HandsApart = 0x2000000;
+            public const UInt64 BothTogether = 0x4000000;
 
             public const int BitsToShiftForLeft = 32;
             public const UInt64 RightMask = 0b11111111111111111111111111111111;
@@ -40,6 +42,8 @@ namespace AnylandMods.ScriptableControls {
             public static UInt64 BitValueForLetter(char letter)
             {
                 switch (letter) {
+                    case 'a': return HandsApart;
+                    case 'b': return BothTogether;
                     case 'c': return ContextLaser;
                     case 'd': return Delete;
                     case 'f': return FingersClosed;
@@ -62,7 +66,7 @@ namespace AnylandMods.ScriptableControls {
 
         static ControlState()
         {
-            tellRegex = new Regex("^xc([blr]?)([0-3]) ?([cdfglmnrtqxyz0-5]*)-?([cdfglmnrtqxyz0-5]*)-?([cdfglmnrtqxyz0-5]*)$");
+            tellRegex = new Regex("^xc([blr]?)([0-3]) ?([abcdfglmnrtqxyz0-5]*)-?([abcdfglmnrtqxyz0-5]*)-?([abcdfglmnrtqxyz0-5]*)$");
             testcache = new Dictionary<string, ControlState>();
         }
 
