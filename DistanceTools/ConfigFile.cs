@@ -6,7 +6,8 @@ using UnityModManagerNet;
 
 namespace AnylandMods.DistanceTools {
     class ConfigFile : ModConfigFile {
-        private bool expEnabled;
+        private bool expLegs;
+        private bool expDrag;
         private bool moveHandDot;
         private float expbase;
         private float ipd;
@@ -14,17 +15,26 @@ namespace AnylandMods.DistanceTools {
         public ConfigFile(UnityModManager.ModEntry mod) : base(mod)
         {
             AddDefaultValue("MoveHand", "False");
-            AddDefaultValue("ExpEnabled", "False");
+            AddDefaultValue("ExpLegs", "False");
+            AddDefaultValue("ExpDrag", "False");
             AddDefaultValue("ExpBase", "2");
             AddDefaultValue("IPD", "60.4");
             Load();
         }
 
-        public bool ExpEnabled {
-            get => expEnabled;
+        public bool ExpLegs {
+            get => expLegs;
             set {
-                expEnabled = value;
-                SetKeyValueInternally("ExpEnabled", value.ToString());
+                expLegs = value;
+                SetKeyValueInternally("ExpLegs", value.ToString());
+            }
+        }
+
+        public bool ExpDrag {
+            get => expDrag;
+            set {
+                expDrag = value;
+                SetKeyValueInternally("ExpDrag", value.ToString());
             }
         }
 
@@ -55,8 +65,11 @@ namespace AnylandMods.DistanceTools {
         protected override void ValueChanged(string key, string newValue)
         {
             switch (key) {
-                case "enabled":
-                    expEnabled = ParseBool(newValue);
+                case "explegs":
+                    expLegs = ParseBool(newValue);
+                    break;
+                case "expdrag":
+                    expDrag = ParseBool(newValue);
                     break;
                 case "movehand":
                     moveHandDot = ParseBool(newValue);

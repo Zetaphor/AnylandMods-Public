@@ -14,6 +14,12 @@ namespace AnylandMods.DistanceTools
         internal static ConfigFile config;
         internal static Menu menu;
         internal static Perspective.PerspectiveOptions perspectiveOpts;
+        internal static bool expDragInProgressLeft = false;
+        internal static bool expDragInProgressRight = false;
+        internal static Vector3 expDragStartPosLeft;
+        internal static Vector3 expDragStartPosRight;
+        internal static Vector3 expDragHandStartPosLeft;
+        internal static Vector3 expDragHandStartPosRight;
 
         static Main()
         {
@@ -34,20 +40,29 @@ namespace AnylandMods.DistanceTools
             miMoveHand.Footnote = "With Leg";
             miMoveHand.ExtraIcon = ExtraIcon.TouchUncollidable;
             miMoveHand.Action += MiMoveHand_Action;
-            var miExpEnabled = new MenuCheckbox("expEnabled", "Move Exponentially");
-            miExpEnabled.Action += MiExpEnabled_Action;
+            var miExpLegs = new MenuCheckbox("expLegs", "Move Legs Exponentially");
+            miExpLegs.Action += MiExpEnabled_Action;
+            var miExpDrag = new MenuCheckbox("expDrag", "Move Things Exponentially");
+            miExpDrag.Action += MiExpDrag_Action;
             var miExpBase = new MenuSlider("Exp. Base: ", 2.0f, Main.config.ExpBase, 10000.0f, "^distance");
             miExpBase.RoundValues = true;
             miExpBase.Action += MiExpBase_Action;
 
-            menu.Add(miExpEnabled);
+            menu.Add(miExpDrag);
+            menu.Add(miExpLegs);
             menu.Add(miMoveHand);
             menu.Add(miExpBase);
 
-            ModMenu.AddButton(harmony, "Leg Options...", LegOptions_Action);
+            ModMenu.AddButton(harmony, "Motion Amplification...", LegOptions_Action);
             ModMenu.AddButton(harmony, "Perspective Edit Mode", MiPerspectiveGrab_Action);
 
             return true;
+        }
+
+        private static void MiExpDrag_Action(string id, Dialog dialog, bool value)
+        {
+            config.ExpDrag = value;
+            config.Save();
         }
 
         private static void MiPerspectiveGrab_Action(string id, Dialog dialog)
@@ -63,7 +78,7 @@ namespace AnylandMods.DistanceTools
 
         public static void MiExpEnabled_Action(string id, Dialog dialog, bool value)
         {
-            config.ExpEnabled = value;
+            config.ExpLegs = value;
             config.Save();
         }
 
@@ -83,7 +98,7 @@ namespace AnylandMods.DistanceTools
     public static class ExponentialLegPuppeteering {
         public static void Prefix(Hand __instance)
         {
-            if (Main.config.ExpEnabled) {
+            if (Main.config.ExpLegs) {
                 Vector3 delta = __instance.transform.position - __instance.previousPosition();
                 Vector3 leg_linear = __instance.leg.position.normalized * Mathf.Log(__instance.leg.position.magnitude, Main.config.ExpBase);
                 leg_linear += delta;
@@ -120,6 +135,40 @@ namespace AnylandMods.DistanceTools
         public static void Postfix(Hand __instance)
         {
             __instance.handDot.transform.localPosition = __instance.handDotNormalPosition();
+        }
+    }
+
+    [HarmonyPatch(typeof(HandDot), "Update")]
+    public static class ExponentialThingMovement {
+        public static void Postfix(HandDot __instance)
+        {
+            if (Main.config.ExpDrag && __instance.currentlyHeldObject != null
+                && __instance.controller != null && CrossDevice.GetPress(__instance.controller, CrossDevice.button_grab, __instance.side)) {
+
+                Vector3 startPos = (__instance.side == Side.Left) ? Main.expDragStartPosLeft : Main.expDragStartPosRight;
+                Vector3 handStartPos = (__instance.side == Side.Left) ? Main.expDragHandStartPosLeft : Main.expDragHandStartPosRight;
+                if ((__instance.side == Side.Left) ? !Main.expDragInProgressLeft : !Main.expDragInProgressRight) {
+                    // That is, if this is the start of us dragging this particular thing...
+                    startPos = __instance.currentlyHeldObject.transform.position;
+                    if (__instance.side == Side.Left) {
+                        Main.expDragInProgressLeft = true;
+                        Main.expDragStartPosLeft = startPos;
+                    } else {
+                        Main.expDragInProgressRight = true;
+                        Main.expDragStartPosRight = startPos;
+                    }
+                }
+                Vector3 offset = __instance.transform.position - handStartPos;
+                __instance.currentlyHeldObject.transform.position = startPos + offset.normalized * (Mathf.Pow(Main.config.ExpBase, offset.magnitude) - 1);
+            } else {
+                if (__instance.side == Side.Left) {
+                    Main.expDragInProgressLeft = false;
+                    Main.expDragHandStartPosLeft = __instance.transform.position;
+                } else {
+                    Main.expDragInProgressRight = false;
+                    Main.expDragHandStartPosRight = __instance.transform.position;
+                }
+            }
         }
     }
 }
