@@ -58,6 +58,9 @@
       <HintPath>D:\steam\steamapps\common\Anyland\anyland_Data\Managed\UnityEngine.CoreModule.dll</HintPath>
       <Private>False</Private>
     </Reference>
+    <Reference Include="UnityEngine.PhysicsModule">
+      <HintPath>D:\steam\steamapps\common\Anyland\anyland_Data\Managed\UnityEngine.PhysicsModule.dll</HintPath>
+    </Reference>
     <Reference Include="UnityEngine.TextRenderingModule">
       <HintPath>D:\steam\steamapps\common\Anyland\anyland_Data\Managed\UnityEngine.TextRenderingModule.dll</HintPath>
       <Private>False</Private>
@@ -73,6 +76,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="BodyTellManager.cs" />
+    <Compile Include="ConeCast.cs" />
     <Compile Include="CustomDialogSupport.cs" />
     <Compile Include="DebugLog.cs" />
     <Compile Include="Main.cs" />

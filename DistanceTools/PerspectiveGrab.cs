@@ -110,7 +110,8 @@ namespace AnylandMods.DistanceTools.Perspective {
                             break;
                     }
 
-                    RaycastHit[] hits = Physics.RaycastAll(Hand.transform.position, eyeToHand, maxDist);
+                    float radius = HeldThing.GetComponent<Renderer>().bounds.extents.magnitude / eyeToHand.magnitude * maxDist;
+                    RaycastHit[] hits = ConeCast.ConeCastAll(Hand.transform.position + eyeToHand, radius, eyeToHand, maxDist, Mathf.Atan2(radius, maxDist));
                     Vector3 newPos;
                     float newScale = 1.0f;
                     Vector3 dropOffset = grabOffset;
