@@ -110,13 +110,22 @@ namespace AnylandMods.DistanceTools.Perspective {
                             break;
                     }
 
-                    float radius = HeldThing.GetComponent<Renderer>().bounds.extents.magnitude / eyeToHand.magnitude * maxDist;
-                    RaycastHit[] hits = ConeCast.ConeCastAll(Hand.transform.position + eyeToHand, radius, eyeToHand, maxDist, Mathf.Atan2(radius, maxDist));
                     Vector3 newPos;
                     float newScale = 1.0f;
                     Vector3 dropOffset = grabOffset;
                     Collider heldCollider = null;
-                    if (Main.perspectiveOpts.PreferCloserRaycast) {
+                    
+                    Bounds? boundingBox = null;
+                    foreach (var r in HeldThing.GetComponentsInChildren<Renderer>()) {
+                        if (boundingBox.HasValue)
+                            boundingBox.Value.Encapsulate(r.bounds);
+                        else
+                            boundingBox = r.bounds;
+                    }
+
+                    if (Main.perspectiveOpts.PreferCloserRaycast && boundingBox.HasValue) {
+                        float radius = boundingBox.Value.extents.magnitude / eyeToHand.magnitude * maxDist;
+                        RaycastHit[] hits = ConeCast.ConeCastAll(Hand.transform.position + eyeToHand, radius, eyeToHand, maxDist, Mathf.Atan2(radius, maxDist));
                         RaycastHit? hit_ = FindCorrectRayHit(hits);
                         if (hit_.HasValue) {
                             RaycastHit hit = hit_.Value;
