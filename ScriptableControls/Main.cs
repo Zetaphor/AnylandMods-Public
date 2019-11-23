@@ -187,8 +187,8 @@ namespace AnylandMods.ScriptableControls {
             foreach (ControlState test in tests) {
                 test.Update(flags);
                 if (test.Edge) {
-                    DebugLog.LogTemp("{0} Edge {1} {2}", test.State, test.Label, test.Test);
-                    DebugLog.LogTemp("@edge={0:X} req={3:X} lastflags={1:X} pass={2:X}", test.FlagsAtEdge, test.LastFlags, test.AtRequiredEdge, test.RequireEdge);
+                    //,DebugLog.LogTemp("{0} Edge {1} {2}", test.State, test.Label, test.Test);
+                    //DebugLog.LogTemp("@edge={0:X} req={3:X} lastflags={1:X} pass={2:X}", test.FlagsAtEdge, test.LastFlags, test.AtRequiredEdge, test.RequireEdge);
                 }
                 if (test.ShouldTrigger) {
                     float t = Time.time;
