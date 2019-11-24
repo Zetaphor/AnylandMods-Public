@@ -52,6 +52,26 @@ namespace AnylandMods
             typeof(Dialog).GetMethod("SetButtonColor", InstanceNonPub).Invoke(dialog, new object[] { button, color });
         }
 
+        public static GameObject GetUiWrapper(this Dialog dialog)
+        {
+            return (GameObject)typeof(Dialog).GetMethod("GetUiWrapper", InstanceNonPub).Invoke(dialog, new object[] { });
+        }
+
+        public static void SetUiWrapper(this Dialog dialog, GameObject wrapper)
+        {
+            typeof(Dialog).GetMethod("SetUiWrapper", InstanceNonPub).Invoke(dialog, new object[] { wrapper });
+        }
+
+        public static GameObject wrapper(this Dialog dialog)
+        {
+            return (GameObject)typeof(Dialog).GetField("wrapper", InstanceNonPub).GetValue(dialog);
+        }
+
+        public static void wrapper(this Dialog dialog, GameObject wrapper)
+        {
+            typeof(Dialog).GetField("wrapper", InstanceNonPub).SetValue(dialog, wrapper);
+        }
+
         // DialogManager
         
         public static Hand GetDialogHand(this DialogManager manager)
@@ -122,6 +142,48 @@ namespace AnylandMods
         public static bool showSubThings(this ThingPartDialog dialog)
         {
             return (bool)typeof(ThingPartDialog).GetField("showSubThings", InstanceNonPub).GetValue(dialog);
+        }
+
+        // MaterialDialog
+
+        public static void AddPropertyButtonsIfNeeded(this MaterialDialog dialog)
+        {
+            typeof(MaterialDialog).GetMethod("AddPropertyButtonsIfNeeded", InstanceNonPub).Invoke(dialog, new object[] { });
+        }
+
+        public static GameObject verticalSide(this MaterialDialog dialog)
+        {
+            return (GameObject)typeof(MaterialDialog).GetField("verticalSide", InstanceNonPub).GetValue(dialog);
+        }
+
+        public static Side side(this MaterialDialog dialog)
+        {
+            return (Side)typeof(MaterialDialog).GetField("side", InstanceNonPub).GetValue(dialog);
+        }
+
+        public static string currentAddedPropertyButtonsListSignature(this MaterialDialog dialog)
+        {
+            return (string)typeof(MaterialDialog).GetField("currentAddedPropertyButtonsListSignature", InstanceNonPub).GetValue(dialog);
+        }
+
+        public static void currentAddedPropertyButtonsListSignature(this MaterialDialog dialog, string signature)
+        {
+            typeof(MaterialDialog).GetField("currentAddedPropertyButtonsListSignature", InstanceNonPub).SetValue(dialog, signature);
+        }
+
+        public static void DeleteTexturePropertyButtons(this MaterialDialog dialog)
+        {
+            typeof(MaterialDialog).GetMethod("DeleteTexturePropertyButtons", InstanceNonPub).Invoke(dialog, new object[] { });
+        }
+
+        public static void DeleteParticleSystemPropertyButtons(this MaterialDialog dialog)
+        {
+            typeof(MaterialDialog).GetMethod("DeleteParticleSystemPropertyButtons", InstanceNonPub).Invoke(dialog, new object[] { });
+        }
+
+        public static void StyleAsPropertyButton(this MaterialDialog dialog, GameObject thisButton)
+        {
+            typeof(MaterialDialog).GetMethod("StyleAsPropertyButton", InstanceNonPub).Invoke(dialog, new object[] { thisButton });
         }
 
         // ProfileDialog

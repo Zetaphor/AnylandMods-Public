@@ -21,6 +21,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DistanceTools", "DistanceTo
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AvatarScriptBackend", "AvatarScriptBackend\AvatarScriptBackend.csproj", "{6A60AF4F-B12B-4ED0-90F7-9CE05C65A48E}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Improvements", "Improvements\Improvements.csproj", "{4C9F2CE6-B5D3-4FA0-A14C-24D62A81D940}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -63,6 +65,10 @@ Global
 		{6A60AF4F-B12B-4ED0-90F7-9CE05C65A48E}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{6A60AF4F-B12B-4ED0-90F7-9CE05C65A48E}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{6A60AF4F-B12B-4ED0-90F7-9CE05C65A48E}.Release|Any CPU.Build.0 = Release|Any CPU
+		{4C9F2CE6-B5D3-4FA0-A14C-24D62A81D940}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{4C9F2CE6-B5D3-4FA0-A14C-24D62A81D940}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{4C9F2CE6-B5D3-4FA0-A14C-24D62A81D940}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{4C9F2CE6-B5D3-4FA0-A14C-24D62A81D940}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

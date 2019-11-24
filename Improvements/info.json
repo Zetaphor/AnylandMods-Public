@@ -1,0 +1,7 @@
+﻿{
+  "Id": "Improvements",
+  "DisplayName": "Miscellaneous Improvements",
+  "Author": "flarn2006",
+  "Version": "1.0.0",
+  "EntryMethod": "AnylandMods.Improvements.Main.Load"
+}
