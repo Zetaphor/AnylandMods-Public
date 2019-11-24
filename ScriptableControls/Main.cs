@@ -58,7 +58,7 @@ namespace AnylandMods.ScriptableControls {
     public static class HandDotUpdateHook {
         private const float XThreshold = 0.3f;
         private const float YThreshold = 0.3f;
-        private const float ZThreshold = 0.1f;
+        private const float ZThreshold = 0.2f;
         private const float VelocityThreshold1 = 0.7f;
         private const float VelocityThreshold2 = 2.5f;
         private const float FingersClosedThreshold = 0.25f;
@@ -187,7 +187,7 @@ namespace AnylandMods.ScriptableControls {
             foreach (ControlState test in tests) {
                 test.Update(flags);
                 if (test.Edge) {
-                    //,DebugLog.LogTemp("{0} Edge {1} {2}", test.State, test.Label, test.Test);
+                    //DebugLog.LogTemp("{0} Edge {1} {2}", test.State, test.Label, test.Test);
                     //DebugLog.LogTemp("@edge={0:X} req={3:X} lastflags={1:X} pass={2:X}", test.FlagsAtEdge, test.LastFlags, test.AtRequiredEdge, test.RequireEdge);
                 }
                 if (test.ShouldTrigger) {
