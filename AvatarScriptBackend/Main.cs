@@ -8,16 +8,49 @@ using Harmony;
 
 namespace AnylandMods.AvatarScriptBackend {
     public class Main {
+        private delegate void Effect(RaycastHit hit, Thing thing, ThingPart part);
+
         public static bool enabled;
         public static UnityModManager.ModEntry mod;
 
+        private static Effect onPoint = Effect_Activate;
+
+        private static List<GameObject> disabledObjects;
+
         public static bool Load(UnityModManager.ModEntry modEntry)
         {
+            disabledObjects = new List<GameObject>();
             var harmony = HarmonyInstance.Create(modEntry.Info.Id);
             harmony.PatchAll();
             mod = modEntry;
             BodyTellManager.ToldByBody += BodyTellManager_ToldByBody;
             return true;
+        }
+
+        private static void Effect_Activate(RaycastHit hit, Thing thing, ThingPart part)
+        {
+            part.TriggerEventAsStateAuthority(StateListener.EventType.OnTouches, "hand");
+            part.TriggerEventAsStateAuthority(StateListener.EventType.OnTouches, "");
+            foreach (ThingPart tp in thing.GetComponentsInChildren<ThingPart>()) {
+                for (int state = 0; state < tp.states.Count; ++state) {
+                    for (int ln = 0; ln < tp.states[state].listeners.Count; ++ln) {
+                        StateListener listener = tp.states[state].listeners[ln];
+                        if (listener.isForAnyState || state == tp.currentState) {
+                            if (listener.eventType == StateListener.EventType.OnToldByAny || listener.eventType == StateListener.EventType.OnToldByNearby) {
+                                DebugLog.Log("{0}[{1}]: {2} {3}", thing.name, state, listener.eventType, listener.whenData);
+                                tp.ExecuteCommands(listener);
+                                Managers.personManager.DoBehaviorScriptLine(thing.gameObject, tp.indexWithinThing, ln, state, tp.currentState);
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        private static void Effect_Disable(RaycastHit hit, Thing thing, ThingPart part)
+        {
+            hit.collider.gameObject.SetActive(false);
+            disabledObjects.Add(hit.collider.gameObject);
         }
 
         private static void BodyTellManager_ToldByBody(string data, bool byScript)
@@ -42,6 +75,57 @@ namespace AnylandMods.AvatarScriptBackend {
                         .Select(hit => hit.collider.gameObject.GetComponent<ThingPart>())
                         .Where(tp => tp != null);
                     
+                    break;
+
+                case "x point fire":
+                    //allHits = Physics.RaycastAll(rightHD.transform.position, rightHD.transform.position - head.transform.position);
+                    const float maxDist = 50.0f;
+                    const float degrees = 3.0f;
+                    float maxRadius = Mathf.Tan(Mathf.Deg2Rad * degrees) * maxDist;
+                    allHits = ConeCast.ConeCastAll(rightHD.transform.position, maxRadius, rightHD.transform.position - head.transform.position, maxDist, degrees);
+                    foreach (RaycastHit hit in allHits.OrderBy(h => h.distance)) {
+                        DebugLog.LogTemp("{0} hit", hit);
+                        ThingPart part;
+                        Thing thing = null;
+                        try {
+                            part = hit.collider.gameObject.GetComponent<ThingPart>();
+                            if (part != null) {
+                                Transform parent = part.gameObject.transform.parent;
+                                if (parent != null) {
+                                    thing = parent.gameObject.GetComponent<Thing>();
+                                    if (thing != null)
+                                        thing = thing.GetMyRootThing();
+                                }
+                            } else {
+                                thing = hit.collider.gameObject.GetComponentInParent<Thing>();
+                                DebugLog.LogTemp("got {0}", thing);
+                            }
+                            DebugLog.LogTemp("calling onPoint");
+                            onPoint(hit, thing, part);
+                        } catch (NullReferenceException ex) {
+                            DebugLog.LogTemp("{0}", ex);
+                            continue;
+                        }
+                        break;
+                    }
+                    break;
+
+                case "x point to activate":
+                    onPoint = Effect_Activate;
+                    break;
+
+                case "x point to disable":
+                    onPoint = Effect_Disable;
+                    break;
+
+                case "rsnap":
+                    foreach (GameObject obj in disabledObjects) {
+                        try {
+                            obj.SetActive(true);
+                        } catch (NullReferenceException) {
+                        }
+                    }
+                    disabledObjects.Clear();
                     break;
             }
         }
@@ -77,7 +161,7 @@ namespace AnylandMods.AvatarScriptBackend {
         }
     }
 
-    [HarmonyPatch(typeof(HandDot), "Update")]
+    /*[HarmonyPatch(typeof(HandDot), "Update")]
     public static class HandDotDebugGraph {
         public static void Postfix(HandDot __instance)
         {
@@ -107,5 +191,5 @@ namespace AnylandMods.AvatarScriptBackend {
                 graphs.transform.position = new Vector3(0, 0, 2);
             }
         }
-    }
+    }*/
 }

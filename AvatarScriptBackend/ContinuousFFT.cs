@@ -43,7 +43,6 @@ namespace AnylandMods.AvatarScriptBackend {
             poslog.Select(v => (double)v.x).ToArray().CopyTo(FFTXR, 0);
             fft.run(FFTXR, FFTXI);
             poslog.Select(v => (double)v.y).ToArray().CopyTo(FFTYR, 0);
-            DebugLog.LogTemp("{0} {1} {2} {3}", FFTXR[10], FFTXI[10], FFTYR[10], FFTYI[10]);
             fft.run(FFTYR, FFTYI);
         }
     }
