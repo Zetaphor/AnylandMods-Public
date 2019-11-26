@@ -8,7 +8,7 @@ using Harmony;
 
 namespace AnylandMods.AvatarScriptBackend {
     public class Main {
-        private delegate void Effect(RaycastHit hit, Thing thing, ThingPart part);
+        private delegate bool Effect(RaycastHit hit, Thing thing, ThingPart part);
 
         public static bool enabled;
         public static UnityModManager.ModEntry mod;
@@ -16,6 +16,7 @@ namespace AnylandMods.AvatarScriptBackend {
         private static Effect onPoint = Effect_Activate;
 
         private static List<GameObject> disabledObjects;
+        private static TelekineticHold tkh = null;
 
         public static bool Load(UnityModManager.ModEntry modEntry)
         {
@@ -27,30 +28,55 @@ namespace AnylandMods.AvatarScriptBackend {
             return true;
         }
 
-        private static void Effect_Activate(RaycastHit hit, Thing thing, ThingPart part)
+        private static bool Effect_Activate(RaycastHit hit, Thing thing, ThingPart part)
         {
-            part.TriggerEventAsStateAuthority(StateListener.EventType.OnTouches, "hand");
-            part.TriggerEventAsStateAuthority(StateListener.EventType.OnTouches, "");
+            bool didSomething = false;
             foreach (ThingPart tp in thing.GetComponentsInChildren<ThingPart>()) {
                 for (int state = 0; state < tp.states.Count; ++state) {
                     for (int ln = 0; ln < tp.states[state].listeners.Count; ++ln) {
                         StateListener listener = tp.states[state].listeners[ln];
                         if (listener.isForAnyState || state == tp.currentState) {
-                            if (listener.eventType == StateListener.EventType.OnToldByAny || listener.eventType == StateListener.EventType.OnToldByNearby) {
+                            var eventTypes = new StateListener.EventType[] {
+                                StateListener.EventType.OnTouches,
+                                StateListener.EventType.OnTriggered,
+                                StateListener.EventType.OnUntriggered,
+                                StateListener.EventType.OnToldByAny,
+                                StateListener.EventType.OnToldByNearby,
+                                StateListener.EventType.OnTold
+                            };
+                            if (eventTypes.Contains(listener.eventType)) {
                                 DebugLog.Log("{0}[{1}]: {2} {3}", thing.name, state, listener.eventType, listener.whenData);
                                 tp.ExecuteCommands(listener);
                                 Managers.personManager.DoBehaviorScriptLine(thing.gameObject, tp.indexWithinThing, ln, state, tp.currentState);
+                                didSomething = true;
                             }
                         }
                     }
                 }
             }
+            return didSomething;
         }
 
-        private static void Effect_Disable(RaycastHit hit, Thing thing, ThingPart part)
+        private static bool Effect_Disable(RaycastHit hit, Thing thing, ThingPart part)
         {
             hit.collider.gameObject.SetActive(false);
             disabledObjects.Add(hit.collider.gameObject);
+            return true;
+        }
+
+        private static bool Effect_Pickup(RaycastHit hit, Thing thing, ThingPart part)
+        {
+            if (tkh == null) {
+                if (thing != null) {
+                    tkh = TelekineticHold.PickUp(thing, Managers.personManager.ourPerson.GetHandBySide(Side.Right).GetComponent<Hand>().handDot);
+                    return tkh != null;
+                } else {
+                    return false;
+                }
+            } else {
+                tkh.FlyToward(hit.point);
+                return true;
+            }
         }
 
         private static void BodyTellManager_ToldByBody(string data, bool byScript)
@@ -79,11 +105,20 @@ namespace AnylandMods.AvatarScriptBackend {
 
                 case "x point fire":
                     //allHits = Physics.RaycastAll(rightHD.transform.position, rightHD.transform.position - head.transform.position);
-                    const float maxDist = 50.0f;
-                    const float degrees = 3.0f;
-                    float maxRadius = Mathf.Tan(Mathf.Deg2Rad * degrees) * maxDist;
-                    allHits = ConeCast.ConeCastAll(rightHD.transform.position, maxRadius, rightHD.transform.position - head.transform.position, maxDist, degrees);
-                    foreach (RaycastHit hit in allHits.OrderBy(h => h.distance)) {
+                    //const float maxDist = 50.0f;
+                    //const float degrees = 3.0f;
+                    //float maxRadius = Mathf.Tan(Mathf.Deg2Rad * degrees) * maxDist;
+                    //allHits = ConeCast.ConeCastAll(rightHD.transform.position, maxRadius, rightHD.transform.position - head.transform.position, maxDist, degrees);
+                    Vector3 headToHand = rightHD.transform.position - head.transform.position;
+                    Vector3 direction = TrackHandVelocity.Right.normalized;
+                    if (Vector3.Angle(direction, headToHand) < 20.0f)
+                        direction = headToHand;
+                    allHits = Physics.SphereCastAll(rightHD.transform.position + direction.normalized * 0.3f, 0.25f, direction);
+                    Func<RaycastHit, float> sortfunc = delegate (RaycastHit h) {
+                        float angle = Vector3.Angle(direction, h.point - head.transform.position);
+                        return h.distance * angle;
+                    };
+                    foreach (RaycastHit hit in allHits.OrderBy(sortfunc)) {
                         DebugLog.LogTemp("{0} hit", hit);
                         ThingPart part;
                         Thing thing = null;
@@ -101,12 +136,11 @@ namespace AnylandMods.AvatarScriptBackend {
                                 DebugLog.LogTemp("got {0}", thing);
                             }
                             DebugLog.LogTemp("calling onPoint");
-                            onPoint(hit, thing, part);
+                            if (onPoint(hit, thing, part))
+                                break;
                         } catch (NullReferenceException ex) {
                             DebugLog.LogTemp("{0}", ex);
-                            continue;
                         }
-                        break;
                     }
                     break;
 
@@ -118,6 +152,10 @@ namespace AnylandMods.AvatarScriptBackend {
                     onPoint = Effect_Disable;
                     break;
 
+                case "x point to pickup":
+                    onPoint = Effect_Pickup;
+                    break;
+
                 case "rsnap":
                     foreach (GameObject obj in disabledObjects) {
                         try {
@@ -126,7 +164,38 @@ namespace AnylandMods.AvatarScriptBackend {
                         }
                     }
                     disabledObjects.Clear();
+                    TelekineticHold.ResetAll();
                     break;
+
+                case "x point stop":
+                    if (tkh != null) {
+                        tkh.PutDown();
+                        tkh = null;
+                    }
+                    break;
+            }
+        }
+    }
+
+    [HarmonyPatch(typeof(HandDot), "Update")]
+    public static class TrackHandVelocity {
+        private static Vector3 lastPosLeft, lastPosRight;
+        public static Vector3 Left { get; private set; }
+        public static Vector3 Right { get; private set; }
+        
+        public static Vector3 ForSide(Side side)
+        {
+            return (side == Side.Left) ? Left : Right;
+        }
+
+        public static void Postfix(HandDot __instance)
+        {
+            if (__instance.side == Side.Left) {
+                Left = (__instance.transform.position - lastPosLeft) / Time.deltaTime;
+                lastPosLeft = __instance.transform.position;
+            } else {
+                Right = (__instance.transform.position - lastPosRight) / Time.deltaTime;
+                lastPosRight = __instance.transform.position;
             }
         }
     }
