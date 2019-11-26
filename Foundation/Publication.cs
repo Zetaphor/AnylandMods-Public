@@ -72,6 +72,11 @@ namespace AnylandMods
             typeof(Dialog).GetField("wrapper", InstanceNonPub).SetValue(dialog, wrapper);
         }
 
+        public static void SetCheckboxState(this Dialog dialog, GameObject part, bool state, bool ignoreIcon = true)
+        {
+            typeof(Dialog).GetMethod("SetCheckboxState", InstanceNonPub).Invoke(dialog, new object[] { part, state, ignoreIcon });
+        }
+
         // DialogManager
         
         public static Hand GetDialogHand(this DialogManager manager)
@@ -184,6 +189,21 @@ namespace AnylandMods
         public static void StyleAsPropertyButton(this MaterialDialog dialog, GameObject thisButton)
         {
             typeof(MaterialDialog).GetMethod("StyleAsPropertyButton", InstanceNonPub).Invoke(dialog, new object[] { thisButton });
+        }
+
+        public static void AddPropertySideInterface(this MaterialDialog dialog)
+        {
+            typeof(MaterialDialog).GetMethod("AddPropertySideInterface", InstanceNonPub).Invoke(dialog, new object[] { });
+        }
+
+        public static void UpdateSlider(this MaterialDialog dialog, string path)
+        {
+            typeof(MaterialDialog).GetMethod("UpdateSlider", InstanceNonPub).Invoke(dialog, new object[] { });
+        }
+
+        public static GameObject propertyDot(this MaterialDialog dialog)
+        {
+            return (GameObject)typeof(MaterialDialog).GetField("propertyDot", InstanceNonPub).GetValue(dialog);
         }
 
         // ProfileDialog
