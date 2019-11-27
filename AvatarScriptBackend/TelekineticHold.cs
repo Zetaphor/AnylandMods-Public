@@ -52,7 +52,7 @@ namespace AnylandMods.AvatarScriptBackend {
                     if (thing.movableByEveryone) {
                         Managers.personManager.DoPlaceAsMovableByEveryone(thing, Side.Right);
                     } else if (thing.IsPlacement() && Managers.areaManager.weAreEditorOfCurrentArea) {
-                        Managers.personManager.DoMovePlacement(thing.gameObject, thing.gameObject.transform.localPosition, thing.gameObject.transform.localEulerAngles);
+                        //Managers.personManager.DoMovePlacement(thing.gameObject, thing.gameObject.transform.localPosition, thing.gameObject.transform.localEulerAngles);
                     } else {
                         Managers.personManager.DoInformOfThingPhysics(thing);
                     }

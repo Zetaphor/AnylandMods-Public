@@ -198,7 +198,7 @@ namespace AnylandMods
 
         public static void UpdateSlider(this MaterialDialog dialog, string path)
         {
-            typeof(MaterialDialog).GetMethod("UpdateSlider", InstanceNonPub).Invoke(dialog, new object[] { });
+            typeof(MaterialDialog).GetMethod("UpdateSlider", InstanceNonPub).Invoke(dialog, new object[] { path });
         }
 
         public static GameObject propertyDot(this MaterialDialog dialog)

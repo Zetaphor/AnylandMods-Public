@@ -132,8 +132,13 @@ namespace AnylandMods {
         {
         }
 
+        protected virtual void PreSave()
+        {
+        }
+
         public void Save()
         {
+            PreSave();
             File.WriteAllText(Path, ContentText);
         }
     }

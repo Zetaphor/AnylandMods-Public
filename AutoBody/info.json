@@ -1,0 +1,8 @@
+﻿{
+  "Id": "AutoBody",
+  "DisplayName": "Auto Body",
+  "Author": "flarn2006",
+  "Version": "1.0.0",
+  "EntryMethod": "AnylandMods.AutoBody.Main.Load",
+  "Requirements": ["Foundation"]
+}

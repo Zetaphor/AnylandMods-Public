@@ -23,6 +23,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AvatarScriptBackend", "Avat
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Improvements", "Improvements\Improvements.csproj", "{4C9F2CE6-B5D3-4FA0-A14C-24D62A81D940}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AutoBody", "AutoBody\AutoBody.csproj", "{8C3A0A66-6E24-4DFB-A9AC-8C80C99456F4}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -69,6 +71,10 @@ Global
 		{4C9F2CE6-B5D3-4FA0-A14C-24D62A81D940}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{4C9F2CE6-B5D3-4FA0-A14C-24D62A81D940}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{4C9F2CE6-B5D3-4FA0-A14C-24D62A81D940}.Release|Any CPU.Build.0 = Release|Any CPU
+		{8C3A0A66-6E24-4DFB-A9AC-8C80C99456F4}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{8C3A0A66-6E24-4DFB-A9AC-8C80C99456F4}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{8C3A0A66-6E24-4DFB-A9AC-8C80C99456F4}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{8C3A0A66-6E24-4DFB-A9AC-8C80C99456F4}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

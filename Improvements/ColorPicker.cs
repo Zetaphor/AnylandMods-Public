@@ -143,7 +143,21 @@ namespace AnylandMods.Improvements.ColorPicker {
                         color.b = value;
                         break;
                 }
+                DebugLog.LogTemp("setting color to {0} (value = {1})", color, value);
                 CreationHelper.currentColor[MaterialTab.material] = color;
+            }
+        }
+    }
+    
+    [HarmonyPatch(typeof(MaterialDialog), "GetCurrentAlphaCap")]
+    public static class OverrideAlphaCapForRGB { 
+        public static bool Prefix(ref float __result)
+        {
+            if (CreationHelper.currentMaterialTab == MaterialTab.material) {
+                __result = 1.0f;
+                return false;
+            } else {
+                return true;
             }
         }
     }
