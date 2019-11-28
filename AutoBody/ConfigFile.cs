@@ -11,6 +11,9 @@ namespace AnylandMods.AutoBody {
         private SavedAttachmentList listHead, listHeadTop, listTorsoLower, listTorsoUpper, listHandLeft, listHandRight;
         private SavedAttachmentList listArmLeft, listArmRight, listLegLeft, listLegRight;
 
+        private bool ignoreAddBody = false;
+        private bool enableTellControl = true;
+
         public ConfigFile(UnityModManager.ModEntry mod)
             : base(mod, "config.txt")
         {
@@ -24,6 +27,24 @@ namespace AnylandMods.AutoBody {
             listArmRight = new SavedAttachmentList(AttachmentPointId.ArmRight);
             listLegLeft = new SavedAttachmentList(AttachmentPointId.LegLeft);
             listLegRight = new SavedAttachmentList(AttachmentPointId.LegRight);
+
+            AddDefaultValue("IgnoreAddBody", "False");
+            AddDefaultValue("EnableTellControl", "True");
+        }
+
+        public bool IgnoreAddBody {
+            get => ignoreAddBody;
+            set {
+                SetKeyValueInternally("IgnoreAddBody", value.ToString());
+                ignoreAddBody = value;
+            }
+        }
+
+        public bool EnableTellControl {
+            get => enableTellControl;
+            set {
+                SetKeyValueInternally("EnableTellControl", value.ToString());
+            }
         }
 
         private ref SavedAttachmentList GetListRefForAttachmentPoint(AttachmentPointId point)
@@ -51,15 +72,21 @@ namespace AnylandMods.AutoBody {
         protected override void ValueChanged(string key, string newValue)
         {
             base.ValueChanged(key, newValue);
-            try {
-                var dict = JsonUtility.FromJson<Dictionary<string, AttachmentData>>(newValue);
-                var point = (AttachmentPointId)Enum.Parse(typeof(AttachmentPointId), key);
-                SavedAttachmentList list = GetListForAttachmentPoint(point);
-                list.Clear();
-                foreach (string name in dict.Keys) {
-                    list[name] = dict[name];
-                }
-            } catch (ArgumentException) { }
+            if (key.Equals("ignoreaddbody")) {
+                ignoreAddBody = ParseBool(newValue);
+            } else if (key.Equals("enabletellcontrol")) {
+                enableTellControl = ParseBool(newValue);
+            } else {
+                try {
+                    var dict = JsonUtility.FromJson<Dictionary<string, AttachmentData>>(newValue);
+                    var point = (AttachmentPointId)Enum.Parse(typeof(AttachmentPointId), key);
+                    SavedAttachmentList list = GetListForAttachmentPoint(point);
+                    list.Clear();
+                    foreach (string name in dict.Keys) {
+                        list[name] = dict[name];
+                    }
+                } catch (ArgumentException) { }
+            }
         }
 
         protected override void PreSave()

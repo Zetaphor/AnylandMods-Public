@@ -206,6 +206,11 @@ namespace AnylandMods
             return (GameObject)typeof(MaterialDialog).GetField("propertyDot", InstanceNonPub).GetValue(dialog);
         }
 
+        public static void propertyValueWhenEmptyClickStarted(this MaterialDialog dialog, float value)
+        {
+            typeof(MaterialDialog).GetField("propertyValueWhenEmptyClickStarted", InstanceNonPub).SetValue(dialog, value);
+        }
+
         // ProfileDialog
 
         public static Person personThisIsOf(this ProfileDialog dialog)

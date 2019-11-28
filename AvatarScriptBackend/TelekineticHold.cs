@@ -42,7 +42,6 @@ namespace AnylandMods.AvatarScriptBackend {
             if (moveWithHand) {
                 Vector3 handVelocity = (Hand.transform.position - lastHandPos) / Time.deltaTime;
                 Vector3 acceleration = GetAccel(handVelocity) * Time.deltaTime;
-                DebugLog.LogTemp("{0}, {1}", handVelocity, acceleration);
                 thing.rigidbody.AddForce(acceleration, ForceMode.VelocityChange);
                 lastHandPos = Hand.transform.position;
 
@@ -149,8 +148,8 @@ namespace AnylandMods.AvatarScriptBackend {
         public void PutDown()
         {
             moveWithHand = false;
-            thing.rigidbody.isKinematic = !wasPhysicalBeforePickup;
-            thing.rigidbody.useGravity = hadGravityBeforePickup;
+            //thing.rigidbody.isKinematic = !wasPhysicalBeforePickup;
+            //thing.rigidbody.useGravity = hadGravityBeforePickup;
         }
     }
 }

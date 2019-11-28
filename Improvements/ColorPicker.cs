@@ -117,11 +117,30 @@ namespace AnylandMods.Improvements.ColorPicker {
 
     [HarmonyPatch(typeof(MaterialDialog), "HandlePropertySliding")]
     public static class HandleRGBPropertySliding {
+        public static void Prefix(MaterialDialog __instance)
+        {
+            if (__instance.controller.GetPressDown(CrossDevice.button_grab) || __instance.controller.GetPressDown(CrossDevice.button_grabTip)) {
+                Color color = CreationHelper.currentColor[MaterialTab.material];
+                float num = 0.0f;
+                switch (AddRGBSliders.selRGBIndex) {
+                    case 0:
+                        num = color.r;
+                        break;
+                    case 1:
+                        num = color.g;
+                        break;
+                    case 2:
+                        num = color.b;
+                        break;
+                }
+            }
+        }
+
         public static IEnumerable<CodeInstruction> Transpiler(IEnumerable<CodeInstruction> code)
         {
             foreach (CodeInstruction inst in code) {
                 yield return inst;
-                if (inst.opcode == OpCodes.Call && inst.operand is MethodInfo && ((MethodInfo)inst.operand).Name.Equals("TriggerHapticPulse")) {
+                if (inst.opcode == OpCodes.Callvirt && inst.operand is MethodInfo && ((MethodInfo)inst.operand).Name.Equals("TriggerHapticPulse")) {
                     yield return new CodeInstruction(OpCodes.Ldloc_S, 4);
                     yield return new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(HandleRGBPropertySliding), "RGBChangeHook"));
                 }
@@ -145,19 +164,6 @@ namespace AnylandMods.Improvements.ColorPicker {
                 }
                 DebugLog.LogTemp("setting color to {0} (value = {1})", color, value);
                 CreationHelper.currentColor[MaterialTab.material] = color;
-            }
-        }
-    }
-    
-    [HarmonyPatch(typeof(MaterialDialog), "GetCurrentAlphaCap")]
-    public static class OverrideAlphaCapForRGB { 
-        public static bool Prefix(ref float __result)
-        {
-            if (CreationHelper.currentMaterialTab == MaterialTab.material) {
-                __result = 1.0f;
-                return false;
-            } else {
-                return true;
             }
         }
     }
