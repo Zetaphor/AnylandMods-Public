@@ -60,6 +60,8 @@ namespace AnylandMods {
         private Dictionary<string, MenuItem> itemsById;
         internal ButtonAction backButtonAction = null;
 
+        public event Action<MenuDialog> DialogDestroy;
+
         public int Count => itemsById.Count;
         public bool IsReadOnly => false;
 
@@ -155,6 +157,11 @@ namespace AnylandMods {
             get {
                 return itemsById.Values.ElementAt(index);
             }
+        }
+
+        internal void TriggerDialogDestroyEvent(MenuDialog dialog)
+        {
+            DialogDestroy?.Invoke(dialog);
         }
     }
 }

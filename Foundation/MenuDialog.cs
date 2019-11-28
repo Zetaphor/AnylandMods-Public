@@ -103,5 +103,10 @@ namespace AnylandMods {
                     break;
             }
         }
+
+        private void OnDestroy()
+        {
+            menu.TriggerDialogDestroyEvent(this);
+        }
     }
 }

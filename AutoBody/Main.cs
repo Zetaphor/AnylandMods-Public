@@ -216,4 +216,27 @@ namespace AnylandMods.AutoBody
             return code;
         }
     }
+
+    [HarmonyPatch(typeof(ThingManager), nameof(ThingManager.SetOurCurrentBodyAttachmentsByThing))]
+    public static class IgnoreAddBodyIfSet {
+        private static bool CheckIgnoreAddBody()
+        {
+            return Main.config.IgnoreAddBody;
+        }
+
+        public static IEnumerable<CodeInstruction> Transpiler(IEnumerable<CodeInstruction> code, ILGenerator ilgen)
+        {
+            foreach (CodeInstruction inst in code) {
+                if (inst.opcode == OpCodes.Ldstr && inst.operand.Equals("HeadCore/HeadTopAttachmentPoint")) {
+                    Label lbl = ilgen.DefineLabel();
+                    yield return new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(IgnoreAddBodyIfSet), "CheckIgnoreAddBody"));
+                    yield return new CodeInstruction(OpCodes.Brfalse, lbl);
+                    yield return new CodeInstruction(OpCodes.Ldc_I4_0);
+                    yield return new CodeInstruction(OpCodes.Ret);
+                    ilgen.MarkLabel(lbl);
+                }
+                yield return inst;
+            }
+        }
+    }
 }
