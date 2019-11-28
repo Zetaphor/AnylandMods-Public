@@ -18,16 +18,18 @@ namespace AnylandMods.AutoBody
         internal static ConfigFile config;
         private static Regex regex;
         internal static Menu pointMenu;
+        internal static HarmonyInstance harmony;
 
         public static bool Load(UnityModManager.ModEntry modEntry)
         {
-            var harmony = HarmonyInstance.Create(modEntry.Info.Id);
+            harmony = HarmonyInstance.Create(modEntry.Info.Id);
             harmony.PatchAll();
             mod = modEntry;
             config = new ConfigFile(mod);
             config.Load();
 
             pointMenu = new Menu("Save Body Part");
+            pointMenu.SetBackButton(DialogType.OwnProfile);
             MenuButton mbtn;
             mbtn = new MenuButton("HeadTop", "(XA0) Hat");
             mbtn.Action += Mbtn_Action;
@@ -121,7 +123,7 @@ namespace AnylandMods.AutoBody
                 string thingName = match.Groups[2].Value;
                 if (thingName.Length == 0) {
                     Managers.personManager.DoRemoveAttachedThing(attpoint);
-                } else if (list.ContainsKey(thingName)) {
+                } else if (list.ContainsName(thingName)) {
                     var comp = attpoint.GetComponent<StartCoroutineAttach>();
                     if (comp == null) {
                         comp = attpoint.AddComponent<StartCoroutineAttach>();
@@ -146,8 +148,8 @@ namespace AnylandMods.AutoBody
     public static class AddCheckboxes {
         private static void DoAdd(OwnProfileDialog instance)
         {
-            instance.AddCheckbox("ignoreAddBody", null, "Attach Head Only", 0, -70, Main.config.IgnoreAddBody, textColor: TextColor.Blue);
-            instance.AddCheckbox("enableTellControl", null, "Enable Tells", 0, 45, Main.config.EnableTellControl, textColor: TextColor.Blue, footnote: "\"XA# THING\"");
+            instance.AddCheckbox("ignoreAddBody", null, "Attach Head Only", 0, 185, Main.config.IgnoreAddBody, textColor: TextColor.Blue);
+            instance.AddCheckbox("enableTellControl", null, "Enable Tells", 0, 300, Main.config.EnableTellControl, textColor: TextColor.Blue, footnote: "\"XA# THING\"");
         }
 
         public static IEnumerable<CodeInstruction> Transpiler(IEnumerable<CodeInstruction> code)
@@ -177,6 +179,41 @@ namespace AnylandMods.AutoBody
                 Main.config.EnableTellControl = state;
                 Main.config.Save();
             }
+        }
+    }
+
+    [HarmonyPatch(typeof(CreateDialog), "DoSave")]
+    public static class UpdateIdOnThingSave {
+        private static string oldId;
+        private static Thing thingScript;
+
+        private static void UpdateId(SaveThing_Response response)
+        {
+            if (response.error == null) {
+                DebugLog.Log("About to call UpdateThingId");
+                Main.config.UpdateThingId(oldId, thingScript.thingId, thingScript.givenName);
+            } else {
+                DebugLog.Log("Not updating {0} ({1}) because an error occurred while saving: {2}", oldId, thingScript.name, response.error);
+            }
+        }
+
+        public static void Prefix(Thing ___thingScript)
+        {
+            thingScript = ___thingScript;
+            oldId = thingScript.thingId;
+        }
+
+        public static IEnumerable<CodeInstruction> Transpiler(IEnumerable<CodeInstruction> code)
+        {
+            foreach (CodeInstruction inst in code) {
+                if (inst.opcode == OpCodes.Ldftn) {
+                    var method = (MethodBase)inst.operand;
+                    DebugLog.Log("Patching {0}", method.Name);
+                    Main.harmony.Patch(method, postfix: new HarmonyMethod(typeof(UpdateIdOnThingSave), "UpdateId"));
+                    break;
+                }
+            }
+            return code;
         }
     }
 }
