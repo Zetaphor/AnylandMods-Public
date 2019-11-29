@@ -32,6 +32,7 @@ namespace AnylandMods.GodMode {
             var person = (Person)arg;
             var menu = new Menu("Attachments");
             menu.SetBackButton(DialogType.Thing);
+            menu.TwoColumns = true;
 
             foreach (Thing thing in person.Rig.GetComponentsInChildren<Thing>()) {
                 string contextName = "button" + things.Count.ToString();

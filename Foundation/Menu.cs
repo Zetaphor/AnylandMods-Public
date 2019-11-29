@@ -66,6 +66,7 @@ namespace AnylandMods {
         public bool IsReadOnly => false;
 
         public string Title { get; set; }
+        public bool TwoColumns { get; set; } = false;
 
         public Menu(string title = "Mod Functions")
         {

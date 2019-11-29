@@ -49,8 +49,9 @@ namespace AnylandMods.DistanceTools.Perspective {
             Main.perspectiveOpts.DistanceMode = value ? DistanceMode.Preserve : DistanceMode.Fixed;
         }
 
-        private void OnDestroy()
+        protected override void OnDestroy()
         {
+            base.OnDestroy();
             Main.perspectiveOpts.Enabled = false;
             BodyTellManager.Trigger("perspective end");
         }

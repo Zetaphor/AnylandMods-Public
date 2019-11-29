@@ -30,6 +30,7 @@ namespace AnylandMods.AutoBody
 
             pointMenu = new Menu("Save Body Part");
             pointMenu.SetBackButton(DialogType.OwnProfile);
+            pointMenu.TwoColumns = true;
             pointMenu.DialogDestroy += PointMenu_DialogDestroy;
 
             MenuButton mbtn;
@@ -39,28 +40,22 @@ namespace AnylandMods.AutoBody
             mbtn = new MenuButton("Head", "(XA1) Head");
             mbtn.Action += Mbtn_Action;
             pointMenu.Add(mbtn);
-            mbtn = new MenuButton("HandLeft", "(XA2) Left Hand");
+            mbtn = new MenuButton("ArmLeft", "(XA2) Left Arm");
             mbtn.Action += Mbtn_Action;
             pointMenu.Add(mbtn);
-            mbtn = new MenuButton("ArmLeft", "(XA3) Left Arm");
+            mbtn = new MenuButton("TorsoUpper", "(XA3) Upper Torso");
             mbtn.Action += Mbtn_Action;
             pointMenu.Add(mbtn);
-            mbtn = new MenuButton("TorsoUpper", "(XA4) Upper Torso");
+            mbtn = new MenuButton("ArmRight", "(XA4) Right Arm");
             mbtn.Action += Mbtn_Action;
             pointMenu.Add(mbtn);
-            mbtn = new MenuButton("ArmRight", "(XA5) Right Arm");
+            mbtn = new MenuButton("TorsoLower", "(XA5) Lower Torso");
             mbtn.Action += Mbtn_Action;
             pointMenu.Add(mbtn);
-            mbtn = new MenuButton("HandRight", "(XA6) Right Hand");
+            mbtn = new MenuButton("LegLeft", "(XA6,8) Left Leg");
             mbtn.Action += Mbtn_Action;
             pointMenu.Add(mbtn);
-            mbtn = new MenuButton("TorsoLower", "(XA7) Lower Torso");
-            mbtn.Action += Mbtn_Action;
-            pointMenu.Add(mbtn);
-            mbtn = new MenuButton("LegLeft", "(XA8) Left Leg");
-            mbtn.Action += Mbtn_Action;
-            pointMenu.Add(mbtn);
-            mbtn = new MenuButton("LegRight", "(XA9) Right Leg");
+            mbtn = new MenuButton("LegRight", "(XA7,9) Right Leg");
             mbtn.Action += Mbtn_Action;
             pointMenu.Add(mbtn);
 
@@ -132,12 +127,12 @@ namespace AnylandMods.AutoBody
                 var points = new AttachmentPointId[] {
                     AttachmentPointId.HeadTop,
                     AttachmentPointId.Head,
-                    AttachmentPointId.HandLeft,
                     AttachmentPointId.ArmLeft,
                     AttachmentPointId.TorsoUpper,
                     AttachmentPointId.ArmRight,
-                    AttachmentPointId.HandRight,
                     AttachmentPointId.TorsoLower,
+                    AttachmentPointId.LegLeft,
+                    AttachmentPointId.LegRight,
                     AttachmentPointId.LegLeft,
                     AttachmentPointId.LegRight
                 };

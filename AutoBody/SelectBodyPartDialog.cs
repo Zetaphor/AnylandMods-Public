@@ -41,6 +41,7 @@ namespace AnylandMods.AutoBody {
             }
             var menu = new Menu(title);
             menu.SetBackButton(Main.pointMenu);
+            menu.TwoColumns = true;
             var btnSave = new MenuButton("save", "+ Save");
             btnSave.TextColor = TextColor.Green;
             btnSave.Action += BtnSave_Action;
@@ -60,8 +61,9 @@ namespace AnylandMods.AutoBody {
             AddMirror();
         }
 
-        public void OnDestroy()
+        protected override void OnDestroy()
         {
+            base.OnDestroy();
             RemoveMirror();
             Managers.personManager.ShowOurSecondaryDots(false);
         }
