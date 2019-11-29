@@ -57,6 +57,10 @@ namespace AnylandMods.AutoBody {
         {
             return entries.ContainsKey(thingName);
         }
+        
+        public IEnumerable<string> ThingNames {
+            get => entries.Keys;
+        }
 
         public AttachmentData this[string name] {
             get {

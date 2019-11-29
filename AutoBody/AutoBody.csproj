@@ -82,6 +82,7 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="ConfigFile.cs" />
     <Compile Include="SavedAttachmentList.cs" />
+    <Compile Include="SelectBodyPartDialog.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="info.json">

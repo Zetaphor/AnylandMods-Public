@@ -45,6 +45,10 @@ namespace AnylandMods.DistanceTools.Perspective {
                 try {
                     RaycastHit hit = hits.OrderBy(h => h.distance).First(h => h.collider.gameObject.tag.Equals("ThingPart"));
                     HeldThing = hit.collider.gameObject.GetComponent<ThingPart>().transform.parent.gameObject.GetComponent<Thing>().GetMyRootThing();
+                    if (HeldThing.isLocked) {
+                        Managers.errorManager.BeepError();
+                        return null;
+                    }
                     var handDot = Hand.handDot.GetComponent<HandDot>();
                     handDot.currentlyHeldObject = HeldThing.gameObject;
                     float scale = HeldThing.transform.localScale.x;
@@ -162,7 +166,7 @@ namespace AnylandMods.DistanceTools.Perspective {
     public class HandDotHook {
         public static void Postfix(HandDot __instance)
         {
-            if (Main.perspectiveOpts.Enabled && Our.mode == EditModes.Area) {
+            if (Main.perspectiveOpts.Enabled) {
                 if (CrossDevice.GetPressDown(__instance.controller, CrossDevice.button_grab, __instance.side)) {
                     GrabHand.FromSide(__instance.side).StartGrab();
                 } else if (CrossDevice.GetPressUp(__instance.controller, CrossDevice.button_grab, __instance.side)) {

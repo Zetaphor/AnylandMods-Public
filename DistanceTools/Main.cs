@@ -67,7 +67,11 @@ namespace AnylandMods.DistanceTools
 
         private static void MiPerspectiveGrab_Action(string id, Dialog dialog)
         {
-            CustomDialog.SwitchTo<Perspective.PerspectiveEditDialog>(dialog.hand(), dialog.tabName);
+            if (Our.mode == EditModes.Area) {
+                CustomDialog.SwitchTo<Perspective.PerspectiveEditDialog>(dialog.hand(), dialog.tabName);
+            } else {
+                Managers.errorManager.BeepError();
+            }
         }
 
         private static void MiExpBase_Action(string id, Dialog dialog, float value)
@@ -142,7 +146,7 @@ namespace AnylandMods.DistanceTools
     public static class ExponentialThingMovement {
         public static void Postfix(HandDot __instance)
         {
-            if (Main.config.ExpDrag && __instance.currentlyHeldObject != null
+            if (Main.config.ExpDrag && (Our.mode == EditModes.Area || Our.mode == EditModes.Thing) && __instance.currentlyHeldObject != null
                 && __instance.controller != null && CrossDevice.GetPress(__instance.controller, CrossDevice.button_grab, __instance.side)) {
 
                 Vector3 startPos = (__instance.side == Side.Left) ? Main.expDragStartPosLeft : Main.expDragStartPosRight;

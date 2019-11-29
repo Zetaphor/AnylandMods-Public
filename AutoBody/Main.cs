@@ -30,6 +30,8 @@ namespace AnylandMods.AutoBody
 
             pointMenu = new Menu("Save Body Part");
             pointMenu.SetBackButton(DialogType.OwnProfile);
+            pointMenu.DialogDestroy += PointMenu_DialogDestroy;
+
             MenuButton mbtn;
             mbtn = new MenuButton("HeadTop", "(XA0) Hat");
             mbtn.Action += Mbtn_Action;
@@ -67,10 +69,15 @@ namespace AnylandMods.AutoBody
             return true;
         }
 
+        private static void PointMenu_DialogDestroy(MenuDialog obj)
+        {
+            Our.SetPreviousMode();
+        }
+
         private static void Mbtn_Action(string id, Dialog dialog)
         {
-            Main.config.GetListForAttachmentPoint((AttachmentPointId)Enum.Parse(typeof(AttachmentPointId), id)).AddCurrent();
-            Main.config.Save();
+            var apid = (AttachmentPointId)Enum.Parse(typeof(AttachmentPointId), id);
+            CustomDialog.SwitchTo<SelectBodyPartDialog>(apid, dialog.hand(), dialog.tabName);
         }
 
         private class StartCoroutineAttach : MonoBehaviour {
@@ -97,6 +104,23 @@ namespace AnylandMods.AutoBody
             }
         }
 
+        internal static void SetAttachment(AttachmentPointId point, string thingName)
+        {
+            GameObject attpoint = Managers.personManager.ourPerson.GetAttachmentPointById(point);
+            SavedAttachmentList list = config.GetListForAttachmentPoint(point);
+            if (thingName.Length == 0) {
+                Managers.personManager.DoRemoveAttachedThing(attpoint);
+            } else if (list.ContainsName(thingName)) {
+                var comp = attpoint.GetComponent<StartCoroutineAttach>();
+                if (comp == null) {
+                    comp = attpoint.AddComponent<StartCoroutineAttach>();
+                }
+                comp.Attach(attpoint.GetComponent<AttachmentPoint>(), list[thingName]);
+            } else {
+                DebugLog.Log("\"{0}\" is not a known attachment for {1}.", thingName, point);
+            }
+        }
+
         private static void BodyTellManager_ToldByBody(string data, bool byScript)
         {
             // TODO: Add some kind of check to make sure this was triggered by an attachment (with a toggle to disable it)
@@ -118,20 +142,9 @@ namespace AnylandMods.AutoBody
                     AttachmentPointId.LegRight
                 };
                 AttachmentPointId point = points[Int32.Parse(match.Groups[1].Value)];
-                GameObject attpoint = Managers.personManager.ourPerson.GetAttachmentPointById(point);
-                SavedAttachmentList list = config.GetListForAttachmentPoint(point);
                 string thingName = match.Groups[2].Value;
-                if (thingName.Length == 0) {
-                    Managers.personManager.DoRemoveAttachedThing(attpoint);
-                } else if (list.ContainsName(thingName)) {
-                    var comp = attpoint.GetComponent<StartCoroutineAttach>();
-                    if (comp == null) {
-                        comp = attpoint.AddComponent<StartCoroutineAttach>();
-                    }
-                    comp.Attach(attpoint.GetComponent<AttachmentPoint>(), list[thingName]);
-                } else {
-                    DebugLog.Log("\"{0}\" is not a known attachment for {1}.", thingName, point);
-                }
+                DebugLog.LogTemp("pt={0}, tn={1}", point, thingName);
+                SetAttachment(point, thingName);
             }
         }
     }
@@ -148,8 +161,8 @@ namespace AnylandMods.AutoBody
     public static class AddCheckboxes {
         private static void DoAdd(OwnProfileDialog instance)
         {
-            instance.AddCheckbox("ignoreAddBody", null, "Attach Head Only", 0, 185, Main.config.IgnoreAddBody, textColor: TextColor.Blue);
-            instance.AddCheckbox("enableTellControl", null, "Enable Tells", 0, 300, Main.config.EnableTellControl, textColor: TextColor.Blue, footnote: "\"XA# THING\"");
+            instance.AddCheckbox("ignoreAddBody", null, "Attach Head Only", 0, 300, Main.config.IgnoreAddBody, textColor: TextColor.Blue);
+            instance.AddCheckbox("enableTellControl", null, "Enable Tells", 0, 415, Main.config.EnableTellControl, textColor: TextColor.Blue, footnote: "\"XA# THING\"");
         }
 
         public static IEnumerable<CodeInstruction> Transpiler(IEnumerable<CodeInstruction> code)
@@ -190,10 +203,9 @@ namespace AnylandMods.AutoBody
         private static void UpdateId(SaveThing_Response response)
         {
             if (response.error == null) {
-                DebugLog.Log("About to call UpdateThingId");
                 Main.config.UpdateThingId(oldId, thingScript.thingId, thingScript.givenName);
             } else {
-                DebugLog.Log("Not updating {0} ({1}) because an error occurred while saving: {2}", oldId, thingScript.name, response.error);
+                DebugLog.Log("Not calling UpdateThingId for {0} ({1}) because an error occurred while saving: {2}", oldId, thingScript.name, response.error);
             }
         }
 
@@ -237,6 +249,23 @@ namespace AnylandMods.AutoBody
                 }
                 yield return inst;
             }
+        }
+    }
+
+    [HarmonyPatch(typeof(OwnProfileDialog), nameof(OwnProfileDialog.Start))]
+    public static class ShowSecondaryDotsInOwnProfile {
+        public static void Postfix()
+        {
+            Managers.personManager.ShowOurSecondaryDots(true);
+        }
+    }
+
+    [HarmonyPatch(typeof(Person), "SetAttachmentPointReferencesById")]
+    public static class AddHandPointReferences {
+        public static void Postfix(Person __instance, GameObject ___AttachmentPointHandLeft, GameObject ___AttachmentPointHandRight)
+        {
+            __instance.AttachmentPointsById.Add(AttachmentPointId.HandLeft, ___AttachmentPointHandLeft);
+            __instance.AttachmentPointsById.Add(AttachmentPointId.HandRight, ___AttachmentPointHandRight);
         }
     }
 }
