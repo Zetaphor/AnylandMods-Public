@@ -27,12 +27,12 @@ namespace AnylandMods.AutoBody {
             }
         }
 
-        public bool AddCurrent()
+        public string AddCurrent()
         {
             GameObject gobj = Managers.personManager.ourPerson.GetAttachmentPointById(AttachmentPoint);
             if (gobj == null) {
                 DebugLog.Log("Attachment point {0} does not exist!", AttachmentPoint);
-                return false;
+                return null;
             }
             AttachmentPoint ap = gobj.GetComponent<AttachmentPoint>();
             if (ap == null) {
@@ -41,10 +41,11 @@ namespace AnylandMods.AutoBody {
                 ap.id = AttachmentPoint;
             }
             if (ap.attachedThing != null) {
-                this[ap.attachedThing.name.ToLower()] = ap.GetAttachmentData();
-                return true;
+                string name = ap.attachedThing.name.ToLower();
+                this[name] = ap.GetAttachmentData();
+                return name;
             } else {
-                return false;
+                return null;
             }
         }
 

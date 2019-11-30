@@ -99,9 +99,10 @@ namespace AnylandMods.AutoBody
             }
         }
 
-        internal static void SetAttachment(AttachmentPointId point, string thingName)
+        internal static void SetAttachment(AttachmentPointId point, string thingName, bool moveLeg = true)
         {
-            GameObject attpoint = Managers.personManager.ourPerson.GetAttachmentPointById(point);
+            Person ourPerson = Managers.personManager.ourPerson;
+            GameObject attpoint = ourPerson.GetAttachmentPointById(point);
             SavedAttachmentList list = config.GetListForAttachmentPoint(point);
             if (thingName.Length == 0) {
                 Managers.personManager.DoRemoveAttachedThing(attpoint);
@@ -111,6 +112,20 @@ namespace AnylandMods.AutoBody
                     comp = attpoint.AddComponent<StartCoroutineAttach>();
                 }
                 comp.Attach(attpoint.GetComponent<AttachmentPoint>(), list[thingName]);
+
+                if (moveLeg) {
+                    try {
+                        if (point == AttachmentPointId.LegLeft) {
+                            ourPerson.AttachmentPointLegLeft.transform.localPosition = config.LegPosLeft[thingName];
+                            ourPerson.AttachmentPointLegLeft.transform.localEulerAngles = config.LegRotLeft[thingName];
+                            Managers.personManager.SaveOurLegAttachmentPointPositions();
+                        } else if (point == AttachmentPointId.LegRight) {
+                            ourPerson.AttachmentPointLegRight.transform.localPosition = config.LegPosRight[thingName];
+                            ourPerson.AttachmentPointLegRight.transform.localEulerAngles = config.LegRotRight[thingName];
+                            Managers.personManager.SaveOurLegAttachmentPointPositions();
+                        }
+                    } catch (KeyNotFoundException) { }
+                }
             } else {
                 DebugLog.Log("\"{0}\" is not a known attachment for {1}.", thingName, point);
             }
@@ -136,10 +151,11 @@ namespace AnylandMods.AutoBody
                     AttachmentPointId.LegLeft,
                     AttachmentPointId.LegRight
                 };
-                AttachmentPointId point = points[Int32.Parse(match.Groups[1].Value)];
+                int pointNum = Int32.Parse(match.Groups[1].Value);
+                AttachmentPointId point = points[pointNum];
                 string thingName = match.Groups[2].Value;
                 DebugLog.LogTemp("pt={0}, tn={1}", point, thingName);
-                SetAttachment(point, thingName);
+                SetAttachment(point, thingName, pointNum == 6 || pointNum == 7);
             }
         }
     }

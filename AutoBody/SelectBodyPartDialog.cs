@@ -70,7 +70,15 @@ namespace AnylandMods.AutoBody {
 
         private void BtnSave_Action(string id, Dialog dialog)
         {
-            if (Main.config.GetListForAttachmentPoint(apid).AddCurrent()) {
+            if (Main.config.GetListForAttachmentPoint(apid).AddCurrent() is string name) {
+                Person ourPerson = Managers.personManager.ourPerson;
+                if (apid == AttachmentPointId.LegLeft) {
+                    Main.config.LegPosLeft[name] = ourPerson.AttachmentPointLegLeft.transform.localPosition;
+                    Main.config.LegRotLeft[name] = ourPerson.AttachmentPointLegLeft.transform.localEulerAngles;
+                } else if (apid == AttachmentPointId.LegRight) {
+                    Main.config.LegPosRight[name] = ourPerson.AttachmentPointLegRight.transform.localPosition;
+                    Main.config.LegRotRight[name] = ourPerson.AttachmentPointLegRight.transform.localEulerAngles;
+                }
                 Main.config.Save();
                 Managers.soundManager.Play("success", transform, 0.2f);
                 SwitchTo<SelectBodyPartDialog>(apid, dialog.hand(), dialog.tabName);

@@ -12,6 +12,11 @@ namespace AnylandMods.AutoBody {
         private SavedAttachmentList listHead, listHeadTop, listTorsoLower, listTorsoUpper, listHandLeft, listHandRight;
         private SavedAttachmentList listArmLeft, listArmRight, listLegLeft, listLegRight;
 
+        public Dictionary<string, Vector3> LegPosLeft { get; private set; }
+        public Dictionary<string, Vector3> LegPosRight { get; private set; }
+        public Dictionary<string, Vector3> LegRotLeft { get; private set; }
+        public Dictionary<string, Vector3> LegRotRight { get; private set; }
+
         private bool ignoreAddBody = false;
         private bool enableTellControl = true;
 
@@ -28,6 +33,11 @@ namespace AnylandMods.AutoBody {
             listArmRight = new SavedAttachmentList(AttachmentPointId.ArmRight);
             listLegLeft = new SavedAttachmentList(AttachmentPointId.LegLeft);
             listLegRight = new SavedAttachmentList(AttachmentPointId.LegRight);
+
+            LegPosLeft = new Dictionary<string, Vector3>();
+            LegPosRight = new Dictionary<string, Vector3>();
+            LegRotLeft = new Dictionary<string, Vector3>();
+            LegRotRight = new Dictionary<string, Vector3>();
 
             AddDefaultValue("IgnoreAddBody", "False");
             AddDefaultValue("EnableTellControl", "True");
@@ -85,6 +95,28 @@ namespace AnylandMods.AutoBody {
             }
         }
 
+        private void ParseLegPos(string value, Dictionary<string, Vector3> posDict, Dictionary<string, Vector3> rotDict)
+        {
+            posDict.Clear();
+            rotDict.Clear();
+            var jsondict = JsonConvert.DeserializeObject<Dictionary<string, string>>(value);
+            foreach (string k in jsondict.Keys) {
+                string[] parts = jsondict[k].Split(',');
+                posDict.Add(k, new Vector3(float.Parse(parts[0]), float.Parse(parts[1]), float.Parse(parts[2])));
+                rotDict.Add(k, new Vector3(float.Parse(parts[3]), float.Parse(parts[4]), float.Parse(parts[5])));
+            }
+        }
+
+        private string UnparseLegPos(Dictionary<string, Vector3> posDict, Dictionary<string, Vector3> rotDict)
+        {
+            var jsondict = new Dictionary<string, string>();
+            foreach (string k in posDict.Keys) {
+                var values = new float[] { posDict[k].x, posDict[k].y, posDict[k].z, rotDict[k].x, rotDict[k].y, rotDict[k].z };
+                jsondict[k] = String.Join(",", values.Select(v => v.ToString()).ToArray());
+            }
+            return JsonConvert.SerializeObject(jsondict);
+        }
+
         protected override void ValueChanged(string key, string newValue)
         {
             base.ValueChanged(key, newValue);
@@ -92,6 +124,10 @@ namespace AnylandMods.AutoBody {
                 ignoreAddBody = ParseBool(newValue);
             } else if (key.Equals("enabletellcontrol")) {
                 enableTellControl = ParseBool(newValue);
+            } else if (key.Equals("legposleft")) {
+                ParseLegPos(newValue, LegPosLeft, LegRotLeft);
+            } else if (key.Equals("legposright")) {
+                ParseLegPos(newValue, LegPosRight, LegRotRight);
             } else {
                 AttachmentPointId point = AttachmentPointId.None;
                 switch (key) {
@@ -130,6 +166,8 @@ namespace AnylandMods.AutoBody {
             foreach (AttachmentPointId point in allPoints) {
                 SetKeyValueInternally(point.ToString(), GetListForAttachmentPoint(point).ToJson());
             }
+            SetKeyValueInternally("LegPosLeft", UnparseLegPos(LegPosLeft, LegRotLeft));
+            SetKeyValueInternally("LegPosRight", UnparseLegPos(LegPosRight, LegRotRight));
         }
     }
 }
