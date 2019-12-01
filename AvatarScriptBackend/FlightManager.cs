@@ -52,6 +52,23 @@ namespace AnylandMods.AvatarScriptBackend {
             }
         }
 
+        private static bool HandleTellWithVectorArg(string tell, string command, out Vector3 vec)
+        {
+            string[] args = tell.Substring(command.Length + 2).Split(' ');
+            try {
+                vec = GetTransformForChar(tell[command.Length]) * new Vector3(float.Parse(args[0]), float.Parse(args[1]), float.Parse(args[2]));
+                return true;
+            } catch (IndexOutOfRangeException) {
+                DebugLog.Log("Not enough arguments given to '{0}'.", command);
+                vec = Vector3.zero;
+                return false;
+            } catch (FormatException) {
+                DebugLog.Log("Invalid argument given to '{0}'.", command);
+                vec = Vector3.zero;
+                return false;
+            }
+        }
+
         private static void BodyTellManager_ToldByBody(string tell, BodyTellManager.TellEventInfo info)
         {
             float val;
@@ -63,22 +80,16 @@ namespace AnylandMods.AvatarScriptBackend {
             } else if (tell.StartsWith("xx drag ") && float.TryParse(tell.Substring(8), out val)) {
                 FM.DragFactor = val;
             } else if (tell.StartsWith("xx setvel")) {
-                string[] args = tell.Substring(11).Split(' ');
-                try {
-                    FM.Velocity = GetTransformForChar(tell[9]) * new Vector3(float.Parse(args[0]), float.Parse(args[1]), float.Parse(args[2]));
-                } catch (IndexOutOfRangeException) {
-                    DebugLog.Log("Not enough arguments given to 'xx setvel'.");
-                } catch (FormatException) {
-                    DebugLog.Log("Invalid argument given to 'xx setvel'.");
+                if (HandleTellWithVectorArg(tell, "xx setvel", out Vector3 vec)) {
+                    FM.Velocity = vec;
+                }
+            } else if (tell.StartsWith("xx addvel")) {
+                if (HandleTellWithVectorArg(tell, "xx addvel", out Vector3 vec)) {
+                    FM.Velocity += vec;
                 }
             } else if (tell.StartsWith("xx setacc")) {
-                string[] args = tell.Substring(11).Split(' ');
-                try {
-                    FM.Acceleration = GetTransformForChar(tell[9]) * new Vector3(float.Parse(args[0]), float.Parse(args[1]), float.Parse(args[2]));
-                } catch (IndexOutOfRangeException) {
-                    DebugLog.Log("Not enough arguments given to 'xx setacc'.");
-                } catch (FormatException) {
-                    DebugLog.Log("Invalid argument given to 'xx setacc'.");
+                if (HandleTellWithVectorArg(tell, "xx setacc", out Vector3 vec)) {
+                    FM.Acceleration = vec;
                 }
             }
         }
