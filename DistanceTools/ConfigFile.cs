@@ -14,7 +14,6 @@ namespace AnylandMods.DistanceTools {
 
         public ConfigFile(UnityModManager.ModEntry mod) : base(mod)
         {
-            AddDefaultValue("MoveHand", "False");
             AddDefaultValue("ExpLegs", "False");
             AddDefaultValue("ExpDrag", "False");
             AddDefaultValue("ExpBase", "2");
@@ -35,14 +34,6 @@ namespace AnylandMods.DistanceTools {
             set {
                 expDrag = value;
                 SetKeyValueInternally("ExpDrag", value.ToString());
-            }
-        }
-
-        public bool MoveHand {
-            get => moveHandDot;
-            set {
-                moveHandDot = value;
-                SetKeyValueInternally("MoveHand", value.ToString());
             }
         }
 

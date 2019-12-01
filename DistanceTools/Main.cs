@@ -36,10 +36,6 @@ namespace AnylandMods.DistanceTools
             menu = new Menu();
             menu.SetBackButton(ModMenu.Menu);
 
-            var miMoveHand = new MenuCheckbox("moveHand", "Move HandDot");
-            miMoveHand.Footnote = "With Leg";
-            miMoveHand.ExtraIcon = ExtraIcon.TouchUncollidable;
-            miMoveHand.Action += MiMoveHand_Action;
             var miExpLegs = new MenuCheckbox("expLegs", "Move Legs Exponentially");
             miExpLegs.Action += MiExpEnabled_Action;
             var miExpDrag = new MenuCheckbox("expDrag", "Move Things Exponentially");
@@ -50,7 +46,6 @@ namespace AnylandMods.DistanceTools
 
             menu.Add(miExpDrag);
             menu.Add(miExpLegs);
-            menu.Add(miMoveHand);
             menu.Add(miExpBase);
 
             ModMenu.AddButton(harmony, "Motion Amplification...", LegOptions_Action);
@@ -86,12 +81,6 @@ namespace AnylandMods.DistanceTools
             config.Save();
         }
 
-        public static void MiMoveHand_Action(string id, Dialog dialog, bool value)
-        {
-            config.MoveHand = value;
-            config.Save();
-        }
-
         public static void LegOptions_Action(string id, Dialog dialog)
         {
             MenuDialog.SwitchTo(menu, dialog.hand(), dialog.tabName);
@@ -110,35 +99,6 @@ namespace AnylandMods.DistanceTools
                 // Change the position it thinks the hand was in last frame, so the delta calculation returns the value we want
                 __instance.previousPosition(__instance.leg.position + __instance.transform.position - leg_exp);
             }
-        }
-    }
-
-    [HarmonyPatch(typeof(Hand), "StartLegPuppeteering")]
-    public static class HandDotLegPuppeteeringStart {
-        private static Vector3 FindHandDotPos(Transform attachmentPoint)
-        {
-            foreach (ThingPart tp in attachmentPoint.GetComponentsInChildren<ThingPart>()) {
-                if (tp.givenName.ToLower().Equals("handdot")) {
-                    return tp.transform.position;
-                }
-            }
-            return attachmentPoint.position;
-        }
-
-        public static void Postfix(Hand __instance)
-        {
-            if (Main.config.MoveHand) {
-                __instance.handDot.transform.parent = __instance.leg.transform;
-                __instance.handDot.transform.position = FindHandDotPos(__instance.leg.transform);
-            }
-        }
-    }
-
-    [HarmonyPatch(typeof(Hand), "EndLegPuppeteering")]
-    public static class HandDotLegPuppeteeringEnd {
-        public static void Postfix(Hand __instance)
-        {
-            __instance.handDot.transform.localPosition = __instance.handDotNormalPosition();
         }
     }
 
