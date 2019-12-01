@@ -100,6 +100,7 @@ namespace AnylandMods {
                     AddMenuItems();
                     break;
                 case "close":
+                    Menu.TriggerDialogCloseEvent(this);
                     CloseDialog();
                     break;
                 case "back":

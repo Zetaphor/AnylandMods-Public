@@ -61,6 +61,7 @@ namespace AnylandMods {
         internal ButtonAction backButtonAction = null;
 
         public event Action<MenuDialog> DialogDestroy;
+        public event Action<MenuDialog> DialogClose;
 
         public int Count => itemsById.Count;
         public bool IsReadOnly => false;
@@ -163,6 +164,11 @@ namespace AnylandMods {
         internal void TriggerDialogDestroyEvent(MenuDialog dialog)
         {
             DialogDestroy?.Invoke(dialog);
+        }
+
+        internal void TriggerDialogCloseEvent(MenuDialog dialog)
+        {
+            DialogClose?.Invoke(dialog);
         }
     }
 }

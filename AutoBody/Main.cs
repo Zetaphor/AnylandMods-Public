@@ -31,7 +31,7 @@ namespace AnylandMods.AutoBody
             pointMenu = new Menu("Save Body Part");
             pointMenu.SetBackButton(DialogType.OwnProfile);
             pointMenu.TwoColumns = true;
-            pointMenu.DialogDestroy += PointMenu_DialogDestroy;
+            pointMenu.DialogClose += PointMenu_DialogClose;
 
             MenuButton mbtn;
             mbtn = new MenuButton("HeadTop", "(XA0) Hat");
@@ -64,7 +64,7 @@ namespace AnylandMods.AutoBody
             return true;
         }
 
-        private static void PointMenu_DialogDestroy(MenuDialog obj)
+        private static void PointMenu_DialogClose(MenuDialog obj)
         {
             Our.SetPreviousMode();
         }
@@ -260,23 +260,6 @@ namespace AnylandMods.AutoBody
                 }
                 yield return inst;
             }
-        }
-    }
-
-    [HarmonyPatch(typeof(OwnProfileDialog), nameof(OwnProfileDialog.Start))]
-    public static class ShowSecondaryDotsInOwnProfile {
-        public static void Postfix()
-        {
-            Managers.personManager.ShowOurSecondaryDots(true);
-        }
-    }
-
-    [HarmonyPatch(typeof(Person), "SetAttachmentPointReferencesById")]
-    public static class AddHandPointReferences {
-        public static void Postfix(Person __instance, GameObject ___AttachmentPointHandLeft, GameObject ___AttachmentPointHandRight)
-        {
-            __instance.AttachmentPointsById.Add(AttachmentPointId.HandLeft, ___AttachmentPointHandLeft);
-            __instance.AttachmentPointsById.Add(AttachmentPointId.HandRight, ___AttachmentPointHandRight);
         }
     }
 }

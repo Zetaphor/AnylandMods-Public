@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using UnityEngine;
 
 namespace AnylandMods.AutoBody {
     class SelectBodyPartDialog : MenuDialog {
@@ -42,6 +43,7 @@ namespace AnylandMods.AutoBody {
             var menu = new Menu(title);
             menu.SetBackButton(Main.pointMenu);
             menu.TwoColumns = true;
+            menu.DialogClose += Menu_DialogClose;
             var btnSave = new MenuButton("save", "+ Save");
             btnSave.TextColor = TextColor.Green;
             btnSave.Action += BtnSave_Action;
@@ -54,7 +56,12 @@ namespace AnylandMods.AutoBody {
             
             base.InitCustomDialog(menu);
         }
-        
+
+        private void Menu_DialogClose(MenuDialog obj)
+        {
+            Our.SetPreviousMode();
+        }
+
         public new void Start()
         {
             base.Start();
