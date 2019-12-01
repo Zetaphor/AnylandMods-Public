@@ -28,7 +28,9 @@ namespace AnylandMods.AutoBody
             config = new ConfigFile(mod);
             config.Load();
 
-            pointMenu = new Menu("Save Body Part");
+            ModMenu.AddButton(harmony, "Saved Body Parts...", SavedBodyParts_Action);
+
+            pointMenu = new Menu("Saved Body Parts");
             pointMenu.SetBackButton(DialogType.OwnProfile);
             pointMenu.TwoColumns = true;
             pointMenu.DialogClose += PointMenu_DialogClose;
@@ -64,6 +66,17 @@ namespace AnylandMods.AutoBody
             return true;
         }
 
+        public static void OpenSavedBodyParts()
+        {
+            Main.config.Load();
+            MenuDialog.SwitchTo(Main.pointMenu);
+        }
+
+        public static void SavedBodyParts_Action(string id, Dialog dialog)
+        {
+            OpenSavedBodyParts();
+        }
+
         private static void PointMenu_DialogClose(MenuDialog obj)
         {
             Our.SetPreviousMode();
@@ -72,7 +85,7 @@ namespace AnylandMods.AutoBody
         private static void Mbtn_Action(string id, Dialog dialog)
         {
             var apid = (AttachmentPointId)Enum.Parse(typeof(AttachmentPointId), id);
-            CustomDialog.SwitchTo<SelectBodyPartDialog>(apid, dialog.hand(), dialog.tabName);
+            CustomDialog.SwitchTo<SelectBodyPartDialog>(new SelectBodyPartDialog.Argument(apid), dialog.hand(), dialog.tabName);
         }
 
         private class StartCoroutineAttach : MonoBehaviour {
@@ -195,7 +208,7 @@ namespace AnylandMods.AutoBody
         public static void Postfix(OwnProfileDialog __instance, string contextName, string contextId, bool state, GameObject thisButton)
         {
             if (contextName.Equals("savedBodyParts")) {
-                MenuDialog.SwitchTo(Main.pointMenu);
+                Main.OpenSavedBodyParts();
             } else if (contextName.Equals("ignoreAddBody")) {
                 Main.config.IgnoreAddBody = state;
                 Main.config.Save();

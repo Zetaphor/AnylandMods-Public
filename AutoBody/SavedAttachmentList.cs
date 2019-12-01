@@ -58,6 +58,11 @@ namespace AnylandMods.AutoBody {
         {
             return entries.ContainsKey(thingName);
         }
+
+        public void Remove(string thingName)
+        {
+            entries.Remove(thingName);
+        }
         
         public IEnumerable<string> ThingNames {
             get => entries.Keys;
