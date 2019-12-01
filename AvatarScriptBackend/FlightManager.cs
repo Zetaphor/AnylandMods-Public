@@ -52,26 +52,29 @@ namespace AnylandMods.AvatarScriptBackend {
             }
         }
 
-        private static void BodyTellManager_ToldByBody(string data, bool byScript)
+        private static void BodyTellManager_ToldByBody(string tell, BodyTellManager.TellEventInfo info)
         {
             float val;
-            if (data.StartsWith("xx fly ") && float.TryParse(data.Substring(7), out val)) {
+            if (!info.IsTrusted)
+                return;
+
+            if (tell.StartsWith("xx fly ") && float.TryParse(tell.Substring(7), out val)) {
                 FM.Acceleration = Managers.personManager.ourPerson.Head.transform.forward * val;
-            } else if (data.StartsWith("xx drag ") && float.TryParse(data.Substring(8), out val)) {
+            } else if (tell.StartsWith("xx drag ") && float.TryParse(tell.Substring(8), out val)) {
                 FM.DragFactor = val;
-            } else if (data.StartsWith("xx setvel")) {
-                string[] args = data.Substring(11).Split(' ');
+            } else if (tell.StartsWith("xx setvel")) {
+                string[] args = tell.Substring(11).Split(' ');
                 try {
-                    FM.Velocity = GetTransformForChar(data[9]) * new Vector3(float.Parse(args[0]), float.Parse(args[1]), float.Parse(args[2]));
+                    FM.Velocity = GetTransformForChar(tell[9]) * new Vector3(float.Parse(args[0]), float.Parse(args[1]), float.Parse(args[2]));
                 } catch (IndexOutOfRangeException) {
                     DebugLog.Log("Not enough arguments given to 'xx setvel'.");
                 } catch (FormatException) {
                     DebugLog.Log("Invalid argument given to 'xx setvel'.");
                 }
-            } else if (data.StartsWith("xx setacc")) {
-                string[] args = data.Substring(11).Split(' ');
+            } else if (tell.StartsWith("xx setacc")) {
+                string[] args = tell.Substring(11).Split(' ');
                 try {
-                    FM.Acceleration = GetTransformForChar(data[9]) * new Vector3(float.Parse(args[0]), float.Parse(args[1]), float.Parse(args[2]));
+                    FM.Acceleration = GetTransformForChar(tell[9]) * new Vector3(float.Parse(args[0]), float.Parse(args[1]), float.Parse(args[2]));
                 } catch (IndexOutOfRangeException) {
                     DebugLog.Log("Not enough arguments given to 'xx setacc'.");
                 } catch (FormatException) {

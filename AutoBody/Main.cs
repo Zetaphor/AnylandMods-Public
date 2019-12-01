@@ -131,10 +131,10 @@ namespace AnylandMods.AutoBody
             }
         }
 
-        private static void BodyTellManager_ToldByBody(string data, bool byScript)
+        private static void BodyTellManager_ToldByBody(string data, BodyTellManager.TellEventInfo info)
         {
-            // TODO: Add some kind of check to make sure this was triggered by an attachment (with a toggle to disable it)
-            if (!config.EnableTellControl)
+            // TODO: Add a toggle to disable IsTrusted check
+            if (!config.EnableTellControl || !info.IsTrusted)
                 return;
 
             Match match = regex.Match(data);

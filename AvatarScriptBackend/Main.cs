@@ -79,7 +79,7 @@ namespace AnylandMods.AvatarScriptBackend {
             }
         }
 
-        private static void BodyTellManager_ToldByBody(string data, bool byScript)
+        private static void BodyTellManager_ToldByBody(string data, BodyTellManager.TellEventInfo info)
         {
             Person me = Managers.personManager.ourPerson;
             GameObject head = me.Head;
@@ -90,6 +90,10 @@ namespace AnylandMods.AvatarScriptBackend {
 
             if (!data.StartsWith("xc"))
                 DebugLog.LogTemp("body tell {0}", data);
+
+            if (!info.IsTrusted)
+                return;
+
             switch (data) {
                 case "xxrtouchcone":
                     RaycastHit[] allHits = ConeCast.ConeCastAll(rightHD.transform.position, 4.0f, rightHD.transform.position - head.transform.position, 8.0f, 20.0f);
