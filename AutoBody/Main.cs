@@ -16,7 +16,7 @@ namespace AnylandMods.AutoBody
         public static bool enabled;
         public static UnityModManager.ModEntry mod;
         internal static ConfigFile config;
-        private static Regex regex;
+        private static Regex regex, regexForIn;
         internal static Menu pointMenu;
         internal static HarmonyInstance harmony;
 
@@ -61,7 +61,8 @@ namespace AnylandMods.AutoBody
             mbtn.Action += Mbtn_Action;
             pointMenu.Add(mbtn);
 
-            regex = new Regex("xa([0-9]) ?(.*)");
+            regex = new Regex("^xa([0-9]) ?(.*)$");
+            regexForIn = new Regex(" in ([0-9]*.?[0-9]*)s?$");
             BodyTellManager.ToldByBody += BodyTellManager_ToldByBody;
             return true;
         }
@@ -167,8 +168,25 @@ namespace AnylandMods.AutoBody
                 int pointNum = Int32.Parse(match.Groups[1].Value);
                 AttachmentPointId point = points[pointNum];
                 string thingName = match.Groups[2].Value;
-                DebugLog.LogTemp("pt={0}, tn={1}", point, thingName);
-                SetAttachment(point, thingName, pointNum == 6 || pointNum == 7);
+                float delay = 0.0f;
+
+                Match matchForIn = regexForIn.Match(thingName);
+                if (matchForIn.Success) {
+                    thingName = thingName.Substring(0, matchForIn.Index);
+                    float.TryParse(matchForIn.Groups[1].Value, out delay);
+                }
+
+                bool shouldMove = (pointNum == 6 || pointNum == 7);
+                if (delay > 0.0f) {
+                    GameObject ap = Managers.personManager.ourPerson.GetAttachmentPointById(point);
+                    var ds = ap.GetComponent<DelayedSwitch>();
+                    if (ds == null)
+                        ds = ap.AddComponent<DelayedSwitch>();
+                    var legPosDict = (pointNum == 6) ? config.LegPosLeft : config.LegPosRight;
+                    ds.Begin(point, thingName, delay, legPosDict[thingName]);
+                } else {
+                    SetAttachment(point, thingName, shouldMove);
+                }
             }
         }
     }
