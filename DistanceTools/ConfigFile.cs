@@ -8,8 +8,8 @@ namespace AnylandMods.DistanceTools {
     class ConfigFile : ModConfigFile {
         private bool expLegs;
         private bool expDrag;
-        private bool moveHandDot;
         private float expbase;
+        private bool enablePerspective;
         private float ipd;
 
         public ConfigFile(UnityModManager.ModEntry mod) : base(mod)
@@ -17,6 +17,9 @@ namespace AnylandMods.DistanceTools {
             AddDefaultValue("ExpLegs", "False");
             AddDefaultValue("ExpDrag", "False");
             AddDefaultValue("ExpBase", "2");
+            AddDefaultLine();
+            AddDefaultLine("# The perspective editing option is buggy and incomplete. Set to True to enable it anyway.");
+            AddDefaultValue("EnablePerspectiveEdit", "False");
             AddDefaultValue("IPD", "60.4");
             Load();
         }
@@ -45,6 +48,14 @@ namespace AnylandMods.DistanceTools {
             }
         }
 
+        public bool EnablePerspectiveEdit {
+            get => enablePerspective;
+            set {
+                enablePerspective = value;
+                SetKeyValueInternally("EnablePerspectiveEdit", value.ToString());
+            }
+        }
+
         public float IPD {
             get => ipd;
             set {
@@ -62,15 +73,15 @@ namespace AnylandMods.DistanceTools {
                 case "expdrag":
                     expDrag = ParseBool(newValue);
                     break;
-                case "movehand":
-                    moveHandDot = ParseBool(newValue);
-                    break;
                 case "expbase":
                     if (!float.TryParse(newValue, out expbase)) {
                         DebugLog.Log("ExpBase={0} is not a valid floating point value. Resetting to default.", newValue);
                         ExpBase = 20.0f;
                         Save();
                     }
+                    break;
+                case "enableperspectiveedit":
+                    enablePerspective = ParseBool(newValue);
                     break;
                 case "ipd":
                     if (!float.TryParse(newValue, out ipd)) {

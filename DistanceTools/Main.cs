@@ -51,7 +51,8 @@ namespace AnylandMods.DistanceTools
             menu.Add(miExpBase);
 
             ModMenu.AddButton(harmony, "Motion Amplification...", LegOptions_Action);
-            ModMenu.AddButton(harmony, "Perspective Edit Mode", MiPerspectiveGrab_Action);
+            if (config.EnablePerspectiveEdit)
+                ModMenu.AddButton(harmony, "Perspective Edit Mode", MiPerspectiveGrab_Action);
 
             return true;
         }
