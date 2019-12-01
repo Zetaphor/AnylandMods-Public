@@ -82,6 +82,7 @@ namespace AnylandMods.AutoBody {
 
         public void UpdateThingId(string oldId, string newId, string newName)
         {
+            bool replacedSomething = false;
             DebugLog.Log("oldId={0}, newId={1}, newName={2}", oldId, newId, newName);
             SavedAttachmentList[] lists = new SavedAttachmentList[] {
                 listHead, listHeadTop, listTorsoLower, listTorsoUpper, listHandLeft, listHandRight, listArmLeft, listArmRight, listLegLeft, listLegRight
@@ -91,8 +92,11 @@ namespace AnylandMods.AutoBody {
                     AttachmentData oldData = list[oldName];
                     list[newName /* == oldName */] = new AttachmentData(newId, oldData.position, oldData.rotation);
                     DebugLog.Log("Replacing {0} -> {1} ({2}) in list{3}", oldId, newId, newName, list.AttachmentPoint);
+                    replacedSomething = true;
                 }
             }
+            if (replacedSomething)
+                Save();
         }
 
         private void ParseLegPos(string value, Dictionary<string, Vector3> posDict, Dictionary<string, Vector3> rotDict)
