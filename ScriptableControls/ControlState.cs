@@ -66,7 +66,7 @@ namespace AnylandMods.ScriptableControls {
 
         static ControlState()
         {
-            tellRegex = new Regex("^xc([blr]?)([0-3]) ?([abcdfglmnrtqxyz0-5]*)-?([abcdfglmnrtqxyz0-5]*)-?([abcdfglmnrtqxyz0-5]*)$");
+            tellRegex = new Regex("^xc([blr]?)([0-3]) ?([abcdfghlmnrtqxyz0-5]*)-?([abcdfghlmnrtqxyz0-5]*)-?([abcdfghlmnrtqxyz0-5]*)$");
             testcache = new Dictionary<string, ControlState>();
         }
 

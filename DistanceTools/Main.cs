@@ -42,7 +42,7 @@ namespace AnylandMods.DistanceTools
             var miExpDrag = new MenuCheckbox("expDrag", "Move Things Exponentially");
             miExpDrag.Value = config.ExpDrag;
             miExpDrag.Action += MiExpDrag_Action;
-            var miExpBase = new MenuSlider("Exp. Base: ", 2.0f, Main.config.ExpBase, 10000.0f, "^distance");
+            var miExpBase = new MenuSlider("Exp. Base: ", 2.0f, Main.config.ExpBase, 1000.0f, "^distance");
             miExpBase.RoundValues = true;
             miExpBase.Action += MiExpBase_Action;
 

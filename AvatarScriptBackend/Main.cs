@@ -18,6 +18,10 @@ namespace AnylandMods.AvatarScriptBackend {
         private static List<GameObject> disabledObjects;
         private static TelekineticHold tkh = null;
 
+        private static GameObject cameraHolder = null;
+        private static Transform previousLeftHandParent = null;
+        private static Transform previousRightHandParent = null;
+
         public static bool Load(UnityModManager.ModEntry modEntry)
         {
             disabledObjects = new List<GameObject>();
@@ -175,6 +179,48 @@ namespace AnylandMods.AvatarScriptBackend {
                     if (tkh != null) {
                         tkh.PutDown();
                         tkh = null;
+                    }
+                    break;
+
+                case "x setcam":
+                case "x setcamhands":
+                    var leftHand_ = leftHand.transform;
+                    var rightHand_ = rightHand.transform;
+                    if (info.Thing != null) {
+                        if (cameraHolder != null) {
+                            GameObject.Destroy(cameraHolder);
+                        }
+                        cameraHolder = new GameObject();
+                        cameraHolder.transform.parent = info.Thing.gameObject.transform;
+                        var cam = cameraHolder.AddComponent<Camera>();
+
+                        if (data.Length > 12) {
+                            // x setcamhands
+                            /*if (previousLeftHandParent == null)
+                                previousLeftHandParent = leftHand_.transform.parent;
+                            leftHand_.SetParent(info.Thing.gameObject.transform, false);
+
+                            if (previousRightHandParent == null)
+                                previousRightHandParent = rightHand_.transform.parent;
+                            rightHand_.SetParent(info.Thing.gameObject.transform, false);*/
+                        }
+                    }
+                    break;
+
+                case "x resetcam":
+                    leftHand_ = leftHand.transform.parent;
+                    rightHand_ = rightHand.transform.parent;
+                    if (cameraHolder != null) {
+                        GameObject.Destroy(cameraHolder);
+                        cameraHolder = null;
+                        if (previousLeftHandParent != null) {
+                            leftHand_.SetParent(previousLeftHandParent, false);
+                            previousLeftHandParent = null;
+                        }
+                        if (previousRightHandParent != null) {
+                            rightHand_.SetParent(previousRightHandParent, false);
+                            previousRightHandParent = null;
+                        }
                     }
                     break;
             }

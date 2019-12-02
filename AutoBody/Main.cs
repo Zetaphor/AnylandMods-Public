@@ -118,7 +118,7 @@ namespace AnylandMods.AutoBody
             Person ourPerson = Managers.personManager.ourPerson;
             GameObject attpoint = ourPerson.GetAttachmentPointById(point);
             SavedAttachmentList list = config.GetListForAttachmentPoint(point);
-            if (thingName.Length == 0) {
+            if (thingName.Length == 0 || thingName.Equals("-")) {
                 Managers.personManager.DoRemoveAttachedThing(attpoint);
             } else if (list.ContainsName(thingName)) {
                 var comp = attpoint.GetComponent<StartCoroutineAttach>();
@@ -147,6 +147,7 @@ namespace AnylandMods.AutoBody
 
         private static void BodyTellManager_ToldByBody(string data, BodyTellManager.TellEventInfo info)
         {
+            DebugLog.LogTemp("{0} {1}", Main.config.EnableTellControl, info.IsTrusted);
             // TODO: Add a toggle to disable IsTrusted check
             if (!config.EnableTellControl || !info.IsTrusted)
                 return;
@@ -177,13 +178,21 @@ namespace AnylandMods.AutoBody
                 }
 
                 bool shouldMove = (pointNum == 6 || pointNum == 7);
-                if (delay > 0.0f) {
-                    GameObject ap = Managers.personManager.ourPerson.GetAttachmentPointById(point);
+                GameObject ap = Managers.personManager.ourPerson.GetAttachmentPointById(point);
+                DebugLog.LogTemp("asrf");
+                if (shouldMove && thingName.Equals("lock")) {
+                    FixedWorldPosRot.LockPosRot(ap);
+                } else if (shouldMove && thingName.Equals("unlock")) {
+                    FixedWorldPosRot.UnlockPosRot(ap);
+                } else if (delay > 0.0f) {
                     var ds = ap.GetComponent<DelayedSwitch>();
                     if (ds == null)
                         ds = ap.AddComponent<DelayedSwitch>();
                     var legPosDict = (pointNum == 6) ? config.LegPosLeft : config.LegPosRight;
-                    ds.Begin(point, thingName, delay, legPosDict[thingName]);
+                    Vector3? targetPos = null;
+                    if (shouldMove && legPosDict.TryGetValue(thingName, out Vector3 tpos))
+                        targetPos = tpos;
+                    ds.Begin(point, thingName, delay, targetPos);
                 } else {
                     SetAttachment(point, thingName, shouldMove);
                 }

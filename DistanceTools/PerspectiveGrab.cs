@@ -46,6 +46,7 @@ namespace AnylandMods.DistanceTools.Perspective {
                     RaycastHit hit = hits.OrderBy(h => h.distance).First(h => h.collider.gameObject.tag.Equals("ThingPart"));
                     HeldThing = hit.collider.gameObject.GetComponent<ThingPart>().transform.parent.gameObject.GetComponent<Thing>().GetMyRootThing();
                     if (HeldThing.isLocked) {
+                        HeldThing = null;
                         Managers.errorManager.BeepError();
                         return null;
                     }
