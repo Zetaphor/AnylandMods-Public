@@ -9,6 +9,8 @@ namespace AnylandMods.AvatarScriptBackend {
     public class FlightManager : MonoBehaviour {
         public Vector3 Velocity { get; set; }
         public Vector3 Acceleration { get; set; }
+        public Quaternion AngularVelocity { get; set; }
+        public Quaternion AngularAcceleration { get; set; }
         public float DragFactor { get; set; }
 
         public void Start()
@@ -16,13 +18,21 @@ namespace AnylandMods.AvatarScriptBackend {
             DragFactor = 0.5f;
             Velocity = Vector3.zero;
             Acceleration = Vector3.zero;
+            AngularVelocity = Quaternion.identity;
+            AngularAcceleration = Quaternion.identity;
         }
 
         public void Update()
         {
             Velocity += Acceleration * Time.deltaTime;
             transform.position += Velocity * Time.deltaTime;
-            Velocity *= Mathf.Pow(DragFactor, Time.deltaTime);
+
+            AngularVelocity *= Quaternion.SlerpUnclamped(Quaternion.identity, AngularAcceleration, Time.deltaTime);
+            transform.rotation *= Quaternion.SlerpUnclamped(Quaternion.identity, AngularVelocity, Time.deltaTime);
+
+            float dragCoefficient = Mathf.Pow(DragFactor, Time.deltaTime);
+            Velocity *= dragCoefficient;
+            AngularVelocity = Quaternion.SlerpUnclamped(Quaternion.identity, AngularVelocity, dragCoefficient);
         }
     }
 
@@ -92,6 +102,79 @@ namespace AnylandMods.AvatarScriptBackend {
                     FM.Acceleration = vec;
                 }
             }
+        }
+    }
+
+    [HarmonyPatch(typeof(HandDot), "Update")]
+    public static class SpecialFlightModes {
+        private enum FlightMode {
+            Default,
+            Wings
+        };
+
+        private static float lastUpdateTime = -1.0f;
+        private static FlightMode mode = FlightMode.Default;
+
+        private static FlightManager FM {
+            get => AddFlightManager.FM;  //shortcut
+        }
+
+        private static void StartMode(FlightMode mode)
+        {
+        }
+
+        private static void UpdateMode(FlightMode mode)
+        {
+            Person me = Managers.personManager.ourPerson;
+            Transform head = me.Head.transform;
+            Transform handL = me.GetHandBySide(Side.Left).transform;
+            Transform handR = me.GetHandBySide(Side.Right).transform;
+            Transform torso = me.Torso.transform;
+            float handDist = (handR.position - handL.position).magnitude;
+
+            if (mode == FlightMode.Wings) {
+                FM.Acceleration = torso.localToWorldMatrix * new Vector3(0.0f, -4.0f - FM.Velocity.y, 20.0f * handDist * handDist);
+                float angle = 0.5f * Vector3.SignedAngle(handR.position - handL.position, torso.right, torso.forward);
+                FM.AngularAcceleration = Quaternion.AngleAxis(angle, Vector3.up);
+            }
+        }
+
+        private static void EndMode(FlightMode mode)
+        {
+            if (mode == FlightMode.Wings) {
+                FM.Acceleration = Vector3.zero;
+                FM.AngularAcceleration = Quaternion.identity;
+                FM.DragFactor = 0.3f;
+            }
+        }
+
+        public static void Postfix()
+        {
+            if (Time.time <= lastUpdateTime)
+                return;
+
+            lastUpdateTime = Time.time;
+
+            FlightMode newMode = FlightMode.Default;
+            Person me = Managers.personManager.ourPerson;
+            var llobj = me.GetThingOnAttachmentPointById(AttachmentPointId.LegLeft);
+            Thing leftLeg = null;
+            if (llobj != null)
+                leftLeg = llobj.GetComponent<Thing>();
+
+            if (leftLeg != null && leftLeg.givenName.ToLower().Equals("cloud wings")) {
+                newMode = FlightMode.Wings;
+            }
+
+            
+
+            if (newMode != mode) {
+                EndMode(mode);
+                mode = newMode;
+                StartMode(mode);
+            }
+
+            UpdateMode(mode);
         }
     }
 }

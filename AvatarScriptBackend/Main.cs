@@ -192,6 +192,8 @@ namespace AnylandMods.AvatarScriptBackend {
                         }
                         cameraHolder = new GameObject();
                         cameraHolder.transform.parent = info.Thing.gameObject.transform;
+                        cameraHolder.transform.localPosition = Vector3.zero;
+                        cameraHolder.transform.localRotation = Quaternion.identity;
                         var cam = cameraHolder.AddComponent<Camera>();
 
                         if (data.Length > 12) {
