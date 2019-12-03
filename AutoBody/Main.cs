@@ -147,7 +147,6 @@ namespace AnylandMods.AutoBody
 
         private static void BodyTellManager_ToldByBody(string data, BodyTellManager.TellEventInfo info)
         {
-            DebugLog.LogTemp("{0} {1}", Main.config.EnableTellControl, info.IsTrusted);
             // TODO: Add a toggle to disable IsTrusted check
             if (!config.EnableTellControl || !info.IsTrusted)
                 return;
@@ -179,7 +178,6 @@ namespace AnylandMods.AutoBody
 
                 bool shouldMove = (pointNum == 6 || pointNum == 7);
                 GameObject ap = Managers.personManager.ourPerson.GetAttachmentPointById(point);
-                DebugLog.LogTemp("asrf");
                 if (shouldMove && thingName.Equals("lock")) {
                     FixedWorldPosRot.LockPosRot(ap);
                 } else if (shouldMove && thingName.Equals("unlock")) {
