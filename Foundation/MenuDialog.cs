@@ -66,8 +66,8 @@ namespace AnylandMods {
             for (int i = start; i < end; ++i) {
                 int x, y;
                 if (menu.TwoColumns) {
-                    x = (i % 2 == 0) ? -225 : 225;
-                    y = 115 * (i / 2 - start) - 305;
+                    x = ((i - start) % 2 == 0) ? -225 : 225;
+                    y = 115 * ((i - start) / 2) - 305;  // outermost parentheses are for integer division
                 } else {
                     x = 0;
                     y = 115 * (i - start) - 305;
