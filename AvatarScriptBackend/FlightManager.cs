@@ -114,7 +114,7 @@ namespace AnylandMods.AvatarScriptBackend {
 
         private static float lastUpdateTime = -1.0f;
         private static FlightMode mode = FlightMode.Default;
-        private static Vector3 handMidpointLast;
+        private static Vector3 dotLPosLast, dotRPosLast;
         private static float timeLast;
 
         private static FlightManager FM {
@@ -129,24 +129,29 @@ namespace AnylandMods.AvatarScriptBackend {
         {
             Person me = Managers.personManager.ourPerson;
             Transform head = me.Head.transform;
-            Transform handL = me.GetHandBySide(Side.Left).transform;
-            Transform handR = me.GetHandBySide(Side.Right).transform;
-            Vector3 handLPos = handL.position - me.Torso.transform.position;
-            Vector3 handRPos = handR.position - me.Torso.transform.position;
-            Vector3 handMidpoint = (handLPos + handRPos) / 2;
-            Vector3 handAvgVelocity = (handMidpoint - handMidpointLast) * (Time.time - timeLast);
+
+            Hand handL = me.GetHandBySide(Side.Left).GetComponent<Hand>();
+            Hand handR = me.GetHandBySide(Side.Right).GetComponent<Hand>();
+            HandDot dotL = handL.handDot.GetComponent<HandDot>();
+            HandDot dotR = handR.handDot.GetComponent<HandDot>();
+            Vector3 dotLPos = dotL.transform.position - me.Torso.transform.position;
+            Vector3 dotRPos = dotR.transform.position - me.Torso.transform.position;
+            Vector3 dotMidpoint = (dotLPos + dotRPos) / 2;
+            Vector3 dotMidpointLast = (dotLPosLast + dotRPosLast) / 2;
+            Vector3 dotAvgVelocity = (dotMidpoint - dotMidpointLast) * (Time.time - timeLast);
             timeLast = Time.time;
 
-            handMidpointLast = handMidpoint;
+            dotLPosLast = dotLPos;
+            dotRPosLast = dotRPos;
 
             Transform torso = me.Torso.transform;
-            float handDist = (handRPos - handLPos).magnitude;
+            float handDist = (dotRPos - dotLPos).magnitude;
 
             if (mode == FlightMode.Wings) {
-                float yHandVel = Mathf.Min(handAvgVelocity.y, 0.0f);
+                float yHandVel = Mathf.Min(dotAvgVelocity.y, 0.0f);
                 float yAccel = -4.0f - FM.Velocity.y - 50000.0f * yHandVel;
                 FM.Acceleration = torso.localToWorldMatrix * new Vector3(0.0f, yAccel, 20.0f * handDist * handDist);
-                float angle = 0.5f * handDist * Vector3.SignedAngle(handR.position - handL.position, torso.right, torso.forward);
+                float angle = 0.5f * handDist * Vector3.SignedAngle(handR.transform.position - handL.transform.position, torso.right, torso.forward);
                 FM.AngularAcceleration = Quaternion.AngleAxis(angle, Vector3.up);
             }
         }
