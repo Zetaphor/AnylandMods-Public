@@ -114,6 +114,8 @@ namespace AnylandMods.AvatarScriptBackend {
 
         private static float lastUpdateTime = -1.0f;
         private static FlightMode mode = FlightMode.Default;
+        private static Vector3 handMidpointLast;
+        private static float timeLast;
 
         private static FlightManager FM {
             get => AddFlightManager.FM;  //shortcut
@@ -129,12 +131,22 @@ namespace AnylandMods.AvatarScriptBackend {
             Transform head = me.Head.transform;
             Transform handL = me.GetHandBySide(Side.Left).transform;
             Transform handR = me.GetHandBySide(Side.Right).transform;
+            Vector3 handLPos = handL.position - me.Torso.transform.position;
+            Vector3 handRPos = handR.position - me.Torso.transform.position;
+            Vector3 handMidpoint = (handLPos + handRPos) / 2;
+            Vector3 handAvgVelocity = (handMidpoint - handMidpointLast) * (Time.time - timeLast);
+            timeLast = Time.time;
+
+            handMidpointLast = handMidpoint;
+
             Transform torso = me.Torso.transform;
-            float handDist = (handR.position - handL.position).magnitude;
+            float handDist = (handRPos - handLPos).magnitude;
 
             if (mode == FlightMode.Wings) {
-                FM.Acceleration = torso.localToWorldMatrix * new Vector3(0.0f, -4.0f - FM.Velocity.y, 20.0f * handDist * handDist);
-                float angle = 0.5f * Vector3.SignedAngle(handR.position - handL.position, torso.right, torso.forward);
+                float yHandVel = Mathf.Min(handAvgVelocity.y, 0.0f);
+                float yAccel = -4.0f - FM.Velocity.y - 50000.0f * yHandVel;
+                FM.Acceleration = torso.localToWorldMatrix * new Vector3(0.0f, yAccel, 20.0f * handDist * handDist);
+                float angle = 0.5f * handDist * Vector3.SignedAngle(handR.position - handL.position, torso.right, torso.forward);
                 FM.AngularAcceleration = Quaternion.AngleAxis(angle, Vector3.up);
             }
         }
@@ -162,11 +174,9 @@ namespace AnylandMods.AvatarScriptBackend {
             if (llobj != null)
                 leftLeg = llobj.GetComponent<Thing>();
 
-            if (leftLeg != null && leftLeg.givenName.ToLower().Equals("cloud wings")) {
+            if (leftLeg != null && leftLeg.givenName.Contains("wings")) {
                 newMode = FlightMode.Wings;
             }
-
-            
 
             if (newMode != mode) {
                 EndMode(mode);
