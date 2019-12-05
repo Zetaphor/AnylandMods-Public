@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using Harmony;
 using UnityEngine;
+using Valve.VR;
 
 namespace AnylandMods.AvatarScriptBackend {
     public class FlightManager : MonoBehaviour {
@@ -114,8 +115,8 @@ namespace AnylandMods.AvatarScriptBackend {
 
         private static float lastUpdateTime = -1.0f;
         private static FlightMode mode = FlightMode.Default;
-        private static Vector3 dotLPosLast, dotRPosLast;
-        private static float timeLast;
+        private static Vector3 dotLPosLast, dotRPosLast, dotLVelLast, dotRVelLast;
+        private static bool lastPosIsInvalid = true;
 
         private static FlightManager FM {
             get => AddFlightManager.FM;  //shortcut
@@ -134,26 +135,53 @@ namespace AnylandMods.AvatarScriptBackend {
             Hand handR = me.GetHandBySide(Side.Right).GetComponent<Hand>();
             HandDot dotL = handL.handDot.GetComponent<HandDot>();
             HandDot dotR = handR.handDot.GetComponent<HandDot>();
-            Vector3 dotLPos = dotL.transform.position - me.Torso.transform.position;
-            Vector3 dotRPos = dotR.transform.position - me.Torso.transform.position;
+            Vector3 dotLPos = Quaternion.Inverse(me.Torso.transform.rotation) * (dotL.transform.position - me.Torso.transform.position);
+            Vector3 dotRPos = Quaternion.Inverse(me.Torso.transform.rotation) * (dotR.transform.position - me.Torso.transform.position);
+            if (lastPosIsInvalid) {
+                dotLPosLast = dotLPos;
+                dotRPosLast = dotRPos;
+                lastPosIsInvalid = false;
+            }
             Vector3 dotMidpoint = (dotLPos + dotRPos) / 2;
-            Vector3 dotMidpointLast = (dotLPosLast + dotRPosLast) / 2;
-            Vector3 dotAvgVelocity = (dotMidpoint - dotMidpointLast) * (Time.time - timeLast);
-            timeLast = Time.time;
-
-            dotLPosLast = dotLPos;
-            dotRPosLast = dotRPos;
+            Vector3 dotLVel = (dotLPos - dotLPosLast) / Time.deltaTime;
+            Vector3 dotRVel = (dotRPos - dotRPosLast) / Time.deltaTime;
 
             Transform torso = me.Torso.transform;
             float handDist = (dotRPos - dotLPos).magnitude;
 
             if (mode == FlightMode.Wings) {
-                float yHandVel = Mathf.Min(dotAvgVelocity.y, 0.0f);
-                float yAccel = -4.0f - FM.Velocity.y - 50000.0f * yHandVel;
+                bool fingersClosedLeft = handL.controller.GetAxis(EVRButtonId.k_EButton_Axis2).x > 0.25f;
+                bool fingersClosedRight = handR.controller.GetAxis(EVRButtonId.k_EButton_Axis2).x > 0.25f;
+                if (fingersClosedLeft) {
+                    dotLPos = dotLPosLast;
+                    dotLVel = dotLVelLast;
+                    lastPosIsInvalid = true;
+                }
+                if (fingersClosedRight) {
+                    dotRPos = dotRPosLast;
+                    dotRVel = dotRVelLast;
+                    lastPosIsInvalid = true;
+                }
+
+                Vector3 dotAvgVel = (dotLVel + dotRVel) / 2;
+                float gravityControl = dotMidpoint.y - head.position.y; // expected range ~= -1 (min gravity) to 0.1 (max gravity)
+                gravityControl = Mathf.Min((gravityControl + 1) * 4, 0.0f);
+                float yAccel = Mathf.Min(-gravityControl - FM.Velocity.y, 0.0f);
                 FM.Acceleration = torso.localToWorldMatrix * new Vector3(0.0f, yAccel, 20.0f * handDist * handDist);
-                float angle = 0.5f * handDist * Vector3.SignedAngle(handR.transform.position - handL.transform.position, torso.right, torso.forward);
-                FM.AngularAcceleration = Quaternion.AngleAxis(angle, Vector3.up);
+                FM.Acceleration -= 20f * dotAvgVel * dotAvgVel.magnitude;
+                float angle1 = 0.5f * Vector3.SignedAngle(handR.transform.position - handL.transform.position, torso.right, torso.forward);
+                float angle2 = Vector3.SignedAngle(dotLVel, dotRVel, Vector3.up);
+                angle2 *= 0.1f * dotLVel.magnitude * dotRVel.magnitude;
+                angle2 *= angle2 / 360f;
+                float angle = (!fingersClosedLeft && !fingersClosedRight) ? (angle1 + angle2) : 0.0f;
+                FM.AngularAcceleration = Quaternion.AngleAxis(0.5f * handDist * angle, Vector3.up);
+                FM.DragFactor = Mathf.Clamp((Vector3.SignedAngle(dotR.transform.position - handR.transform.position, me.Torso.transform.forward, Vector3.up) + 90.0f) / 180.0f, 0.0f, 1.0f);
             }
+
+            dotLPosLast = dotLPos;
+            dotRPosLast = dotRPos;
+            dotLVelLast = dotLVel;
+            dotRVelLast = dotRVel;
         }
 
         private static void EndMode(FlightMode mode)
