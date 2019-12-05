@@ -167,15 +167,16 @@ namespace AnylandMods.AvatarScriptBackend {
                 float gravityControl = dotMidpoint.y - head.position.y; // expected range ~= -1 (min gravity) to 0.1 (max gravity)
                 gravityControl = Mathf.Min((gravityControl + 1) * 4, 0.0f);
                 float yAccel = Mathf.Min(-gravityControl - FM.Velocity.y, 0.0f);
-                FM.Acceleration = torso.localToWorldMatrix * new Vector3(0.0f, yAccel, 20.0f * handDist * handDist);
-                FM.Acceleration -= 20f * dotAvgVel * dotAvgVel.magnitude;
+                FM.Acceleration = torso.rotation * new Vector3(0.0f, 0.0f, 20.0f * handDist * handDist);
+                FM.Acceleration += new Vector3(0, yAccel);
+                FM.Acceleration -= 20f * (torso.rotation * dotAvgVel) * dotAvgVel.magnitude;
                 float angle1 = 0.5f * Vector3.SignedAngle(handR.transform.position - handL.transform.position, torso.right, torso.forward);
-                float angle2 = Vector3.SignedAngle(dotLVel, dotRVel, Vector3.up);
+                float angle2 = Vector3.SignedAngle(dotLVel, dotRVel, torso.up);
                 angle2 *= 0.1f * dotLVel.magnitude * dotRVel.magnitude;
                 angle2 *= angle2 / 360f;
                 float angle = (!fingersClosedLeft && !fingersClosedRight) ? (angle1 + angle2) : 0.0f;
-                FM.AngularAcceleration = Quaternion.AngleAxis(0.5f * handDist * angle, Vector3.up);
-                FM.DragFactor = Mathf.Clamp((Vector3.SignedAngle(dotR.transform.position - handR.transform.position, me.Torso.transform.forward, Vector3.up) + 90.0f) / 180.0f, 0.0f, 1.0f);
+                FM.AngularAcceleration = Quaternion.AngleAxis(0.5f * handDist * angle, torso.up);
+                FM.DragFactor = Mathf.Clamp((Vector3.SignedAngle(dotR.transform.position - handR.transform.position, torso.transform.forward, torso.transform.right) + 90.0f) / 180.0f, 0.0f, 1.0f);
             }
 
             dotLPosLast = dotLPos;
