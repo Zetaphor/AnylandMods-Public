@@ -62,7 +62,7 @@ namespace AnylandMods.AutoBody
             pointMenu.Add(mbtn);
 
             regex = new Regex("^xa([0-9]) ?(.*)$");
-            regexForIn = new Regex(" in ([0-9]*.?[0-9]*)s? ?(?:via (.*))?$");
+            regexForIn = new Regex(" in ([0-9]*\\.?[0-9]*)s? ?(?:via (.*))?$");
             BodyTellManager.ToldByBody += BodyTellManager_ToldByBody;
             return true;
         }
@@ -116,6 +116,7 @@ namespace AnylandMods.AutoBody
         internal static void SetAttachment(AttachmentPointId point, string thingName, bool moveLeg = true)
         {
             Person ourPerson = Managers.personManager.ourPerson;
+
             GameObject attpoint = ourPerson.GetAttachmentPointById(point);
             SavedAttachmentList list = config.GetListForAttachmentPoint(point);
             if (thingName.Length == 0 || thingName.Equals("-")) {
@@ -181,10 +182,11 @@ namespace AnylandMods.AutoBody
 
                 bool shouldMove = (pointNum == 6 || pointNum == 7);
                 GameObject ap = Managers.personManager.ourPerson.GetAttachmentPointById(point);
+                DebugLog.LogTemp("parent of {0} is {1}", ap, ap.transform.parent.gameObject);
                 if (shouldMove && thingName.Equals("lock")) {
-                    FixedWorldPosRot.LockPosRot(ap);
+                    ap.transform.parent = Managers.personManager.ourPerson.Rig.transform.parent;
                 } else if (shouldMove && thingName.Equals("unlock")) {
-                    FixedWorldPosRot.UnlockPosRot(ap);
+                    ap.transform.parent = Managers.personManager.ourPerson.Torso.transform;
                 } else if (delay > 0.0f) {
                     var ds = ap.GetComponent<DelayedSwitch>();
                     if (ds == null)
