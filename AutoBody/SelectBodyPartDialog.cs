@@ -136,6 +136,7 @@ namespace AnylandMods.AutoBody {
         {
             base.Start();
             AddMirror();
+            Our.SetMode(EditModes.Body);
         }
 
         protected override void OnDestroy()
