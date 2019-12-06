@@ -42,6 +42,7 @@ namespace AnylandMods.AvatarScriptBackend {
             if (moveWithHand) {
                 Vector3 handVelocity = (Hand.transform.position - lastHandPos) / Time.deltaTime;
                 Vector3 acceleration = GetAccel(handVelocity) * Time.deltaTime;
+                thing.rigidbody.useGravity = false;
                 thing.rigidbody.AddForce(acceleration, ForceMode.VelocityChange);
                 lastHandPos = Hand.transform.position;
 
