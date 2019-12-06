@@ -62,7 +62,7 @@ namespace AnylandMods.AutoBody
             pointMenu.Add(mbtn);
 
             regex = new Regex("^xa([0-9]) ?(.*)$");
-            regexForIn = new Regex(" in ([0-9]*.?[0-9]*)s?$");
+            regexForIn = new Regex(" in ([0-9]*.?[0-9]*)s? ?(?:via (.*))?$");
             BodyTellManager.ToldByBody += BodyTellManager_ToldByBody;
             return true;
         }
@@ -174,6 +174,9 @@ namespace AnylandMods.AutoBody
                 if (matchForIn.Success) {
                     thingName = thingName.Substring(0, matchForIn.Index);
                     float.TryParse(matchForIn.Groups[1].Value, out delay);
+                    if (matchForIn.Groups[2].Success && delay > 0) {
+                        SetAttachment(point, matchForIn.Groups[2].Value);
+                    }
                 }
 
                 bool shouldMove = (pointNum == 6 || pointNum == 7);
