@@ -60,8 +60,14 @@ namespace AnylandMods.AutoBody
             mbtn = new MenuButton("LegRight", "(XA7,9) Right Leg");
             mbtn.Action += Mbtn_Action;
             pointMenu.Add(mbtn);
+            mbtn = new MenuButton("HandLeft", "(XAA) Left Hand*");
+            mbtn.Action += Mbtn_Action;
+            pointMenu.Add(mbtn);
+            mbtn = new MenuButton("HandRight", "(XAB) Right Hand*");
+            mbtn.Action += Mbtn_Action;
+            pointMenu.Add(mbtn);
 
-            regex = new Regex("^xa([0-9]) ?(.*)$");
+            regex = new Regex("^xa([0-9ab]) ?(.*)$");
             regexForIn = new Regex(" in ([0-9]*\\.?[0-9]*)s? ?(?:via (.*))?$");
             BodyTellManager.ToldByBody += BodyTellManager_ToldByBody;
             return true;
@@ -116,9 +122,15 @@ namespace AnylandMods.AutoBody
         internal static void SetAttachment(AttachmentPointId point, string thingName, bool moveLeg = true)
         {
             Person ourPerson = Managers.personManager.ourPerson;
-
             GameObject attpoint = ourPerson.GetAttachmentPointById(point);
             SavedAttachmentList list = config.GetListForAttachmentPoint(point);
+
+            if (point == AttachmentPointId.HandLeft) {
+                HandPseudoAttachmentControl.thingNameLeft = thingName;
+            } else if (point == AttachmentPointId.HandRight) {
+                HandPseudoAttachmentControl.thingNameRight = thingName;
+            }
+
             if (thingName.Length == 0 || thingName.Equals("-")) {
                 Managers.personManager.DoRemoveAttachedThing(attpoint);
             } else if (list.ContainsName(thingName)) {
@@ -139,10 +151,17 @@ namespace AnylandMods.AutoBody
                             ourPerson.AttachmentPointLegRight.transform.localEulerAngles = config.LegRotRight[thingName];
                             Managers.personManager.SaveOurLegAttachmentPointPositions();
                         }
-                    } catch (KeyNotFoundException) { }
+                    } catch (KeyNotFoundException) {
+                        DebugLog.Log("warning: no leg pos/rot saved for {0}:{1}", point, thingName);
+                    }
                 }
             } else {
                 DebugLog.Log("\"{0}\" is not a known attachment for {1}.", thingName, point);
+                if (point == AttachmentPointId.HandLeft) {
+                    HandPseudoAttachmentControl.thingNameLeft = "";
+                } else if (point == AttachmentPointId.HandRight) {
+                    HandPseudoAttachmentControl.thingNameRight = "";
+                }
             }
         }
 
@@ -164,9 +183,12 @@ namespace AnylandMods.AutoBody
                     AttachmentPointId.LegLeft,
                     AttachmentPointId.LegRight,
                     AttachmentPointId.LegLeft,
-                    AttachmentPointId.LegRight
+                    AttachmentPointId.LegRight,
+                    AttachmentPointId.HandLeft,
+                    AttachmentPointId.HandRight
                 };
-                int pointNum = Int32.Parse(match.Groups[1].Value);
+                char pointChar = match.Groups[1].Value[0];
+                int pointNum = Char.IsDigit(pointChar) ? (pointChar - '0') : (10 + pointChar - 'a');
                 AttachmentPointId point = points[pointNum];
                 string thingName = match.Groups[2].Value;
                 float delay = 0.0f;
@@ -303,6 +325,103 @@ namespace AnylandMods.AutoBody
                 }
                 yield return inst;
             }
+        }
+    }
+
+    [HarmonyPatch(typeof(PhotonView), nameof(PhotonView.RPC), typeof(string), typeof(PhotonTargets), typeof(object[]))]
+    public static class SyncHandPointsAsHeldItems {
+        public static void Prefix(ref string methodName, ref object[] parameters)
+        {
+            if (methodName.Equals("DoAttachThing_Remote")) {
+                var apid = (AttachmentPointId)parameters[0];
+                if (apid == AttachmentPointId.HandLeft || apid == AttachmentPointId.HandRight) {
+                    methodName = "DoAddToHand_Remote";
+                    object[] oldParams = parameters;
+                    parameters = new object[] {
+                        (apid == AttachmentPointId.HandLeft) ? TopographyId.Left : TopographyId.Right,
+                        oldParams[1],
+                        oldParams[2],
+                        oldParams[3],
+                        EditModes.None,
+                        EditModes.None
+                    };
+                }
+            } else if (methodName.Equals("DoRemoveAttachedThing_LocalOrRemote")) {
+                var apid = (AttachmentPointId)parameters[0];
+                if (apid == AttachmentPointId.HandLeft || apid == AttachmentPointId.HandRight) {
+                    methodName = "DoClearFromHand_Remote";
+                    parameters = new object[] { (apid == AttachmentPointId.HandLeft) ? TopographyId.Left : TopographyId.Right };
+                }
+            }
+        }
+    }
+
+    [HarmonyPatch(typeof(ServerManager), nameof(ServerManager.UpdateAttachment))]
+    public static class DoNotSaveHandAttachmentsToServer {
+        private static System.Collections.IEnumerator EmptyCoroutine()
+        {
+            yield break;
+        }
+
+        public static bool Prefix(AttachmentPointId attachmentPointId, ref System.Collections.IEnumerator __result)
+        {
+            if (attachmentPointId == AttachmentPointId.HandLeft || attachmentPointId == AttachmentPointId.HandRight) {
+                __result = EmptyCoroutine();
+                return false;
+            } else {
+                return true;
+            }
+        }
+    }
+
+    public class HandPseudoAttachmentControl : MonoBehaviour {
+        private static bool holdingLeft = false;
+        private static bool holdingRight = false;
+        internal static string thingNameLeft, thingNameRight;
+
+        private void Start() { }
+
+        public void Update()
+        {
+            AttachmentPointId apid = GetComponent<AttachmentPoint>().id;
+            var person = GetComponentInParent<Person>();
+            if (person.isOurPerson) {
+                if (apid == AttachmentPointId.HandLeft) {
+                    bool holding = person.GetHandBySide(Side.Left).GetComponentInChildren<HandDot>().currentlyHeldObject != null;
+                    if (holding != holdingLeft) {
+                        holdingLeft = holding;
+                        if (holding) {
+                            GameObject.Destroy(GetComponentInChildren<Thing>().gameObject);
+                        } else {
+                            Main.SetAttachment(AttachmentPointId.HandLeft, thingNameLeft);
+                        }
+                        if (!holding) {
+                            Main.SetAttachment(AttachmentPointId.HandLeft, thingNameLeft);
+                        }
+                    }
+                } else if (apid == AttachmentPointId.HandRight) {
+                    bool holding = person.GetHandBySide(Side.Right).GetComponentInChildren<HandDot>().currentlyHeldObject != null;
+                    if (holding != holdingRight) {
+                        holdingRight = holding;
+                        if (holding) {
+                            GameObject.Destroy(GetComponentInChildren<Thing>().gameObject);
+                        } else {
+                            Main.SetAttachment(AttachmentPointId.HandRight, thingNameRight);
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    [HarmonyPatch(typeof(Person), "SetAttachmentPointReferencesById")]
+    public static class AddHandPointReferences {
+        public static void Postfix(Person __instance, GameObject ___AttachmentPointHandLeft, GameObject ___AttachmentPointHandRight)
+        {
+            __instance.AttachmentPointsById.Add(AttachmentPointId.HandLeft, ___AttachmentPointHandLeft);
+            __instance.AttachmentPointsById.Add(AttachmentPointId.HandRight, ___AttachmentPointHandRight);
+            ___AttachmentPointHandLeft.gameObject.AddComponent<HandPseudoAttachmentControl>();
+            ___AttachmentPointHandRight.gameObject.AddComponent<HandPseudoAttachmentControl>();
         }
     }
 }

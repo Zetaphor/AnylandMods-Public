@@ -60,6 +60,8 @@ namespace AnylandMods.AutoBody {
                 case AttachmentPointId.TorsoLower: title = "Lower Torso"; break;
                 case AttachmentPointId.LegLeft: title = "Left Leg"; break;
                 case AttachmentPointId.LegRight: title = "Right Leg"; break;
+                case AttachmentPointId.HandLeft: title = "Left Hand*"; break;
+                case AttachmentPointId.HandRight: title = "Right Hand*"; break;
             }
             var menu = new Menu(title);
             menu.SetBackButton(Main.pointMenu);
