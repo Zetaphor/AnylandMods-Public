@@ -205,7 +205,6 @@ namespace AnylandMods.AvatarScriptBackend {
                 dotRPosLast = dotRPos;
                 lastPosIsInvalid = false;
             }
-            Vector3 dotMidpoint = (dotLPos + dotRPos) / 2;
             Vector3 dotLVel = (dotLPos - dotLPosLast) / Time.deltaTime;
             Vector3 dotRVel = (dotRPos - dotRPosLast) / Time.deltaTime;
 
@@ -227,21 +226,23 @@ namespace AnylandMods.AvatarScriptBackend {
                 }
 
                 Vector3 dotAvgVel = (dotLVel + dotRVel) / 2;
-                float gravityControl = dotMidpoint.y - head.position.y; // expected range ~= -1 (min gravity) to 0.1 (max gravity)
-                gravityControl = Mathf.Min((gravityControl + 1) * 4, 0.0f);
-                float yAccel = Mathf.Min(-gravityControl - FM.Velocity.y, 0.0f);
-                FM.AccelWithLean = (Quaternion.Inverse(FM.CurrentLean) * torso.rotation) * new Vector3(0.0f, 0.0f, 20.0f * handDist * handDist);
-                FM.Acceleration = FM.AccelWithLean;
-                FM.Acceleration += new Vector3(0, yAccel);
-                FM.Acceleration -= 20f * (torso.rotation * dotAvgVel) * dotAvgVel.magnitude;
+                float gravityControl = (dotLPos - head.position).magnitude + (dotRPos - head.position).magnitude;
+                float yAccel = Mathf.Lerp(-100.0f, 0.0f, gravityControl);
                 float angle1 = 0.5f * Vector3.SignedAngle(handR.transform.position - handL.transform.position, torso.right, torso.forward);
                 float angle2 = Vector3.SignedAngle(dotLVel, dotRVel, torso.up);
                 angle2 *= 0.4f * dotLVel.magnitude * dotRVel.magnitude;
                 angle2 *= angle2 / 360f;
                 angle2 = 0;  // until I figure out the right math to use
                 float angle = (!fingersClosedLeft && !fingersClosedRight) ? (angle1 + angle2) : 0.0f;
-                FM.AngularAcceleration = Quaternion.AngleAxis(0.5f * handDist * angle, torso.up);
-                FM.DragFactor = Mathf.Clamp((-Vector3.SignedAngle(dotR.transform.position - handR.transform.position, torso.transform.forward, torso.transform.right) + 90.0f) / 180.0f, 0.0f, 1.0f);
+
+                if (!fingersClosedLeft || !fingersClosedRight) {
+                    FM.AccelWithLean = (Quaternion.Inverse(FM.CurrentLean) * torso.rotation) * new Vector3(0.0f, 0.0f, 20.0f * handDist * handDist);
+                    FM.Acceleration = FM.AccelWithLean;
+                    FM.Acceleration += new Vector3(0, yAccel);
+                    FM.Acceleration -= 20f * (torso.rotation * dotAvgVel) * dotAvgVel.magnitude;
+                    FM.AngularAcceleration = Quaternion.AngleAxis(0.5f * handDist * angle, torso.up);
+                    FM.DragFactor = Mathf.Clamp((-Vector3.SignedAngle(dotR.transform.position - handR.transform.position, torso.transform.forward, torso.transform.right) + 90.0f) / 180.0f, 0.0f, 1.0f);
+                }
             }
 
             dotLPosLast = dotLPos;
