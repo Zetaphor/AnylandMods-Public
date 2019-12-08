@@ -92,8 +92,8 @@ namespace AnylandMods.AvatarScriptBackend {
         {
             HintFacingAngle();
             CurrentLean = Quaternion.identity;
-            //transform.rotation = Quaternion.LookRotation(lastSignificantDir.normalized, Vector3.up);
-            transform.rotation = Quaternion.identity;
+            transform.rotation = Quaternion.LookRotation(lastSignificantDir.normalized, Vector3.up);
+            //transform.rotation = Quaternion.identity;
         }
     }
 
@@ -172,7 +172,8 @@ namespace AnylandMods.AvatarScriptBackend {
     public static class SpecialFlightModes {
         private enum FlightMode {
             Default,
-            Wings
+            Wings,
+            Grab
         };
 
         private static float lastUpdateTime = -1.0f;
@@ -186,7 +187,11 @@ namespace AnylandMods.AvatarScriptBackend {
 
         private static void StartMode(FlightMode mode)
         {
-            FM.HintFacingAngle();
+            if (mode == FlightMode.Default) {
+                FM.DragFactor = 0.3f;
+            } else if (mode == FlightMode.Grab) {
+                FM.DragFactor = 0.1f;
+            }
         }
 
         private static void UpdateMode(FlightMode mode)
@@ -207,11 +212,14 @@ namespace AnylandMods.AvatarScriptBackend {
             }
             Vector3 dotLVel = (dotLPos - dotLPosLast) / Time.deltaTime;
             Vector3 dotRVel = (dotRPos - dotRPosLast) / Time.deltaTime;
+            Vector3 dotAvgVel = (dotLVel + dotRVel) / 2;
 
             Transform torso = me.Torso.transform;
             float handDist = (dotRPos - dotLPos).magnitude;
-            
-            if (mode == FlightMode.Wings) {
+
+            if (mode == FlightMode.Default) {
+                FM.HintFacingAngle();
+            } else if (mode == FlightMode.Wings) {
                 bool fingersClosedLeft = handL.controller.GetAxis(EVRButtonId.k_EButton_Axis2).x > 0.25f;
                 bool fingersClosedRight = handR.controller.GetAxis(EVRButtonId.k_EButton_Axis2).x > 0.25f;
                 if (fingersClosedLeft) {
@@ -225,7 +233,6 @@ namespace AnylandMods.AvatarScriptBackend {
                     lastPosIsInvalid = true;
                 }
 
-                Vector3 dotAvgVel = (dotLVel + dotRVel) / 2;
                 float gravityControl = (dotLPos - head.position).magnitude + (dotRPos - head.position).magnitude;
                 float yAccel = Mathf.Lerp(-100.0f, 0.0f, gravityControl);
                 float angle1 = 0.5f * Vector3.SignedAngle(handR.transform.position - handL.transform.position, torso.right, torso.forward);
@@ -239,10 +246,13 @@ namespace AnylandMods.AvatarScriptBackend {
                     FM.AccelWithLean = (Quaternion.Inverse(FM.CurrentLean) * torso.rotation) * new Vector3(0.0f, 0.0f, 20.0f * handDist * handDist);
                     FM.Acceleration = FM.AccelWithLean;
                     FM.Acceleration += new Vector3(0, yAccel);
-                    FM.Acceleration -= 20f * (torso.rotation * dotAvgVel) * dotAvgVel.magnitude;
-                    FM.AngularAcceleration = Quaternion.AngleAxis(0.5f * handDist * angle, torso.up);
+                    FM.Acceleration -= 15f * (torso.rotation * dotAvgVel) * dotAvgVel.magnitude;
+                    FM.AngularAcceleration = Quaternion.AngleAxis(handDist * angle, torso.up);
                     FM.DragFactor = Mathf.Clamp((-Vector3.SignedAngle(dotR.transform.position - handR.transform.position, torso.transform.forward, torso.transform.right) + 90.0f) / 180.0f, 0.0f, 1.0f);
                 }
+            } else if (mode == FlightMode.Grab) {
+                FM.HintFacingAngle();
+                FM.Acceleration = -25f * (torso.rotation * dotAvgVel) * dotAvgVel.magnitude;
             }
 
             dotLPosLast = dotLPos;
@@ -253,11 +263,12 @@ namespace AnylandMods.AvatarScriptBackend {
 
         private static void EndMode(FlightMode mode)
         {
+            FM.Acceleration = Vector3.zero;
+            FM.AccelWithLean = Vector3.zero;
+            FM.AngularAcceleration = Quaternion.identity;
+
             if (mode == FlightMode.Wings) {
-                FM.Acceleration = Vector3.zero;
-                FM.AccelWithLean = Vector3.zero;
-                FM.AngularAcceleration = Quaternion.identity;
-                FM.DragFactor = 0.3f;
+                FM.ResetRotation();
             }
         }
 
@@ -270,6 +281,10 @@ namespace AnylandMods.AvatarScriptBackend {
 
             FlightMode newMode = FlightMode.Default;
             Person me = Managers.personManager.ourPerson;
+            Hand handL = me.GetHandBySide(Side.Left).GetComponent<Hand>();
+            Hand handR = me.GetHandBySide(Side.Right).GetComponent<Hand>();
+            HandDot dotL = handL.handDot.GetComponent<HandDot>();
+            HandDot dotR = handR.handDot.GetComponent<HandDot>();
             var llobj = me.GetThingOnAttachmentPointById(AttachmentPointId.LegLeft);
             Thing leftLeg = null;
             if (llobj != null)
@@ -277,6 +292,9 @@ namespace AnylandMods.AvatarScriptBackend {
 
             if (leftLeg != null && leftLeg.givenName.Contains("wings")) {
                 newMode = FlightMode.Wings;
+            } else if (CrossDevice.GetPress(dotL.controller, CrossDevice.button_teleport, Side.Left) && CrossDevice.GetPress(dotR.controller, CrossDevice.button_teleport, Side.Right)) {
+                FM.HintFacingAngle();
+                newMode = FlightMode.Grab;
             }
 
             if (newMode != mode) {
