@@ -9,11 +9,12 @@ namespace AnylandMods.AvatarScriptBackend {
         private static Vector3 GetAccel(Vector3 handVelocity)
         {
             float speed = handVelocity.magnitude;
-            float accel = 32.0f * speed * speed;
+            float accel = 16f * speed * speed;
             return handVelocity.normalized * accel;
         }
 
         private Vector3 lastHandPos;
+        private Vector3 lastHandVec;
         private Thing thing;
         private bool wasPhysicalBeforePickup;
         private bool hadGravityBeforePickup;
@@ -40,11 +41,25 @@ namespace AnylandMods.AvatarScriptBackend {
         public void Update()
         {
             if (moveWithHand) {
-                Vector3 handVelocity = (Hand.transform.position - lastHandPos) / Time.deltaTime;
+                Vector3 handMovement = Hand.transform.position - lastHandPos;
+                Vector3 handVelocity = handMovement / Time.deltaTime;
                 Vector3 acceleration = GetAccel(handVelocity) * Time.deltaTime;
                 thing.rigidbody.useGravity = false;
                 thing.rigidbody.AddForce(acceleration, ForceMode.VelocityChange);
+                Vector3 axis = Vector3.Cross(handMovement.normalized, lastHandVec.normalized);
+                float angle = Vector3.SignedAngle(handMovement, lastHandVec, axis);
+                thing.rigidbody.AddTorque(-3f * axis * angle * (lastHandVec + handMovement).magnitude, ForceMode.VelocityChange);
+                lastHandVec = handMovement;
                 lastHandPos = Hand.transform.position;
+
+                var handDot = Hand.GetComponent<HandDot>();
+                if (handDot != null) {
+                    if (CrossDevice.GetPressDown(handDot.controller, CrossDevice.button_grabTip, handDot.side)) {
+                        thing.TriggerEventAsStateAuthority(StateListener.EventType.OnTriggered);
+                    } else if (CrossDevice.GetPressUp(handDot.controller, CrossDevice.button_grabTip, handDot.side)) {
+                        thing.TriggerEventAsStateAuthority(StateListener.EventType.OnUntriggered);
+                    }
+                }
 
                 timeSinceSync += Time.deltaTime;
                 if (timeSinceSync > 1.0f/30) {
@@ -111,7 +126,7 @@ namespace AnylandMods.AvatarScriptBackend {
             comp.thing.rigidbody.isKinematic = false;
             comp.thing.rigidbody.useGravity = false;
             comp.thing.rigidbody.drag = 2.0f;
-            comp.thing.rigidbody.angularDrag = 4.0f;
+            comp.thing.rigidbody.angularDrag = 15.0f;
             comp.moveWithHand = true;
 
             return comp;
@@ -138,6 +153,7 @@ namespace AnylandMods.AvatarScriptBackend {
         {
             foreach (TelekineticHold tkh in allMovedObjects) {
                 try {
+                    tkh.PutDown();
                     tkh.ResetPosition();
                 } catch (Exception ex) {
                     DebugLog.Log("Error resetting position:\n{0}", ex);
@@ -149,8 +165,20 @@ namespace AnylandMods.AvatarScriptBackend {
         public void PutDown()
         {
             moveWithHand = false;
-            //thing.rigidbody.isKinematic = !wasPhysicalBeforePickup;
-            //thing.rigidbody.useGravity = hadGravityBeforePickup;
+            thing.rigidbody.isKinematic = !wasPhysicalBeforePickup;
+            thing.rigidbody.useGravity = hadGravityBeforePickup;
+        }
+
+        public static void PutDownAll()
+        {
+            foreach (TelekineticHold tkh in allMovedObjects) {
+                try {
+                    tkh.PutDown();
+                } catch (NullReferenceException) {
+                } catch (Exception ex) {
+                    DebugLog.Log("Error putting down:\n{0}", ex);
+                }
+            }
         }
     }
 }

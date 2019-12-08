@@ -70,16 +70,13 @@ namespace AnylandMods.AvatarScriptBackend {
 
         private static bool Effect_Pickup(RaycastHit hit, Thing thing, ThingPart part)
         {
-            if (tkh == null) {
-                if (thing != null) {
-                    tkh = TelekineticHold.PickUp(thing, Managers.personManager.ourPerson.GetHandBySide(Side.Right).GetComponent<Hand>().handDot);
-                    return tkh != null;
-                } else {
+            if (thing != null) {
+                if (!thing.isThrownOrEmitted && !thing.movableByEveryone)
                     return false;
-                }
+                tkh = TelekineticHold.PickUp(thing, Managers.personManager.ourPerson.GetHandBySide(Side.Right).GetComponent<Hand>().handDot);
+                return tkh != null;
             } else {
-                tkh.FlyToward(hit.point);
-                return true;
+                return false;
             }
         }
 
@@ -164,6 +161,19 @@ namespace AnylandMods.AvatarScriptBackend {
                     onPoint = Effect_Pickup;
                     break;
 
+                case "x pickup nearest":
+                    onPoint = Effect_Pickup;
+                    headToHand = rightHD.transform.position - head.transform.position;
+                    Thing nearest = Managers.thingManager.GetAllThings()
+                        .Where(c => c is Thing)
+                        .Select(c => (Thing)c)
+                        .Where(t => t.isThrownOrEmitted || t.movableByEveryone)
+                        .OrderBy(t => (t.transform.position - head.transform.position).magnitude * Vector3.Angle((t.transform.position - rightHD.transform.position), headToHand) / 180)
+                        .FirstOrDefault();
+                    if (nearest != null)
+                        TelekineticHold.PickUp(nearest, rightHD.gameObject);
+                    break;
+
                 case "rsnap":
                     foreach (GameObject obj in disabledObjects) {
                         try {
@@ -176,10 +186,7 @@ namespace AnylandMods.AvatarScriptBackend {
                     break;
 
                 case "x point stop":
-                    if (tkh != null) {
-                        tkh.PutDown();
-                        tkh = null;
-                    }
+                    TelekineticHold.PutDownAll();
                     break;
 
                 case "x setcam":
