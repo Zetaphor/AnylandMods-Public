@@ -54,6 +54,10 @@
       <HintPath>D:\steam\steamapps\common\Anyland\anyland_Data\Managed\UnityEngine.dll</HintPath>
       <Private>False</Private>
     </Reference>
+    <Reference Include="UnityEngine.AudioModule">
+      <HintPath>D:\steam\steamapps\common\Anyland\anyland_Data\Managed\UnityEngine.AudioModule.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
     <Reference Include="UnityEngine.CoreModule">
       <HintPath>D:\steam\steamapps\common\Anyland\anyland_Data\Managed\UnityEngine.CoreModule.dll</HintPath>
       <Private>False</Private>

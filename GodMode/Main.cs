@@ -16,6 +16,7 @@ namespace AnylandMods.GodMode
         public static bool gmEnabled = false;
         public static UnityModManager.ModEntry mod;
         internal static HarmonyInstance harmony = null;
+        internal static bool hearEveryone = false;
 
         public static IEnumerable<CodeInstruction> ForceClonableTranspiler(IEnumerable<CodeInstruction> code)
         {
@@ -52,6 +53,7 @@ namespace AnylandMods.GodMode
             harmony.PatchAll();
 
             ModMenu.AddCheckbox(harmony, "Enable God Mode", GmEnableCheckbox_Action).ExtraIcon = ExtraIcon.Unlocked;
+            ModMenu.AddCheckbox(harmony, "Hear Everyone", HearEveryone_Action);
 
             MethodInfo[] methods = new MethodInfo[]
             {
@@ -79,6 +81,18 @@ namespace AnylandMods.GodMode
         private static void GmEnableCheckbox_Action(string id, Dialog dialog, bool value)
         {
             Main.gmEnabled = value;
+        }
+
+        private static void HearEveryone_Action(string id, Dialog dialog, bool value)
+        {
+            Main.hearEveryone = value;
+            if (!value) {
+                foreach (Person p in Managers.personManager.GetCurrentAreaPersons()) {
+                    if (!p.isOurPerson) {
+                        p.SetAmplifySpeech(p.amplifySpeech);
+                    }
+                }
+            }
         }
     }
 
@@ -144,6 +158,18 @@ namespace AnylandMods.GodMode
         {
             if (Main.gmEnabled)
                 isForAirLaser = false;
+        }
+    }
+
+    [HarmonyPatch(typeof(Person), "Update")]
+    public static class ForceMaxSpeechDistance {
+        public static void Postfix(Person __instance)
+        {
+            if (Main.hearEveryone) {
+                if (__instance.Head != null) {
+                    __instance.Head.GetComponent<AudioSource>().maxDistance = 999999f;
+                }
+            }
         }
     }
 }
