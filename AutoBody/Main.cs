@@ -332,7 +332,8 @@ namespace AnylandMods.AutoBody
     public static class SyncHandPointsAsHeldItems {
         public static void Prefix(ref string methodName, ref object[] parameters)
         {
-            DebugLog.LogTemp("{0}({1})", methodName, string.Join(", ", parameters.Select(o => o.ToString()).ToArray()));
+            if (!methodName.Equals("vc"))
+                DebugLog.LogTemp("{0}({1})", methodName, string.Join(", ", parameters.Select(o => o.ToString()).ToArray()));
             if (methodName.Equals("DoAttachThing_Remote")) {
                 var apid = (AttachmentPointId)parameters[0];
                 if (apid == AttachmentPointId.HandLeft || apid == AttachmentPointId.HandRight) {
@@ -394,7 +395,7 @@ namespace AnylandMods.AutoBody
                         holdingLeft = holding;
                         if (holding && ap.attachedThing != null) {
                             GameObject.Destroy(ap.attachedThing);
-                        } else if (ap.attachedThing == null) {
+                        } else if (ap.attachedThing == null && thingNameLeft != null) {
                             Main.SetAttachment(AttachmentPointId.HandLeft, thingNameLeft);
                         }
                     }
@@ -404,7 +405,7 @@ namespace AnylandMods.AutoBody
                         holdingRight = holding;
                         if (holding && ap.attachedThing != null) {
                             GameObject.Destroy(ap.attachedThing);
-                        } else if (ap.attachedThing == null) {
+                        } else if (ap.attachedThing == null && thingNameRight != null) {
                             Main.SetAttachment(AttachmentPointId.HandRight, thingNameRight);
                         }
                     }
@@ -417,6 +418,7 @@ namespace AnylandMods.AutoBody
     public static class ReattachHandOnClearFromHand {
         public static void Postfix(GameObject hand)
         {
+            DebugLog.LogTemp("ReattachHandOnClearFromHand.Postfix({0})", hand);
             if (hand == null)
                 return;
 
@@ -430,6 +432,7 @@ namespace AnylandMods.AutoBody
     public static class ReattachHandOnThrowThing {
         public static void Postfix(PersonManager __instance, GameObject thing)
         {
+            DebugLog.LogTemp("ReattachHandOnThrowThing.Postfix(thing: {0})", thing);
             if (thing == null)
                 return;
 

@@ -69,7 +69,10 @@ namespace AnylandMods.AvatarScriptBackend {
             transform.position += Velocity * Time.deltaTime;
 
             AngularVelocity *= Quaternion.SlerpUnclamped(Quaternion.identity, AngularAcceleration, Time.deltaTime);
-            transform.rotation *= Quaternion.SlerpUnclamped(Quaternion.identity, AngularVelocity, Time.deltaTime);
+            Quaternion angVelRotation = Quaternion.Inverse(CurrentLean);
+            angVelRotation *= Quaternion.SlerpUnclamped(Quaternion.identity, AngularVelocity, Time.deltaTime);
+            angVelRotation *= CurrentLean;
+            transform.rotation *= angVelRotation;
 
             float dragCoefficient = Mathf.Pow(DragFactor, Time.deltaTime);
             Velocity *= dragCoefficient;
@@ -189,6 +192,8 @@ namespace AnylandMods.AvatarScriptBackend {
         {
             if (mode == FlightMode.Default) {
                 FM.DragFactor = 0.3f;
+            } else if (mode == FlightMode.Wings) {
+                FM.HintFacingAngle();
             } else if (mode == FlightMode.Grab) {
                 FM.DragFactor = 0.1f;
             }

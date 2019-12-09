@@ -5,6 +5,7 @@ using System.Text;
 using UnityModManagerNet;
 using UnityEngine;
 using Harmony;
+using System.Reflection.Emit;
 
 namespace AnylandMods.AvatarScriptBackend {
     public class Main {
@@ -71,12 +72,42 @@ namespace AnylandMods.AvatarScriptBackend {
         private static bool Effect_Pickup(RaycastHit hit, Thing thing, ThingPart part)
         {
             if (thing != null) {
-                if (!thing.isThrownOrEmitted && !thing.movableByEveryone)
+                GameObject dot = Managers.personManager.ourPerson.GetHandBySide(Side.Right).GetComponent<Hand>().handDot;
+                if (thing.isThrownOrEmitted || thing.movableByEveryone) {
+                    tkh = TelekineticHold.PickUp(thing, dot);
+                    return tkh != null;
+                } else if (thing.isHoldable) {
+                    GameObject newCopy = UnityEngine.Object.Instantiate<GameObject>(thing.gameObject);
+                    Thing synced = SyncEmitWithoutSound(newCopy);
+                    tkh = TelekineticHold.PickUp(synced, dot);
+                    return tkh != null;
+                } else {
                     return false;
-                tkh = TelekineticHold.PickUp(thing, Managers.personManager.ourPerson.GetHandBySide(Side.Right).GetComponent<Hand>().handDot);
-                return tkh != null;
+                }
             } else {
                 return false;
+            }
+        }
+
+        private static Thing SyncEmitWithoutSound(GameObject thing)
+        {
+            Vector3 pos = thing.transform.position;
+            Thing thing_ = thing.GetComponent<Thing>();
+            if (thing_.isThrownOrEmitted) {
+                Managers.personManager.ourPerson.photonView.RPC("DoAddJustCreatedTemporaryThing_Remote", PhotonTargets.Others, new object[] {
+                    thing_.thingId,
+                    new Vector3(-9999999f, -9999999f, -9999999f),
+                    thing_.transform.rotation,
+                    thing_.thrownId
+                });
+                Managers.personManager.DoInformOfThingPhysics(thing_);
+                return thing_;
+            } else {
+                thing.transform.position += new Vector3(-9999999f, -9999999f, -9999999f);
+                Managers.personManager.DoAddJustCreatedTemporaryThing(thing);
+                thing.transform.position = CaptureTemporaryThing.Captured.transform.position = pos;
+                Managers.personManager.DoInformOfThingPhysics(CaptureTemporaryThing.Captured);
+                return CaptureTemporaryThing.Captured;
             }
         }
 
@@ -88,6 +119,7 @@ namespace AnylandMods.AvatarScriptBackend {
             Hand rightHand = me.GetHandBySide(Side.Right).GetComponent<Hand>();
             HandDot leftHD = leftHand.handDot.GetComponent<HandDot>();
             HandDot rightHD = rightHand.handDot.GetComponent<HandDot>();
+            Vector3 headToHand = rightHD.transform.position - head.transform.position;
 
             if (!data.StartsWith("xc"))
                 DebugLog.LogTemp("body tell {0}", data);
@@ -114,7 +146,6 @@ namespace AnylandMods.AvatarScriptBackend {
                     //const float degrees = 3.0f;
                     //float maxRadius = Mathf.Tan(Mathf.Deg2Rad * degrees) * maxDist;
                     //allHits = ConeCast.ConeCastAll(rightHD.transform.position, maxRadius, rightHD.transform.position - head.transform.position, maxDist, degrees);
-                    Vector3 headToHand = rightHD.transform.position - head.transform.position;
                     Vector3 direction = TrackHandVelocity.Right.normalized;
                     if (Vector3.Angle(direction, headToHand) < 20.0f)
                         direction = headToHand;
@@ -163,15 +194,108 @@ namespace AnylandMods.AvatarScriptBackend {
 
                 case "x pickup nearest":
                     onPoint = Effect_Pickup;
-                    headToHand = rightHD.transform.position - head.transform.position;
                     Thing nearest = Managers.thingManager.GetAllThings()
                         .Where(c => c is Thing)
                         .Select(c => (Thing)c)
-                        .Where(t => t.isThrownOrEmitted || t.movableByEveryone)
-                        .OrderBy(t => (t.transform.position - head.transform.position).magnitude * Vector3.Angle((t.transform.position - rightHD.transform.position), headToHand) / 180)
+                        .Where(t => t.isThrownOrEmitted || t.movableByEveryone || t.isHoldable)
+                        .OrderBy(t => (t.transform.position - head.transform.position).magnitude + Vector3.Angle(t.transform.position - rightHD.transform.position, headToHand) / 10)
                         .FirstOrDefault();
-                    if (nearest != null)
-                        TelekineticHold.PickUp(nearest, rightHD.gameObject);
+                    if (nearest != null) {
+                        if (nearest.isThrownOrEmitted || nearest.movableByEveryone) {
+                            TelekineticHold.PickUp(nearest, rightHD.gameObject);
+                        } else {
+                            GameObject newCopy = UnityEngine.Object.Instantiate<GameObject>(nearest.gameObject);
+                            Thing synced = SyncEmitWithoutSound(newCopy);
+                            TelekineticHold.PickUp(synced, rightHD.gameObject);
+                        }
+                    }
+                    break;
+
+                case "x tkh fly to me":
+                    foreach (var tkh in TelekineticHold.AllActiveHolds) {
+                        try {
+                            tkh.FlyToward(rightHD.transform.position);
+                        } catch (NullReferenceException) {
+                        } catch (Exception ex) {
+                            DebugLog.Log("{0}", ex);
+                        }
+                    }
+                    break;
+
+                case "x tkh fly to left point":
+                    Vector3 target;
+                    Vector3 headToLeftHand = leftHD.transform.position - head.transform.position;
+                    try {
+                        RaycastHit rayhit = Physics.RaycastAll(leftHD.transform.position, headToLeftHand).OrderBy(h => h.distance).First();
+                        target = rayhit.point;
+                    } catch (InvalidOperationException) {
+                        target = leftHD.transform.position + headToLeftHand.normalized * 10f;
+                    }
+
+                    foreach (var tkh in TelekineticHold.AllActiveHolds) {
+                        try {
+                            tkh.FlyToward(target);
+                        } catch (NullReferenceException) {
+                        } catch (Exception ex) {
+                            DebugLog.Log("{0}", ex);
+                        }
+                    }
+                    break;
+
+                case "x tkh aimbot":
+                    foreach (var tkh in TelekineticHold.AllActiveHolds) {
+                        try {
+                            tkh.AutoAim = true;
+                        } catch (NullReferenceException) {
+                        } catch (Exception ex) {
+                            DebugLog.Log("{0}", ex);
+                        }
+                    }
+                    break;
+
+                case "x tkh copy":
+                    var toPickUp = new List<Thing>();
+                    foreach (var tkh in TelekineticHold.AllActiveHolds) {
+                        try {
+                            tkh.AllowCollision = false;
+                            GameObject newCopy = UnityEngine.Object.Instantiate<GameObject>(tkh.Thing.gameObject);
+                            Thing synced = SyncEmitWithoutSound(newCopy);
+                            Vector3 splitDir = Misc.GetRandomVector3(2.0f).normalized;
+                            newCopy.GetComponent<Rigidbody>()?.AddForce(splitDir, ForceMode.VelocityChange);
+                            tkh.Thing.GetComponent<Rigidbody>()?.AddForce(-splitDir, ForceMode.VelocityChange);
+                            toPickUp.Add(synced);
+                        } catch (NullReferenceException) {
+                        } catch (Exception ex) {
+                            DebugLog.Log("{0}", ex);
+                        }
+                    }
+                    foreach (var thing in toPickUp) {
+                        DebugLog.LogTemp("Adding {0}", thing.givenName);
+                        TelekineticHold.PickUp(thing, rightHD.gameObject);
+                    }
+                    DebugLog.LogTemp("-----");
+                    foreach (var tkh in TelekineticHold.AllActiveHolds) {
+                        DebugLog.LogTemp("{0}", tkh.Thing.givenName);
+                    }
+                    DebugLog.LogTemp("-----");
+
+                    break;
+
+                case "x tkh vanish":
+                    var toPutDown = new List<TelekineticHold>();
+                    foreach (var tkh in TelekineticHold.AllActiveHolds) {
+                        try {
+                            tkh.Thing.transform.position = new Vector3(-99999999f, -99999999f, -99999999f);
+                            Managers.personManager.DoInformOfThingPhysics(tkh.Thing);
+                            toPutDown.Add(tkh);
+                        } catch (NullReferenceException) {
+                        } catch (Exception ex) {
+                            DebugLog.Log("{0}", ex);
+                        }
+                    }
+                    foreach (var tkh in toPutDown) {
+                        tkh.PutDown();
+                    }
                     break;
 
                 case "rsnap":
@@ -232,6 +356,22 @@ namespace AnylandMods.AvatarScriptBackend {
                         }
                     }
                     break;
+            }
+        }
+    }
+
+    [HarmonyPatch(typeof(PersonManager), nameof(PersonManager.DoAddJustCreatedTemporaryThing))]
+    public class CaptureTemporaryThing {
+        internal static Thing Captured;
+        
+        public static IEnumerable<CodeInstruction> Transpiler(IEnumerable<CodeInstruction> code)
+        {
+            foreach (CodeInstruction inst in code) {
+                if (inst.opcode == OpCodes.Ret) {
+                    yield return new CodeInstruction(OpCodes.Ldloc_2);
+                    yield return new CodeInstruction(OpCodes.Stsfld, AccessTools.Field(typeof(CaptureTemporaryThing), "Captured"));
+                }
+                yield return inst;
             }
         }
     }
