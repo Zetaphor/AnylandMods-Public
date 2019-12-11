@@ -167,13 +167,17 @@ namespace AnylandMods.AvatarScriptBackend {
                 }
             } else if (tell.Equals("xx resetrot")) {
                 FM.ResetRotation();
+            } else if (tell.Equals("xx grab")) {
+                SpecialFlightModes.DefaultMode = SpecialFlightModes.FlightMode.Grab;
+            } else if (tell.Equals("xx default")) {
+                SpecialFlightModes.DefaultMode = SpecialFlightModes.FlightMode.Default;
             }
         }
     }
 
     [HarmonyPatch(typeof(HandDot), "Update")]
     public static class SpecialFlightModes {
-        private enum FlightMode {
+        public enum FlightMode {
             Default,
             Wings,
             Grab
@@ -184,16 +188,17 @@ namespace AnylandMods.AvatarScriptBackend {
         private static Vector3 dotLPosLast, dotRPosLast, dotLVelLast, dotRVelLast;
         private static bool lastPosIsInvalid = true;
 
+        public static FlightMode DefaultMode { get; set; } = FlightMode.Default;
+
         private static FlightManager FM {
             get => AddFlightManager.FM;  //shortcut
         }
 
         private static void StartMode(FlightMode mode)
         {
+            FM.HintFacingAngle();
             if (mode == FlightMode.Default) {
                 FM.DragFactor = 0.3f;
-            } else if (mode == FlightMode.Wings) {
-                FM.HintFacingAngle();
             } else if (mode == FlightMode.Grab) {
                 FM.DragFactor = 0.1f;
             }
@@ -257,7 +262,11 @@ namespace AnylandMods.AvatarScriptBackend {
                 }
             } else if (mode == FlightMode.Grab) {
                 FM.HintFacingAngle();
+                FM.DragFactor = 1.0f - handL.controller.GetAxis(EVRButtonId.k_EButton_Axis2).x;
                 FM.Acceleration = -25f * (torso.rotation * dotAvgVel) * dotAvgVel.magnitude;
+                float angle = Vector3.SignedAngle(dotLPos, dotLPosLast, torso.up) + Vector3.SignedAngle(dotRPos, dotRPosLast, torso.up);
+                DebugLog.LogTemp("{0}", angle);
+                FM.AngularAcceleration = Quaternion.AngleAxis(angle, torso.up);
             }
 
             dotLPosLast = dotLPos;
@@ -284,7 +293,7 @@ namespace AnylandMods.AvatarScriptBackend {
 
             lastUpdateTime = Time.time;
 
-            FlightMode newMode = FlightMode.Default;
+            FlightMode newMode = DefaultMode;
             Person me = Managers.personManager.ourPerson;
             Hand handL = me.GetHandBySide(Side.Left).GetComponent<Hand>();
             Hand handR = me.GetHandBySide(Side.Right).GetComponent<Hand>();

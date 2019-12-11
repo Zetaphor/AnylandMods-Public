@@ -19,6 +19,7 @@ namespace AnylandMods.AutoBody
         private static Regex regex, regexForIn;
         internal static Menu pointMenu;
         internal static HarmonyInstance harmony;
+        internal static bool holdAttachments;
 
         public static bool Load(UnityModManager.ModEntry modEntry)
         {
@@ -226,10 +227,12 @@ namespace AnylandMods.AutoBody
     }
 
     [HarmonyPatch(typeof(OwnProfileDialog), nameof(OwnProfileDialog.Start))]
-    public static class AddButton {
+    public static class AddButtons {
         public static void Postfix(OwnProfileDialog __instance)
         {
-            __instance.AddButton("savedBodyParts", null, "Saved Body Parts...", "ButtonCompact", 0, 300, textColor: TextColor.Blue, align: TextAlignment.Center);
+            __instance.AddButton("savedBodyParts", null, "Saved Body Parts...", "ButtonCompact", 100, 300, textColor: TextColor.Blue, align: TextAlignment.Center);
+            __instance.AddButton("holdAttachments", null, "Hold", "ButtonSmallCentered", -200, 0, null, false, textColor: TextColor.Blue);
+            Main.holdAttachments = false;
         }
     }
 
@@ -261,6 +264,8 @@ namespace AnylandMods.AutoBody
         {
             if (contextName.Equals("savedBodyParts")) {
                 Main.OpenSavedBodyParts();
+            } else if (contextName.Equals("holdAttachments")) {
+                Main.holdAttachments = !Main.holdAttachments;
             } else if (contextName.Equals("ignoreAddBody")) {
                 Main.config.IgnoreAddBody = state;
                 Main.config.Save();
@@ -395,8 +400,6 @@ namespace AnylandMods.AutoBody
                         holdingLeft = holding;
                         if (holding && ap.attachedThing != null) {
                             GameObject.Destroy(ap.attachedThing);
-                        } else if (ap.attachedThing == null && thingNameLeft != null) {
-                            Main.SetAttachment(AttachmentPointId.HandLeft, thingNameLeft);
                         }
                     }
                 } else if (ap.id == AttachmentPointId.HandRight) {
@@ -405,47 +408,9 @@ namespace AnylandMods.AutoBody
                         holdingRight = holding;
                         if (holding && ap.attachedThing != null) {
                             GameObject.Destroy(ap.attachedThing);
-                        } else if (ap.attachedThing == null && thingNameRight != null) {
-                            Main.SetAttachment(AttachmentPointId.HandRight, thingNameRight);
                         }
                     }
                 }
-            }
-        }
-    }
-
-    [HarmonyPatch(typeof(PersonManager), nameof(PersonManager.DoClearFromHand))]
-    public static class ReattachHandOnClearFromHand {
-        public static void Postfix(GameObject hand)
-        {
-            DebugLog.LogTemp("ReattachHandOnClearFromHand.Postfix({0})", hand);
-            if (hand == null)
-                return;
-
-            AttachmentPointId apid = (hand.GetComponent<Hand>().side == Side.Left) ? AttachmentPointId.HandLeft : AttachmentPointId.HandRight;
-            string thingName = (apid == AttachmentPointId.HandLeft) ? HandPseudoAttachmentControl.thingNameLeft : HandPseudoAttachmentControl.thingNameRight;
-            Main.SetAttachment(apid, thingName);
-        }
-    }
-
-    [HarmonyPatch(typeof(PersonManager), nameof(PersonManager.DoThrowThing))]
-    public static class ReattachHandOnThrowThing {
-        public static void Postfix(PersonManager __instance, GameObject thing)
-        {
-            DebugLog.LogTemp("ReattachHandOnThrowThing.Postfix(thing: {0})", thing);
-            if (thing == null)
-                return;
-
-            TopographyId topo = __instance.GetTopographyIdOfHand(thing.transform.parent.gameObject);
-            AttachmentPointId apid = AttachmentPointId.None;
-            if (topo == TopographyId.Left)
-                apid = AttachmentPointId.HandLeft;
-            else if (topo == TopographyId.Right)
-                apid = AttachmentPointId.HandRight;
-
-            if (apid != AttachmentPointId.None) {
-                string thingName = (topo == TopographyId.Left) ? HandPseudoAttachmentControl.thingNameLeft : HandPseudoAttachmentControl.thingNameRight;
-                Main.SetAttachment(apid, thingName);
             }
         }
     }

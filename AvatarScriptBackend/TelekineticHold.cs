@@ -181,7 +181,11 @@ namespace AnylandMods.AvatarScriptBackend {
 
         public static void ResetAll()
         {
+            var toReset = new List<TelekineticHold>();
             foreach (TelekineticHold tkh in AllMovedObjects) {
+                toReset.Add(tkh);
+            }
+            foreach (TelekineticHold tkh in toReset) {
                 try {
                     tkh.PutDown();
                     tkh.ResetPosition();
@@ -203,7 +207,11 @@ namespace AnylandMods.AvatarScriptBackend {
 
         public static void PutDownAll()
         {
-            foreach (TelekineticHold tkh in AllMovedObjects) {
+            var toPutDown = new List<TelekineticHold>();
+            foreach (TelekineticHold tkh in AllActiveHolds) {
+                toPutDown.Add(tkh);
+            }
+            foreach (TelekineticHold tkh in toPutDown) {
                 try {
                     tkh.PutDown();
                 } catch (NullReferenceException) {
