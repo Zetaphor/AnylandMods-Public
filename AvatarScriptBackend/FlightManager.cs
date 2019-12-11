@@ -262,11 +262,10 @@ namespace AnylandMods.AvatarScriptBackend {
                 }
             } else if (mode == FlightMode.Grab) {
                 FM.HintFacingAngle();
-                FM.DragFactor = 1.0f - handL.controller.GetAxis(EVRButtonId.k_EButton_Axis2).x;
+                FM.DragFactor = Mathf.Max(0.25f, 1.0f - handL.controller.GetAxis(EVRButtonId.k_EButton_Axis2).x);
                 FM.Acceleration = -25f * (torso.rotation * dotAvgVel) * dotAvgVel.magnitude;
                 float angle = Vector3.SignedAngle(dotLPos, dotLPosLast, torso.up) + Vector3.SignedAngle(dotRPos, dotRPosLast, torso.up);
-                DebugLog.LogTemp("{0}", angle);
-                FM.AngularAcceleration = Quaternion.AngleAxis(angle, torso.up);
+                FM.AngularVelocity *= Quaternion.AngleAxis(30f * angle * angle, torso.up);
             }
 
             dotLPosLast = dotLPos;
