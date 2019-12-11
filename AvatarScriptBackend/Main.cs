@@ -23,8 +23,6 @@ namespace AnylandMods.AvatarScriptBackend {
         private static Transform previousLeftHandParent = null;
         private static Transform previousRightHandParent = null;
 
-        private static bool ricochet = false;
-
         public static bool Load(UnityModManager.ModEntry modEntry)
         {
             disabledObjects = new List<GameObject>();
@@ -261,6 +259,7 @@ namespace AnylandMods.AvatarScriptBackend {
                         try {
                             tkh.AllowCollision = false;
                             GameObject newCopy = UnityEngine.Object.Instantiate<GameObject>(tkh.Thing.gameObject);
+                            newCopy.GetComponent<Thing>().thrownId = Misc.GetRandomId();
                             Thing synced = SyncEmitWithoutSound(newCopy);
                             Vector3 splitDir = Misc.GetRandomVector3(2.0f).normalized;
                             newCopy.GetComponent<Rigidbody>()?.AddForce(splitDir, ForceMode.VelocityChange);
@@ -358,14 +357,6 @@ namespace AnylandMods.AvatarScriptBackend {
                         }
                     }
                     break;
-
-                case "x ricochet on":
-                    ricochet = true;
-                    break;
-
-                case "x ricochet off":
-                    ricochet = false;
-                    break;
             }
         }
     }
@@ -405,31 +396,6 @@ namespace AnylandMods.AvatarScriptBackend {
             } else {
                 Right = (__instance.transform.position - lastPosRight) / Time.deltaTime;
                 lastPosRight = __instance.transform.position;
-            }
-        }
-    }
-
-    [HarmonyPatch(typeof(Thing), "Update")]
-    public static class DoRicochet {
-        private static List<Thing> toInform;
-
-        static DoRicochet()
-        {
-            toInform = new List<Thing>();
-        }
-
-        public static void Postfix(Thing __instance)
-        {
-            foreach (Thing thing in toInform) {
-                Managers.personManager.DoInformOfThingPhysics(thing);
-            }
-            toInform.Clear();
-            Vector3 ourPos = Managers.personManager.ourPerson.Torso.transform.position;
-            if (__instance.rigidbody != null && (__instance.transform.position - ourPos).magnitude < 1.5f) {
-                __instance.rigidbody.velocity = -1.5f * __instance.rigidbody.velocity;
-                __instance.transform.position = ourPos + (__instance.transform.position - ourPos).normalized * 1.5f;
-                BodyTellManager.Trigger("x ricochet hit");
-                toInform.Add(__instance);
             }
         }
     }
