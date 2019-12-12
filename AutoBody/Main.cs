@@ -16,10 +16,11 @@ namespace AnylandMods.AutoBody
         public static bool enabled;
         public static UnityModManager.ModEntry mod;
         internal static ConfigFile config;
-        private static Regex regex, regexForIn;
+        private static Regex regex, regexForIn, regexForSave;
         internal static Menu pointMenu;
         internal static HarmonyInstance harmony;
         internal static bool holdAttachments;
+        internal static Dictionary<AttachmentPointId, string[]> savedSlots;
 
         public static bool Load(UnityModManager.ModEntry modEntry)
         {
@@ -28,6 +29,8 @@ namespace AnylandMods.AutoBody
             mod = modEntry;
             config = new ConfigFile(mod);
             config.Load();
+
+            savedSlots = new Dictionary<AttachmentPointId, string[]>();
 
             ModMenu.AddButton(harmony, "Saved Body Parts...", SavedBodyParts_Action);
 
@@ -70,6 +73,7 @@ namespace AnylandMods.AutoBody
 
             regex = new Regex("^xa([0-9ab]) ?(.*)$");
             regexForIn = new Regex(" in ([0-9]*\\.?[0-9]*)s? ?(?:via (.*))?$");
+            regexForSave = new Regex("^save ?([0-9]) ?");
             BodyTellManager.ToldByBody += BodyTellManager_ToldByBody;
             return true;
         }
@@ -130,6 +134,14 @@ namespace AnylandMods.AutoBody
                 HandPseudoAttachmentControl.thingNameLeft = thingName;
             } else if (point == AttachmentPointId.HandRight) {
                 HandPseudoAttachmentControl.thingNameRight = thingName;
+            }
+
+            if (thingName.ToLower().StartsWith("load") && (thingName.Length == 5 || (thingName.Length == 6 && thingName[4] == ' '))) {
+                if (int.TryParse(thingName[thingName.Length - 1].ToString(), out int slot)) {
+                    if (savedSlots.TryGetValue(point, out string[] array)) {
+                        thingName = array[slot];
+                    }
+                }
             }
 
             if (thingName.Length == 0 || thingName.Equals("-")) {
@@ -203,6 +215,19 @@ namespace AnylandMods.AutoBody
                     }
                 }
 
+                Match matchForSave = regexForSave.Match(thingName);
+                if (matchForSave.Success) {
+                    DebugLog.LogTemp("matchForSave {0}", matchForSave);
+                    string[] array;
+                    if (!savedSlots.TryGetValue(point, out array)) {
+                        array = new string[10];
+                        savedSlots[point] = array;
+                    }
+                    thingName = thingName.Substring(matchForSave.Length);
+                    array[int.Parse(matchForSave.Groups[1].Value)] = thingName;
+                    return;
+                }
+
                 bool shouldMove = (pointNum == 6 || pointNum == 7);
                 GameObject ap = Managers.personManager.ourPerson.GetAttachmentPointById(point);
                 DebugLog.LogTemp("parent of {0} is {1}", ap, ap.transform.parent.gameObject);
@@ -231,7 +256,7 @@ namespace AnylandMods.AutoBody
         public static void Postfix(OwnProfileDialog __instance)
         {
             __instance.AddButton("savedBodyParts", null, "Saved Body Parts...", "ButtonCompact", 100, 300, textColor: TextColor.Blue, align: TextAlignment.Center);
-            __instance.AddButton("holdAttachments", null, "Hold", "ButtonSmallCentered", -200, 0, null, false, textColor: TextColor.Blue);
+            __instance.AddButton("holdAttachments", null, "Hold", "ButtonSmallCentered", -220, 300, null, false, textColor: TextColor.Blue);
             Main.holdAttachments = false;
         }
     }
@@ -423,6 +448,56 @@ namespace AnylandMods.AutoBody
             __instance.AttachmentPointsById.Add(AttachmentPointId.HandRight, ___AttachmentPointHandRight);
             ___AttachmentPointHandLeft.gameObject.AddComponent<HandPseudoAttachmentControl>();
             ___AttachmentPointHandRight.gameObject.AddComponent<HandPseudoAttachmentControl>();
+        }
+    }
+
+    [HarmonyPatch(typeof(HandDot), nameof(HandDot.HandleOnTriggerStay))]
+    public static class HoldAttachmentsOnPoints1 {
+        internal static AttachmentPointId activePoint = AttachmentPointId.None;
+
+        private static void CapturePointId(GameObject point, HandDot instance)
+        {
+            var ap = point.GetComponent<AttachmentPoint>();
+            if (ap == null || CrossDevice.GetPress(instance.controller, CrossDevice.button_delete, instance.side)) {
+                activePoint = AttachmentPointId.None;
+            } else {
+                activePoint = ap.id;
+            }
+        }
+
+        public static IEnumerable<CodeInstruction> Transpiler(IEnumerable<CodeInstruction> code)
+        {
+            foreach (CodeInstruction inst in code) {
+                if (inst.opcode == OpCodes.Callvirt) {
+                    if (((MethodInfo)inst.operand).Name.Equals("DoRemoveAttachedThing")) {
+                        yield return new CodeInstruction(OpCodes.Dup);
+                        yield return new CodeInstruction(OpCodes.Ldarg_0);
+                        yield return new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(HoldAttachmentsOnPoints1), "CapturePointId"));
+                    }
+                }
+                yield return inst;
+            }
+        }
+
+        public static void Postfix(HandDot __instance)
+        {
+            if (CrossDevice.GetPress(__instance.controller, CrossDevice.button_delete, __instance.side)) {
+                activePoint = AttachmentPointId.None;
+            }
+        }
+    }
+
+    [HarmonyPatch(typeof(HandDot), "AttachIfCollidesWithAttachmentPointSphere")]
+    public static class HoldAttachmentsOnPoints2 {
+        public static bool Prefix(GameObject thing)
+        {
+            if (Main.holdAttachments && HoldAttachmentsOnPoints1.activePoint != AttachmentPointId.None) {
+                GameObject point = Managers.personManager.ourPerson.GetAttachmentPointById(HoldAttachmentsOnPoints1.activePoint);
+                Managers.personManager.DoAttachThing(point, thing, false);
+                return false;
+            } else {
+                return true;
+            }
         }
     }
 }
