@@ -117,8 +117,6 @@ namespace AnylandMods.AvatarScriptBackend {
         
         public static TelekineticHold PickUp(Thing thing, GameObject hand)
         {
-            if (thing.isLocked)
-                return null;
             var comp = thing.gameObject.GetComponent<TelekineticHold>();
             if (comp == null) {
                 comp = thing.gameObject.AddComponent<TelekineticHold>();

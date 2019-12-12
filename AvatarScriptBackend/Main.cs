@@ -363,7 +363,7 @@ namespace AnylandMods.AvatarScriptBackend {
 
     [HarmonyPatch(typeof(PersonManager), nameof(PersonManager.DoAddJustCreatedTemporaryThing))]
     public class CaptureTemporaryThing {
-        internal static Thing Captured;
+        internal static Thing Captured = null;
         
         public static IEnumerable<CodeInstruction> Transpiler(IEnumerable<CodeInstruction> code)
         {

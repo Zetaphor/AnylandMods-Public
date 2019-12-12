@@ -10,8 +10,8 @@ namespace AnylandMods.AvatarScriptBackend {
     public class FlightManager : MonoBehaviour {
         public Vector3 Velocity { get; set; }
         public Vector3 Acceleration { get; set; }
-        public Quaternion AngularVelocity { get; set; }
-        public Quaternion AngularAcceleration { get; set; }
+        public Vector3 AngularVelocity { get; set; }
+        public Vector3 AngularAcceleration { get; set; }
         public float DragFactor { get; set; }
 
         public float MaxLeanAngle { get; set; } = 70f;
@@ -30,8 +30,9 @@ namespace AnylandMods.AvatarScriptBackend {
             Acceleration = Vector3.zero;
             velWithLean = Vector3.zero;
             AccelWithLean = Vector3.zero;
-            AngularVelocity = Quaternion.identity;
-            AngularAcceleration = Quaternion.identity;
+            AngularVelocity = Vector3.zero;
+            AngularAcceleration = Vector3.zero;
+            CurrentLean = Quaternion.identity;
         }
 
         private static float Sigmoid(float a, float b, float c, float x)
@@ -62,22 +63,32 @@ namespace AnylandMods.AvatarScriptBackend {
             lastSignificantDir = new Vector3(Mathf.Cos(angle * Mathf.Deg2Rad), 0, Mathf.Sin(angle * Mathf.Deg2Rad));
         }
 
+        public static Vector3 AddAAVector(Vector3 a, Vector3 b)
+        {
+            Quaternion quatA = Quaternion.AngleAxis(a.magnitude, a.normalized);
+            Quaternion quatB = Quaternion.AngleAxis(b.magnitude, b.normalized);
+            (quatA * quatB).ToAngleAxis(out float angle, out Vector3 axis);
+            return angle * axis;
+        }
+
         public void Update()
         {
             Velocity += Acceleration * Time.deltaTime;
             velWithLean += AccelWithLean * Time.deltaTime;
             transform.position += Velocity * Time.deltaTime;
 
-            AngularVelocity *= Quaternion.SlerpUnclamped(Quaternion.identity, AngularAcceleration, Time.deltaTime);
+
+            AngularVelocity = AddAAVector(AngularVelocity, AngularAcceleration * Time.deltaTime);
+            var angularDelta = AngularVelocity * Time.deltaTime;
             Quaternion angVelRotation = Quaternion.Inverse(CurrentLean);
-            angVelRotation *= Quaternion.SlerpUnclamped(Quaternion.identity, AngularVelocity, Time.deltaTime);
+            angVelRotation *= Quaternion.AngleAxis(angularDelta.magnitude, angularDelta.normalized);
             angVelRotation *= CurrentLean;
             transform.rotation *= angVelRotation;
 
             float dragCoefficient = Mathf.Pow(DragFactor, Time.deltaTime);
             Velocity *= dragCoefficient;
             velWithLean *= dragCoefficient;
-            AngularVelocity = Quaternion.SlerpUnclamped(Quaternion.identity, AngularVelocity, dragCoefficient);
+            AngularVelocity *= dragCoefficient;
 
             if (FlatVelocity.magnitude >= minSignificantVelocity)
                 lastSignificantDir = FlatVelocity.normalized;
@@ -257,15 +268,16 @@ namespace AnylandMods.AvatarScriptBackend {
                     FM.Acceleration = FM.AccelWithLean;
                     FM.Acceleration += new Vector3(0, yAccel);
                     FM.Acceleration -= 15f * (torso.rotation * dotAvgVel) * dotAvgVel.magnitude;
-                    FM.AngularAcceleration = Quaternion.AngleAxis(handDist * angle, torso.up);
+                    FM.AngularAcceleration = handDist * angle * torso.up;
                     FM.DragFactor = Mathf.Clamp((-Vector3.SignedAngle(dotR.transform.position - handR.transform.position, torso.transform.forward, torso.transform.right) + 90.0f) / 180.0f, 0.0f, 1.0f);
                 }
             } else if (mode == FlightMode.Grab) {
                 FM.HintFacingAngle();
                 FM.DragFactor = Mathf.Max(0.25f, 1.0f - handL.controller.GetAxis(EVRButtonId.k_EButton_Axis2).x);
                 FM.Acceleration = -25f * (torso.rotation * dotAvgVel) * dotAvgVel.magnitude;
-                float angle = Vector3.SignedAngle(dotLPos, dotLPosLast, torso.up) + Vector3.SignedAngle(dotRPos, dotRPosLast, torso.up);
-                FM.AngularVelocity *= Quaternion.AngleAxis(30f * angle * angle, torso.up);
+                Vector3 midpoint = (dotLPos + dotRPos) / 2;
+                float angle = Vector3.SignedAngle(dotLPos - midpoint, dotLPosLast - midpoint, torso.up) + Vector3.SignedAngle(dotRPos - midpoint, dotRPosLast - midpoint, torso.up);
+                FM.AngularVelocity += 2f * angle * angle * angle * torso.up;
             }
 
             dotLPosLast = dotLPos;
@@ -278,7 +290,7 @@ namespace AnylandMods.AvatarScriptBackend {
         {
             FM.Acceleration = Vector3.zero;
             FM.AccelWithLean = Vector3.zero;
-            FM.AngularAcceleration = Quaternion.identity;
+            FM.AngularAcceleration = Vector3.zero;
 
             if (mode == FlightMode.Wings) {
                 FM.ResetRotation();
