@@ -256,12 +256,8 @@ namespace AnylandMods.AvatarScriptBackend {
 
                 float gravityControl = (dotLPos - head.position).magnitude + (dotRPos - head.position).magnitude;
                 float yAccel = Mathf.Lerp(-100.0f, 0.0f, gravityControl);
-                float angle1 = 0.5f * Vector3.SignedAngle(handR.transform.position - handL.transform.position, torso.right, torso.forward);
-                float angle2 = Vector3.SignedAngle(dotLVel, dotRVel, torso.up);
-                angle2 *= 0.4f * dotLVel.magnitude * dotRVel.magnitude;
-                angle2 *= angle2 / 360f;
-                angle2 = 0;  // until I figure out the right math to use
-                float angle = (!fingersClosedLeft && !fingersClosedRight) ? (angle1 + angle2) : 0.0f;
+                float angle = 0.5f * Vector3.SignedAngle(handR.transform.position - handL.transform.position, torso.right, torso.forward);
+                angle = (!fingersClosedLeft && !fingersClosedRight) ? angle : 0.0f;
 
                 if (!fingersClosedLeft || !fingersClosedRight) {
                     FM.AccelWithLean = (Quaternion.Inverse(FM.CurrentLean) * torso.rotation) * new Vector3(0.0f, 0.0f, 20.0f * handDist * handDist);
@@ -277,7 +273,7 @@ namespace AnylandMods.AvatarScriptBackend {
                 FM.Acceleration = -25f * (torso.rotation * dotAvgVel) * dotAvgVel.magnitude;
                 Vector3 midpoint = (dotLPos + dotRPos) / 2;
                 float angle = Vector3.SignedAngle(dotLPos - midpoint, dotLPosLast - midpoint, torso.up) + Vector3.SignedAngle(dotRPos - midpoint, dotRPosLast - midpoint, torso.up);
-                FM.AngularVelocity += 2f * angle * angle * angle * torso.up;
+                FM.AngularVelocity += ((dotRPos - midpoint).magnitude + (dotLPos - midpoint).magnitude) * angle * angle * angle * Vector3.up;
             }
 
             dotLPosLast = dotLPos;
