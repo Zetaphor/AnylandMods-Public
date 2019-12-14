@@ -27,25 +27,43 @@ namespace AnylandMods.AutoBody {
             }
         }
 
-        public string AddCurrent()
+        public string AddCurrent(bool preferHandAttachment = false)
         {
-            GameObject gobj = Managers.personManager.ourPerson.GetAttachmentPointById(AttachmentPoint);
+            AttachmentPointId apid = AttachmentPoint;
+            bool switchedToHand = false;
+            if (preferHandAttachment) {
+                if (apid == AttachmentPointId.ArmLeft) {
+                    apid = AttachmentPointId.HandLeft;
+                    switchedToHand = true;
+                } else if (apid == AttachmentPointId.ArmRight) {
+                    apid = AttachmentPointId.HandRight;
+                    switchedToHand = true;
+                }
+            }
+
+            GameObject gobj = Managers.personManager.ourPerson.GetAttachmentPointById(apid);
             if (gobj == null) {
-                DebugLog.Log("Attachment point {0} does not exist!", AttachmentPoint);
-                return null;
+                DebugLog.Log("Attachment point {0} does not exist!", apid);
+                if (switchedToHand)
+                    return AddCurrent(false);
+                else
+                    return null;
             }
             AttachmentPoint ap = gobj.GetComponent<AttachmentPoint>();
             if (ap == null) {
                 DebugLog.Log("Attachment point {0} missing AttachmentPoint component; adding it now.");
                 ap = gobj.AddComponent<AttachmentPoint>();
-                ap.id = AttachmentPoint;
+                ap.id = apid;
             }
             if (ap.attachedThing != null) {
                 string name = ap.attachedThing.name.ToLower();
                 this[name] = ap.GetAttachmentData();
                 return name;
             } else {
-                return null;
+                if (switchedToHand)
+                    return AddCurrent(false);
+                else
+                    return null;
             }
         }
 

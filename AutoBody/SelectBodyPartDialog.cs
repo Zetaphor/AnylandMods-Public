@@ -150,7 +150,8 @@ namespace AnylandMods.AutoBody {
 
         private void BtnSave_Action(string id, Dialog dialog)
         {
-            if (Main.config.GetListForAttachmentPoint(apid).AddCurrent() is string name) {
+            bool isHand = (apid == AttachmentPointId.HandLeft || apid == AttachmentPointId.HandRight);
+            if (Main.config.GetListForAttachmentPoint(apid).AddCurrent(isHand) is string name) {
                 Person ourPerson = Managers.personManager.ourPerson;
                 if (apid == AttachmentPointId.LegLeft) {
                     Main.config.LegPosLeft[name] = ourPerson.AttachmentPointLegLeft.transform.localPosition;
