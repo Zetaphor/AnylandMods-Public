@@ -418,6 +418,8 @@ namespace AnylandMods.AutoBody
         {
             var ap = GetComponent<AttachmentPoint>();
             var person = GetComponentInParent<Person>();
+            if (ap == null || person == null)
+                return;
             if (person.isOurPerson) {
                 if (ap.id == AttachmentPointId.HandLeft) {
                     bool holding = person.GetHandBySide(Side.Left).GetComponentInChildren<HandDot>().currentlyHeldObject != null;
