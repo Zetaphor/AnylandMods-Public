@@ -106,6 +106,7 @@ namespace AnylandMods.AvatarScriptBackend {
                 thing.transform.position += new Vector3(-9999999f, -9999999f, -9999999f);
                 Managers.personManager.DoAddJustCreatedTemporaryThing(thing);
                 thing.transform.position = CaptureTemporaryThing.Captured.transform.position = pos;
+
                 Managers.personManager.DoInformOfThingPhysics(CaptureTemporaryThing.Captured);
                 return CaptureTemporaryThing.Captured;
             }
@@ -200,11 +201,11 @@ namespace AnylandMods.AvatarScriptBackend {
                         .Where(t => t.isThrownOrEmitted || t.movableByEveryone || t.isHoldable)
                         .OrderBy(t => (t.transform.position - head.transform.position).magnitude + Vector3.Angle(t.transform.position - rightHD.transform.position, headToHand) / 10)
                         .FirstOrDefault();
-                    if (nearest != null) {
+                    if (nearest != null && nearest.GetComponentInParent<Person>() == null) {
                         if (nearest.isThrownOrEmitted || nearest.movableByEveryone) {
                             TelekineticHold.PickUp(nearest, rightHD.gameObject);
                         } else {
-                            DebugLog.Log("Picking up nearest = {0}, {1}", nearest.givenName, nearest);
+                            DebugLog.Log("Picking up nearest = {0}, {1}", nearest.givenName, nearest.thingId);
                             GameObject newCopy = UnityEngine.Object.Instantiate<GameObject>(nearest.gameObject);
                             Thing synced = SyncEmitWithoutSound(newCopy);
                             TelekineticHold.PickUp(synced, rightHD.gameObject);

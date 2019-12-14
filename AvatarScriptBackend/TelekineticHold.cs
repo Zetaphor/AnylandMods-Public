@@ -30,7 +30,7 @@ namespace AnylandMods.AvatarScriptBackend {
         private bool positionWasReset = false;
 
         public bool AutoAim { get; set; }
-        public bool AllowCollision { get; set; }
+        public bool AllowCollision { get; set; } = false;
 
         public static List<TelekineticHold> AllMovedObjects { get; private set; }
         public static List<TelekineticHold> AllActiveHolds { get; private set; }

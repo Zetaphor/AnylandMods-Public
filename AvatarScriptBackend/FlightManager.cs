@@ -256,7 +256,7 @@ namespace AnylandMods.AvatarScriptBackend {
                     FM.AccelWithLean = (Quaternion.Inverse(FM.CurrentLean) * torso.rotation) * new Vector3(0.0f, 0.0f, 20.0f * handDist * handDist / (ourScale * ourScale));
                     FM.Acceleration = FM.AccelWithLean;
                     FM.Acceleration += new Vector3(0, yAccel);
-                    FM.Acceleration -= 15f * (torso.rotation * dotAvgVel) * dotAvgVel.magnitude / (ourScale * ourScale);
+                    FM.Acceleration -= 15f * (torso.rotation * dotAvgVel) * dotAvgVel.magnitude / ourScale;
                     FM.AngularAcceleration = handDist / ourScale * angle * Vector3.up;
                     FM.DragFactor = Mathf.Clamp((-Vector3.SignedAngle(dotR.transform.position - handR.transform.position, torso.transform.forward, torso.transform.right) + 90.0f) / 180.0f, 0.0f, 1.0f);
                 }
@@ -268,12 +268,15 @@ namespace AnylandMods.AvatarScriptBackend {
                 float angle = Vector3.SignedAngle(dotLPos - midpoint, dotLPosLast - midpoint, torso.up) + Vector3.SignedAngle(dotRPos - midpoint, dotRPosLast - midpoint, torso.up);
                 FM.AngularVelocity += ((dotRPos - midpoint).magnitude + (dotLPos - midpoint).magnitude) * angle * angle * angle * Vector3.up / 20f;
 
+                Vector3? tppos = Our.lastTeleportHitPoint;
+                Our.lastTeleportHitPoint = null;
                 if (CrossDevice.GetPress(handL.controller, CrossDevice.button_grabTip, Side.Left)) {
                     float ratio = (dotRPos - dotLPos).magnitude / ((dotRPosLast - dotLPosLast).magnitude * ourScale / ourScaleLast);
                     Managers.personManager.ApplyAndCachePhotonRigScale(ourScale * ratio, true);
                 } else if (CrossDevice.GetPressDown(handL.controller, CrossDevice.button_grab, Side.Left)) {
                     Managers.personManager.ApplyAndCachePhotonRigScale(1.0f);
                 }
+                Our.lastTeleportHitPoint = tppos;
             }
 
             dotLPosLast = dotLPos;
