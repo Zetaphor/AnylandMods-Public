@@ -63,25 +63,16 @@ namespace AnylandMods.AvatarScriptBackend {
             lastSignificantDir = new Vector3(Mathf.Cos(angle * Mathf.Deg2Rad), 0, Mathf.Sin(angle * Mathf.Deg2Rad));
         }
 
-        public static Vector3 AddAAVector(Vector3 a, Vector3 b)
-        {
-            Quaternion quatA = Quaternion.AngleAxis(a.magnitude, a.normalized);
-            Quaternion quatB = Quaternion.AngleAxis(b.magnitude, b.normalized);
-            (quatA * quatB).ToAngleAxis(out float angle, out Vector3 axis);
-            return angle * axis;
-        }
-
         public void Update()
         {
             Velocity += Acceleration * Time.deltaTime;
             velWithLean += AccelWithLean * Time.deltaTime;
             transform.position += Velocity * Time.deltaTime;
 
-
-            AngularVelocity = AddAAVector(AngularVelocity, AngularAcceleration * Time.deltaTime);
+            AngularVelocity += AngularAcceleration * Time.deltaTime;
             var angularDelta = AngularVelocity * Time.deltaTime;
             Quaternion angVelRotation = Quaternion.Inverse(CurrentLean);
-            angVelRotation *= Quaternion.AngleAxis(angularDelta.magnitude, angularDelta.normalized);
+            angVelRotation *= Quaternion.Euler(angularDelta);
             angVelRotation *= CurrentLean;
             transform.rotation *= angVelRotation;
 
@@ -197,6 +188,7 @@ namespace AnylandMods.AvatarScriptBackend {
         private static float lastUpdateTime = -1.0f;
         private static FlightMode mode = FlightMode.Default;
         private static Vector3 dotLPosLast, dotRPosLast, dotLVelLast, dotRVelLast;
+        private static float ourScaleLast = 1f;
         private static bool lastPosIsInvalid = true;
 
         public static FlightMode DefaultMode { get; set; } = FlightMode.Default;
@@ -235,6 +227,7 @@ namespace AnylandMods.AvatarScriptBackend {
             Vector3 dotRVel = (dotRPos - dotRPosLast) / Time.deltaTime;
             Vector3 dotAvgVel = (dotLVel + dotRVel) / 2;
 
+            float ourScale = Managers.personManager.GetOurScale();
             Transform torso = me.Torso.transform;
             float handDist = (dotRPos - dotLPos).magnitude;
 
@@ -256,15 +249,15 @@ namespace AnylandMods.AvatarScriptBackend {
 
                 float gravityControl = (dotLPos - head.position).magnitude + (dotRPos - head.position).magnitude;
                 float yAccel = Mathf.Lerp(-100.0f, 0.0f, gravityControl);
-                float angle = 0.5f * Vector3.SignedAngle(handR.transform.position - handL.transform.position, torso.right, torso.forward);
+                float angle = 0.5f * Vector3.SignedAngle((handR.transform.position - handL.transform.position) / ourScale, torso.right, torso.forward);
                 angle = (!fingersClosedLeft && !fingersClosedRight) ? angle : 0.0f;
 
                 if (!fingersClosedLeft || !fingersClosedRight) {
-                    FM.AccelWithLean = (Quaternion.Inverse(FM.CurrentLean) * torso.rotation) * new Vector3(0.0f, 0.0f, 20.0f * handDist * handDist);
+                    FM.AccelWithLean = (Quaternion.Inverse(FM.CurrentLean) * torso.rotation) * new Vector3(0.0f, 0.0f, 20.0f * handDist * handDist / (ourScale * ourScale));
                     FM.Acceleration = FM.AccelWithLean;
                     FM.Acceleration += new Vector3(0, yAccel);
-                    FM.Acceleration -= 15f * (torso.rotation * dotAvgVel) * dotAvgVel.magnitude;
-                    FM.AngularAcceleration = handDist * angle * torso.up;
+                    FM.Acceleration -= 15f * (torso.rotation * dotAvgVel) * dotAvgVel.magnitude / (ourScale * ourScale);
+                    FM.AngularAcceleration = handDist / ourScale * angle * Vector3.up;
                     FM.DragFactor = Mathf.Clamp((-Vector3.SignedAngle(dotR.transform.position - handR.transform.position, torso.transform.forward, torso.transform.right) + 90.0f) / 180.0f, 0.0f, 1.0f);
                 }
             } else if (mode == FlightMode.Grab) {
@@ -273,13 +266,21 @@ namespace AnylandMods.AvatarScriptBackend {
                 FM.Acceleration = -25f * (torso.rotation * dotAvgVel) * dotAvgVel.magnitude;
                 Vector3 midpoint = (dotLPos + dotRPos) / 2;
                 float angle = Vector3.SignedAngle(dotLPos - midpoint, dotLPosLast - midpoint, torso.up) + Vector3.SignedAngle(dotRPos - midpoint, dotRPosLast - midpoint, torso.up);
-                FM.AngularVelocity += ((dotRPos - midpoint).magnitude + (dotLPos - midpoint).magnitude) * angle * angle * angle * Vector3.up;
+                FM.AngularVelocity += ((dotRPos - midpoint).magnitude + (dotLPos - midpoint).magnitude) * angle * angle * angle * Vector3.up / 20f;
+
+                if (CrossDevice.GetPress(handL.controller, CrossDevice.button_grabTip, Side.Left)) {
+                    float ratio = (dotRPos - dotLPos).magnitude / ((dotRPosLast - dotLPosLast).magnitude * ourScale / ourScaleLast);
+                    Managers.personManager.ApplyAndCachePhotonRigScale(ourScale * ratio, true);
+                } else if (CrossDevice.GetPressDown(handL.controller, CrossDevice.button_grab, Side.Left)) {
+                    Managers.personManager.ApplyAndCachePhotonRigScale(1.0f);
+                }
             }
 
             dotLPosLast = dotLPos;
             dotRPosLast = dotRPos;
             dotLVelLast = dotLVel;
             dotRVelLast = dotRVel;
+            ourScaleLast = ourScale;
         }
 
         private static void EndMode(FlightMode mode)
