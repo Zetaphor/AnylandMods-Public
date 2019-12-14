@@ -77,7 +77,6 @@ namespace AnylandMods.ScriptableControls {
 
         public static void UpdateTests()
         {
-            DebugLog.Log("UpdateTests called");
             foreach (string tell in BodyTellManager.BodyTellList) {
                 if (!tells.Contains(tell)) {
                     if (ControlState.TryParseTellString(tell, out ControlState state))

@@ -5,6 +5,7 @@ using System.Text;
 using Harmony;
 using System.Reflection;
 using System.Reflection.Emit;
+using UnityEngine;
 
 namespace AnylandMods {
     public static class BodyTellManager {
@@ -78,11 +79,22 @@ namespace AnylandMods {
             }
         }
 
-        [HarmonyPatch(typeof(PersonManager), nameof(PersonManager.InitializeOurPerson))]
+        [HarmonyPatch(typeof(HandDot), "Update")]
         public static class UpdateBodyTellListWhenNeeded2 {
+            private static float timeOfLastUpdate = -1f;
+
+            static UpdateBodyTellListWhenNeeded2()
+            {
+                BodyTellManager.OnUpdate += delegate {
+                    timeOfLastUpdate = Time.time;
+                };
+            }
+
             public static void Postfix()
             {
-                BodyTellManager.Update();
+                if (Time.time - timeOfLastUpdate >= 1f) {
+                    BodyTellManager.Update();
+                }
             }
         }
 
