@@ -204,6 +204,7 @@ namespace AnylandMods.AvatarScriptBackend {
                         if (nearest.isThrownOrEmitted || nearest.movableByEveryone) {
                             TelekineticHold.PickUp(nearest, rightHD.gameObject);
                         } else {
+                            DebugLog.Log("Picking up nearest = {0}, {1}", nearest.givenName, nearest);
                             GameObject newCopy = UnityEngine.Object.Instantiate<GameObject>(nearest.gameObject);
                             Thing synced = SyncEmitWithoutSound(newCopy);
                             TelekineticHold.PickUp(synced, rightHD.gameObject);
