@@ -87,6 +87,8 @@
     <Compile Include="ModMenu.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Publication.cs" />
+    <Compile Include="SyncAuthority.cs" />
+    <Compile Include="SyncTools.cs" />
     <Compile Include="Tuple.cs" />
   </ItemGroup>
   <ItemGroup>
