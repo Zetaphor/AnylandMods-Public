@@ -69,7 +69,7 @@ namespace AnylandMods {
                             thingPhysicsString.Append(specid + "|");
                             thingPhysicsString.Append(thing.thingId + "|");
                             if (sync.SpawnOutOfEarshot) {
-                                thingPhysicsString.Append(PersonManager.GetSyncingCompressedVector3(new Vector3(-999999f, -999999f, -999999f)));
+                                thingPhysicsString.Append(PersonManager.GetSyncingCompressedVector3(SyncTools.FarAway));
                             } else {
                                 thingPhysicsString.Append(PersonManager.GetSyncingCompressedVector3(thing.transform.position) + "|");
                             }
