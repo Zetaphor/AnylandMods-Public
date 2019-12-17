@@ -84,6 +84,7 @@
     <Compile Include="ConfigFile.cs" />
     <Compile Include="SavedAttachmentList.cs" />
     <Compile Include="SelectBodyPartDialog.cs" />
+    <Compile Include="SelectEmittableThingDialog.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="info.json">

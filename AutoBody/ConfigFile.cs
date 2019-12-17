@@ -11,11 +11,13 @@ namespace AnylandMods.AutoBody {
     class ConfigFile : ModConfigFile {
         private SavedAttachmentList listHead, listHeadTop, listTorsoLower, listTorsoUpper;
         private SavedAttachmentList listArmLeft, listArmRight, listLegLeft, listLegRight;
+        public SavedAttachmentList Emittables { get; private set; }
 
         public Dictionary<string, Vector3> LegPosLeft { get; private set; }
         public Dictionary<string, Vector3> LegPosRight { get; private set; }
         public Dictionary<string, Vector3> LegRotLeft { get; private set; }
         public Dictionary<string, Vector3> LegRotRight { get; private set; }
+
 
         private bool ignoreAddBody = false;
         private bool enableTellControl = true;
@@ -31,6 +33,7 @@ namespace AnylandMods.AutoBody {
             listArmRight = new SavedAttachmentList(AttachmentPointId.ArmRight);
             listLegLeft = new SavedAttachmentList(AttachmentPointId.LegLeft);
             listLegRight = new SavedAttachmentList(AttachmentPointId.LegRight);
+            Emittables = new SavedAttachmentList(AttachmentPointId.None);
 
             LegPosLeft = new Dictionary<string, Vector3>();
             LegPosRight = new Dictionary<string, Vector3>();
@@ -81,7 +84,7 @@ namespace AnylandMods.AutoBody {
             bool replacedSomething = false;
             DebugLog.Log("oldId={0}, newId={1}, newName={2}", oldId, newId, newName);
             SavedAttachmentList[] lists = new SavedAttachmentList[] {
-                listHead, listHeadTop, listTorsoLower, listTorsoUpper, listArmLeft, listArmRight, listLegLeft, listLegRight
+                listHead, listHeadTop, listTorsoLower, listTorsoUpper, listArmLeft, listArmRight, listLegLeft, listLegRight, Emittables
             };
             foreach (SavedAttachmentList list in lists) {
                 if (list.TryGetThingName(oldId, out string oldName) && oldName.Equals(newName)) {
@@ -128,6 +131,8 @@ namespace AnylandMods.AutoBody {
                 ParseLegPos(newValue, LegPosLeft, LegRotLeft);
             } else if (key.Equals("legposright")) {
                 ParseLegPos(newValue, LegPosRight, LegRotRight);
+            } else if (key.Equals("emittables")) {
+                Emittables = new SavedAttachmentList(AttachmentPointId.None, newValue);
             } else {
                 AttachmentPointId point = AttachmentPointId.None;
                 switch (key) {
@@ -162,6 +167,7 @@ namespace AnylandMods.AutoBody {
             foreach (AttachmentPointId point in allPoints) {
                 SetKeyValueInternally(point.ToString(), GetListForAttachmentPoint(point).ToJson());
             }
+            SetKeyValueInternally("Emittables", Emittables.ToJson());
             SetKeyValueInternally("LegPosLeft", UnparseLegPos(LegPosLeft, LegRotLeft));
             SetKeyValueInternally("LegPosRight", UnparseLegPos(LegPosRight, LegRotRight));
         }

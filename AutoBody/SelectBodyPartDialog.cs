@@ -211,6 +211,8 @@ namespace AnylandMods.AutoBody {
             if (DoSave()) {
                 Managers.soundManager.Play("success", transform, 0.2f);
                 Menu = BuildMenu();
+            } else {
+                Managers.errorManager.BeepError();
             }
         }
     }

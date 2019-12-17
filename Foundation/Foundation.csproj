@@ -90,6 +90,7 @@
     <Compile Include="SyncAuthority.cs" />
     <Compile Include="SyncTools.cs" />
     <Compile Include="Tuple.cs" />
+    <Compile Include="Util.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="info.json">

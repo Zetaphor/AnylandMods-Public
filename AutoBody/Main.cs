@@ -70,12 +70,20 @@ namespace AnylandMods.AutoBody
             mbtn = new MenuButton("HandRight", "(XAB) Right Hand*");
             mbtn.Action += Mbtn_Action;
             pointMenu.Add(mbtn);
+            mbtn = new MenuButton("Emits", "Emittables");
+            mbtn.Action += Emits_Action;
+            pointMenu.Add(mbtn);
 
             regex = new Regex("^xa([0-9ab]) ?(.*)$");
             regexForIn = new Regex(" in ([0-9]*\\.?[0-9]*)s? ?(?:via (.*))?$");
             regexForSave = new Regex("^save ?([0-9]) ?");
             BodyTellManager.ToldByBody += BodyTellManager_ToldByBody;
             return true;
+        }
+
+        private static void Emits_Action(string id, Dialog dialog)
+        {
+            CustomDialog.SwitchTo<SelectEmittableThingDialog>(dialog.hand(), dialog.tabName);
         }
 
         public static void OpenSavedBodyParts()
