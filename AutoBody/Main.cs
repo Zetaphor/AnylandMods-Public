@@ -232,7 +232,7 @@ namespace AnylandMods.AutoBody
                 GameObject ap = Managers.personManager.ourPerson.GetAttachmentPointById(point);
                 DebugLog.LogTemp("parent of {0} is {1}", ap, ap.transform.parent.gameObject);
                 if (shouldMove && thingName.Equals("lock")) {
-                    ap.transform.parent = Managers.personManager.ourPerson.Rig.transform.parent;
+                    ap.transform.parent = Managers.personManager.ourPerson.transform;
                 } else if (shouldMove && thingName.Equals("unlock")) {
                     ap.transform.parent = Managers.personManager.ourPerson.Torso.transform;
                 } else if (delay > 0.0f) {
@@ -248,6 +248,25 @@ namespace AnylandMods.AutoBody
                     SetAttachment(point, thingName, shouldMove);
                 }
             }
+        }
+    }
+
+    [HarmonyPatch(typeof(Person), nameof(Person.ResetLegsPositionRotationToUniversalDefault))]
+    public static class ReparentLegsOnReset1 {
+        public static void Prefix(Person __instance, Side? onlyThisSide)
+        {
+            if (!onlyThisSide.HasValue || onlyThisSide.Value == Side.Left)
+                __instance.AttachmentPointLegLeft.transform.parent = __instance.Torso.transform;
+            if (!onlyThisSide.HasValue || onlyThisSide.Value == Side.Right)
+                __instance.AttachmentPointLegRight.transform.parent = __instance.Torso.transform;
+        }
+    }
+
+    [HarmonyPatch(typeof(Person), nameof(Person.ResetLegsPositionRotationToBodyOrUniversalDefault))]
+    public static class ReparentLegsOnReset2 {
+        public static void Prefix(Person __instance)
+        {
+            ReparentLegsOnReset1.Prefix(__instance, null);
         }
     }
 
