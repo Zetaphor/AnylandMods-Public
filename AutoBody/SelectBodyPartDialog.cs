@@ -19,7 +19,7 @@ namespace AnylandMods.AutoBody {
                     dialog.GetSavedAttachmentList().Remove(name);
                     dialog.Menu = dialog.BuildMenu();
                 } else {
-                    Main.SetAttachment(dialog.apid, name);
+                    dialog.SelectItem(name);
                 }
             }
 
@@ -49,6 +49,11 @@ namespace AnylandMods.AutoBody {
             apid = arg_.point;
             isDelete = arg_.isDelete;
             base.InitCustomDialog(BuildMenu());
+        }
+
+        protected virtual void SelectItem(string thingName)
+        {
+            Main.SetAttachment(apid, thingName);
         }
 
         private Menu BuildMenu()
