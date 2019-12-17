@@ -89,12 +89,14 @@ namespace AnylandMods.AutoBody {
                 menu.Add(btnDelete);
             }
 
-            var btnDetach = new MenuButton("detach", "(None)");
-            btnDetach.TextColor = TextColor.Blue;
-            btnDetach.Action += BtnDetach_Action;
-            menu.Add(btnDetach);
+            if (ShouldShowDetachButton()) {
+                var btnDetach = new MenuButton("detach", "(None)");
+                btnDetach.TextColor = TextColor.Blue;
+                btnDetach.Action += BtnDetach_Action;
+                menu.Add(btnDetach);
+            }
 
-            foreach (string k in Main.config.GetListForAttachmentPoint(apid).ThingNames) {
+            foreach (string k in GetSelectionNames()) {
                 var btn = new MenuButton("attach_" + k, k);
                 if (isDelete) {
                     btn.TextColor = TextColor.Red;
@@ -103,11 +105,32 @@ namespace AnylandMods.AutoBody {
                 btn.Action += MenuItemHandler.Handler(apid, k, isDelete);
                 menu.Add(btn);
             }
-            
+
+            FinalizeMenu(menu);
+
             base.InitCustomDialog(menu);
         }
 
+        protected virtual void FinalizeMenu(Menu menu)
+        {
+        }
+
+        protected virtual bool ShouldShowDetachButton()
+        {
+            return true;
+        }
+
+        protected virtual IEnumerable<string> GetSelectionNames()
+        {
+            return GetSavedAttachmentList().ThingNames;
+        }
+
         private void BtnDetach_Action(string id, Dialog dialog)
+        {
+            DoDetach();
+        }
+
+        protected virtual void DoDetach()
         {
             Main.SetAttachment(apid, "");
         }
@@ -148,10 +171,15 @@ namespace AnylandMods.AutoBody {
             Managers.personManager.ShowOurSecondaryDots(false);
         }
 
-        private void BtnSave_Action(string id, Dialog dialog)
+        protected virtual SavedAttachmentList GetSavedAttachmentList()
+        {
+            return Main.config.GetListForAttachmentPoint(apid);
+        }
+
+        protected virtual bool DoSave()
         {
             bool isHand = (apid == AttachmentPointId.HandLeft || apid == AttachmentPointId.HandRight);
-            if (Main.config.GetListForAttachmentPoint(apid).AddCurrent(isHand) is string name) {
+            if (GetSavedAttachmentList().AddCurrent(isHand) is string name) {
                 Person ourPerson = Managers.personManager.ourPerson;
                 if (apid == AttachmentPointId.LegLeft) {
                     Main.config.LegPosLeft[name] = ourPerson.AttachmentPointLegLeft.transform.localPosition;
@@ -161,6 +189,15 @@ namespace AnylandMods.AutoBody {
                     Main.config.LegRotRight[name] = ourPerson.AttachmentPointLegRight.transform.localEulerAngles;
                 }
                 Main.config.Save();
+                return true;
+            } else {
+                return false;
+            }
+        }
+
+        private void BtnSave_Action(string id, Dialog dialog)
+        {
+            if (DoSave()) {
                 Managers.soundManager.Play("success", transform, 0.2f);
                 SwitchTo<SelectBodyPartDialog>(new Argument(apid), dialog.hand(), dialog.tabName);
             }
