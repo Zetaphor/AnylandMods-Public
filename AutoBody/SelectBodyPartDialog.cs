@@ -10,25 +10,23 @@ namespace AnylandMods.AutoBody {
         private bool isDelete;
 
         private class MenuItemHandler {
-            private AttachmentPointId apid;
-            private bool isDelete;
+            private SelectBodyPartDialog dialog;
             private string name;
 
-            public void Handle(string id, Dialog dialog)
+            public void Handle(string id, Dialog dlg)
             {
-                if (isDelete) {
-                    Main.config.GetListForAttachmentPoint(apid).Remove(name);
-                    SwitchTo<SelectBodyPartDialog>(new Argument(apid, true), dialog.hand(), dialog.tabName);
+                if (dialog.isDelete) {
+                    dialog.GetSavedAttachmentList().Remove(name);
+                    dialog.Menu = dialog.BuildMenu();
                 } else {
-                    Main.SetAttachment(apid, name);
+                    Main.SetAttachment(dialog.apid, name);
                 }
             }
 
-            public static MenuItem.ItemAction Handler(AttachmentPointId point, string thingName, bool isDelete)
+            public static MenuItem.ItemAction Handler(SelectBodyPartDialog dialog, string thingName)
             {
                 var mih = new MenuItemHandler();
-                mih.apid = point;
-                mih.isDelete = isDelete;
+                mih.dialog = dialog;
                 mih.name = thingName;
                 return mih.Handle;
             }
@@ -50,6 +48,11 @@ namespace AnylandMods.AutoBody {
             var arg_ = (Argument)arg;
             apid = arg_.point;
             isDelete = arg_.isDelete;
+            base.InitCustomDialog(BuildMenu());
+        }
+
+        private Menu BuildMenu()
+        {
             string title = "";
             switch (apid) {
                 case AttachmentPointId.HeadTop: title = "Hat"; break;
@@ -63,6 +66,7 @@ namespace AnylandMods.AutoBody {
                 case AttachmentPointId.HandLeft: title = "Left Hand*"; break;
                 case AttachmentPointId.HandRight: title = "Right Hand*"; break;
             }
+
             var menu = new Menu(title);
             menu.SetBackButton(Main.pointMenu);
             menu.TwoColumns = true;
@@ -102,13 +106,12 @@ namespace AnylandMods.AutoBody {
                     btn.TextColor = TextColor.Red;
                     btn.Text = "- " + btn.Text;
                 }
-                btn.Action += MenuItemHandler.Handler(apid, k, isDelete);
+                btn.Action += MenuItemHandler.Handler(this, k);
                 menu.Add(btn);
             }
 
             FinalizeMenu(menu);
-
-            base.InitCustomDialog(menu);
+            return menu;
         }
 
         protected virtual void FinalizeMenu(Menu menu)
@@ -138,18 +141,21 @@ namespace AnylandMods.AutoBody {
         private void BtnCancelDelete_Action(string id, Dialog dialog)
         {
             Main.config.Load();
-            SwitchTo<SelectBodyPartDialog>(new Argument(apid, false), dialog.hand(), dialog.tabName);
+            isDelete = false;
+            Menu = BuildMenu();
         }
 
         private void BtnConfirmDelete_Action(string id, Dialog dialog)
         {
             Main.config.Save();
-            SwitchTo<SelectBodyPartDialog>(new Argument(apid, false), dialog.hand(), dialog.tabName);
+            isDelete = false;
+            Menu = BuildMenu();
         }
 
         private void BtnDelete_Action(string id, Dialog dialog)
         {
-            SwitchTo<SelectBodyPartDialog>(new Argument(apid, true), dialog.hand(), dialog.tabName);
+            isDelete = true;
+            Menu = BuildMenu();
         }
 
         private void Menu_DialogClose(MenuDialog obj)
@@ -199,7 +205,7 @@ namespace AnylandMods.AutoBody {
         {
             if (DoSave()) {
                 Managers.soundManager.Play("success", transform, 0.2f);
-                SwitchTo<SelectBodyPartDialog>(new Argument(apid), dialog.hand(), dialog.tabName);
+                Menu = BuildMenu();
             }
         }
     }

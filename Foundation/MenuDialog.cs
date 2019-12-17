@@ -25,11 +25,13 @@ namespace AnylandMods {
                 return menu;
             }
             set {
+                RemoveMenuItems();
                 menu = value;
-                currentPage = 0;
                 pageCount = (menu.Count + ItemsPerPage - 1) / ItemsPerPage;
                 if (pageCount == 0)
                     pageCount = 1;
+                if (currentPage >= pageCount)
+                    currentPage = 0;
                 AddMenuItems();
             }
         }
