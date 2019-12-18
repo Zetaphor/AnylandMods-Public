@@ -16,6 +16,7 @@ namespace AnylandMods {
 
         public bool OnlySyncOnce { get; set; } = true;
         public bool SpawnOutOfEarshot { get; set; } = false;
+        public bool SyncStates { get; set; } = false;
 
         static SyncAuthority()
         {
@@ -36,32 +37,34 @@ namespace AnylandMods {
                 if (sync.isActiveAndEnabled) {
                     Thing thing = sync.GetComponent<Thing>();
                     if (thing.name != Universe.objectNameIfAlreadyDestroyed) {
-                        // Thing part states
 
                         ThingSpecifierType spectype = ThingSpecifierType.None;
                         string specid = thing.GetSpecifierId(ref spectype);
                         string compressed = PersonManager.GetSyncingCompressedSpecifierType(spectype);
-                        System.Collections.IEnumerator enumerator = thing.transform.GetEnumerator();
-                        try {
-                            while (enumerator.MoveNext()) {
-                                var transform = (Transform)enumerator.Current;
-                                ThingPart tp = transform.GetComponent<ThingPart>();
-                                if (tp != null) {
-                                    if (thingPartStatesString.Length > 0)
-                                        thingPartStatesString.Append("\n");
-                                    thingPartStatesString.Append(compressed + "|");
-                                    thingPartStatesString.Append(specid + "|");
-                                    thingPartStatesString.Append(tp.GetSyncingToAreaNewcomersDataString(true));
+
+                        // Thing part states
+                        if (sync.SyncStates) {
+                            System.Collections.IEnumerator enumerator = thing.transform.GetEnumerator();
+                            try {
+                                while (enumerator.MoveNext()) {
+                                    var transform = (Transform)enumerator.Current;
+                                    ThingPart tp = transform.GetComponent<ThingPart>();
+                                    if (tp != null) {
+                                        if (thingPartStatesString.Length > 0)
+                                            thingPartStatesString.Append("\n");
+                                        thingPartStatesString.Append(compressed + "|");
+                                        thingPartStatesString.Append(specid + "|");
+                                        thingPartStatesString.Append(tp.GetSyncingToAreaNewcomersDataString(true));
+                                    }
                                 }
+                            } finally {
+                                var disposable = enumerator as IDisposable;
+                                if (disposable != null)
+                                    disposable.Dispose();
                             }
-                        } finally {
-                            var disposable = enumerator as IDisposable;
-                            if (disposable != null)
-                                disposable.Dispose();
                         }
 
                         // Physics
-
                         if (thing.rigidbody != null && thing.isThrownOrEmitted && !string.IsNullOrEmpty(thing.thrownId)) {
                             if (thingPhysicsString.Length > 0)
                                 thingPhysicsString.Append("\n");
@@ -93,12 +96,12 @@ namespace AnylandMods {
                     thingPhysicsString.ToString(),
                     "", "", "", "", "", "", ""
                 });
+            }
 
-                foreach (SyncAuthority sync in allInstances) {
-                    if (sync.SpawnOutOfEarshot) {
-                        Managers.personManager.DoInformOfThingPhysics(sync.GetComponent<Thing>());
-                        sync.SpawnOutOfEarshot = false;
-                    }
+            foreach (SyncAuthority sync in allInstances) {
+                if (sync.SpawnOutOfEarshot) {
+                    Managers.personManager.DoInformOfThingPhysics(sync.GetComponent<Thing>());
+                    sync.SpawnOutOfEarshot = false;
                 }
             }
         }

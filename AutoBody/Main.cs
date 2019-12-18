@@ -15,7 +15,7 @@ namespace AnylandMods.AutoBody
     {
         public static bool enabled;
         public static UnityModManager.ModEntry mod;
-        internal static ConfigFile config;
+        public static ConfigFile config;
         private static Regex regex, regexForIn, regexForSave;
         internal static Menu pointMenu;
         internal static HarmonyInstance harmony;
@@ -188,9 +188,25 @@ namespace AnylandMods.AutoBody
 
         private static void BodyTellManager_ToldByBody(string data, BodyTellManager.TellEventInfo info)
         {
-            // TODO: Add a toggle to disable IsTrusted check
-            if (!config.EnableTellControl || !info.IsTrusted)
+            if (!config.EnableTellControl)
                 return;
+
+            if (data.StartsWith("x emit ")) {
+                Transform source = Managers.personManager.ourPerson.Head.transform;
+                if (info.Thing != null) {
+                    source = info.Thing.transform;
+                }
+                EmitCommand.Emit(source, data.Substring(7));
+                return;
+            }
+
+            // TODO: Add a toggle to disable IsTrusted check
+            if (!info.IsTrusted) {
+                DebugLog.Log("WARNING: 'TELL BODY {0}' from untrusted source!", data.ToUpper());
+                DebugLog.Log(" Received from thing: {0} (#{1})", info.Thing.givenName, info.Thing.thingId);
+                Managers.errorManager.BeepError();
+                return;
+            }
 
             Match match = regex.Match(data);
             if (match.Success) {
@@ -239,10 +255,16 @@ namespace AnylandMods.AutoBody
                 bool shouldMove = (pointNum == 6 || pointNum == 7);
                 GameObject ap = Managers.personManager.ourPerson.GetAttachmentPointById(point);
                 DebugLog.LogTemp("parent of {0} is {1}", ap, ap.transform.parent.gameObject);
+
                 if (shouldMove && thingName.Equals("lock")) {
                     ap.transform.parent = Managers.personManager.ourPerson.transform;
+
                 } else if (shouldMove && thingName.Equals("unlock")) {
                     ap.transform.parent = Managers.personManager.ourPerson.Torso.transform;
+                
+                } else if (thingName.StartsWith("emit ")) {
+                    EmitCommand.Emit(ap.transform, thingName.Substring(5));
+
                 } else if (delay > 0.0f) {
                     var ds = ap.GetComponent<DelayedSwitch>();
                     if (ds == null)
@@ -390,7 +412,7 @@ namespace AnylandMods.AutoBody
         public static void Prefix(ref string methodName, ref object[] parameters)
         {
             if (!methodName.Equals("vc"))
-                DebugLog.LogTemp("{0}({1})", methodName, string.Join(", ", parameters.Select(o => o.ToString()).ToArray()));
+                DebugLog.Log("{0}({1})", methodName, string.Join(", ", parameters.Select(o => o.ToString()).ToArray()));
             if (methodName.Equals("DoAttachThing_Remote")) {
                 var apid = (AttachmentPointId)parameters[0];
                 if (apid == AttachmentPointId.HandLeft || apid == AttachmentPointId.HandRight) {
@@ -523,6 +545,25 @@ namespace AnylandMods.AutoBody
             if (Main.holdAttachments && HoldAttachmentsOnPoints1.activePoint != AttachmentPointId.None) {
                 GameObject point = Managers.personManager.ourPerson.GetAttachmentPointById(HoldAttachmentsOnPoints1.activePoint);
                 Managers.personManager.DoAttachThing(point, thing, false);
+                return false;
+            } else {
+                return true;
+            }
+        }
+    }
+
+    [HarmonyPatch(typeof(PersonLegStateSync), "Update")]
+    public static class SyncLockedLegPoints {
+        public static bool Prefix(PersonLegStateSync __instance, ref Vector3 ___localPositionToSend, ref Quaternion ___localRotationToSend)
+        {
+            Transform torso = Managers.personManager.ourPerson.Torso.transform;
+            if (__instance.isOurPerson && __instance.transform.parent != torso) {
+                ___localPositionToSend -= __instance.transform.parent.position;
+                ___localPositionToSend += torso.position;
+                ___localRotationToSend *= Quaternion.Inverse(__instance.transform.parent.rotation);
+                ___localRotationToSend *= torso.rotation;
+                DebugLog.LogTemp("Position: {0} -> {1}", __instance.transform.position, ___localPositionToSend);
+                DebugLog.LogTemp("Rotation: {0} -> {1}", __instance.transform.rotation.eulerAngles, ___localRotationToSend.eulerAngles);
                 return false;
             } else {
                 return true;

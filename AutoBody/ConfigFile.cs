@@ -8,7 +8,7 @@ using UnityEngine;
 using Newtonsoft.Json;
 
 namespace AnylandMods.AutoBody {
-    class ConfigFile : ModConfigFile {
+    public class ConfigFile : ModConfigFile {
         private SavedAttachmentList listHead, listHeadTop, listTorsoLower, listTorsoUpper;
         private SavedAttachmentList listArmLeft, listArmRight, listLegLeft, listLegRight;
         public SavedAttachmentList Emittables { get; private set; }

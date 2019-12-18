@@ -6,7 +6,7 @@ using UnityEngine;
 using Newtonsoft.Json;
 
 namespace AnylandMods.AutoBody {
-    class SavedAttachmentList {
+    public class SavedAttachmentList {
         public AttachmentPointId AttachmentPoint { get; private set; }
         private Dictionary<string, AttachmentData> entries;
         private Dictionary<string, string> namesById;
