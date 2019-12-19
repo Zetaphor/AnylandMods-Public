@@ -558,8 +558,8 @@ namespace AnylandMods.AutoBody
         {
             Transform torso = Managers.personManager.ourPerson.Torso.transform;
             if (__instance.isOurPerson && __instance.transform.parent != torso) {
-                ___localPositionToSend -= __instance.transform.parent.position;
-                ___localPositionToSend += torso.position;
+                ___localPositionToSend = __instance.transform.position - torso.position;
+                ___localRotationToSend = __instance.transform.rotation;
                 ___localRotationToSend *= Quaternion.Inverse(__instance.transform.parent.rotation);
                 ___localRotationToSend *= torso.rotation;
                 DebugLog.LogTemp("Position: {0} -> {1}", __instance.transform.position, ___localPositionToSend);
