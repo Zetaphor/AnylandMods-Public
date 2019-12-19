@@ -13,11 +13,12 @@ namespace AnylandMods {
         private static List<SyncAuthority> allInstances;
         public static float SyncInterval { get; set; } = 0.1f;
         private static bool syncPending = false;
+        private bool destroyAfterNextSync = false;
 
         public bool OnlySyncOnce { get; set; } = true;
         public bool SpawnOutOfEarshot { get; set; } = false;
         public bool SyncStates { get; set; } = false;
-
+        
         static SyncAuthority()
         {
             allInstances = new List<SyncAuthority>();
@@ -83,7 +84,9 @@ namespace AnylandMods {
                         }
                     }
 
-                    if (sync.OnlySyncOnce) {
+                    if (sync.destroyAfterNextSync) {
+                        GameObject.Destroy(sync.gameObject);
+                    } else if (sync.OnlySyncOnce) {
                         sync.enabled = false;
                     }
                 }
@@ -118,6 +121,14 @@ namespace AnylandMods {
                 syncPending = true;
                 Invoke("CallSyncNow", 0f);
             }
+        }
+
+        public void Despawn()
+        {
+            SyncStates = true;
+            enabled = true;
+            destroyAfterNextSync = true;
+            GetComponent<Thing>().destroyMeInTime = 0;
         }
 
         void CallSyncNow()

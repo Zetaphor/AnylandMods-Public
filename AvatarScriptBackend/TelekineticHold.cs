@@ -28,6 +28,7 @@ namespace AnylandMods.AvatarScriptBackend {
         private Vector3 savedPosition;
         private Vector3 savedRotation;
         private bool positionWasReset = false;
+        private Thing fxThing = null;
 
         public bool AutoAim { get; set; }
         public bool AllowCollision { get; set; } = false;
@@ -157,6 +158,12 @@ namespace AnylandMods.AvatarScriptBackend {
             comp.AutoAim = false;
             comp.moveWithHand = true;
 
+            SyncTools.SpawnThing(AutoBody.Main.config.Emittables["pickupfx"].thingId, delegate (Thing fxThing) {
+                comp.fxThing = fxThing;
+                fxThing.transform.localPosition = Vector3.zero;
+                fxThing.gameObject.AddComponent<CopyPosition>().Target = thing.transform;
+            }, true);
+
             return comp;
         }
 
@@ -201,6 +208,7 @@ namespace AnylandMods.AvatarScriptBackend {
             Thing.rigidbody.useGravity = hadGravityBeforePickup;
             Thing.rigidbody.detectCollisions = hadCollisionBeforePickup;
             AllActiveHolds.Remove(this);
+            fxThing?.GetComponent<SyncAuthority>()?.Despawn();
         }
 
         public static void PutDownAll()

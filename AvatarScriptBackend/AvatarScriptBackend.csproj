@@ -71,6 +71,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="ContinuousFFT.cs" />
+    <Compile Include="CopyPosition.cs" />
     <Compile Include="DebugGraph.cs" />
     <Compile Include="FFT2.cs" />
     <Compile Include="FlightManager.cs" />
@@ -79,6 +80,11 @@
     <Compile Include="TelekineticHold.cs" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\AutoBody\AutoBody.csproj">
+      <Project>{8c3a0a66-6e24-4dfb-a9ac-8c80c99456f4}</Project>
+      <Name>AutoBody</Name>
+      <Private>False</Private>
+    </ProjectReference>
     <ProjectReference Include="..\Foundation\Foundation.csproj">
       <Project>{9a6e0442-816f-4d8a-a86c-037ba2a3783e}</Project>
       <Name>Foundation</Name>
