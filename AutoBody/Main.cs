@@ -16,7 +16,7 @@ namespace AnylandMods.AutoBody
         public static bool enabled;
         public static UnityModManager.ModEntry mod;
         public static ConfigFile config;
-        private static Regex regex, regexForIn, regexForSave;
+        private static Regex regex, regexForIn, regexForSave, regexForGoto;
         internal static Menu pointMenu;
         internal static HarmonyInstance harmony;
         internal static bool holdAttachments;
@@ -77,6 +77,7 @@ namespace AnylandMods.AutoBody
             regex = new Regex("^xa([0-9ab]) ?(.*)$");
             regexForIn = new Regex(" in ([0-9]*\\.?[0-9]*)s? ?(?:via (.*))?$");
             regexForSave = new Regex("^save ?([0-9]) ?");
+            regexForGoto = new Regex("^goto (-?[0-9.]*) (-?[0-9.]*) (-?[0-9.]*)$");
             BodyTellManager.ToldByBody += BodyTellManager_ToldByBody;
             return true;
         }
@@ -138,6 +139,8 @@ namespace AnylandMods.AutoBody
             GameObject attpoint = ourPerson.GetAttachmentPointById(point);
             SavedAttachmentList list = config.GetListForAttachmentPoint(point);
 
+            Main.SetLegPlayspaceLock(point, false);
+
             if (point == AttachmentPointId.HandLeft) {
                 HandPseudoAttachmentControl.thingNameLeft = thingName;
             } else if (point == AttachmentPointId.HandRight) {
@@ -184,6 +187,22 @@ namespace AnylandMods.AutoBody
                     HandPseudoAttachmentControl.thingNameRight = "";
                 }
             }
+        }
+
+        internal static void SetLegPlayspaceLock(GameObject leg, bool isLocked)
+        {
+            AttachmentPointId apid = leg.GetComponent<AttachmentPoint>().id;
+            if (apid == AttachmentPointId.LegLeft || apid == AttachmentPointId.LegRight) {
+                if (isLocked)
+                    leg.transform.parent = Managers.personManager.ourPerson.transform;
+                else
+                    leg.transform.parent = Managers.personManager.ourPerson.Torso.transform;
+            }
+        }
+
+        internal static void SetLegPlayspaceLock(AttachmentPointId leg, bool isLocked)
+        {
+            SetLegPlayspaceLock(Managers.personManager.ourPerson.GetAttachmentPointById(leg), isLocked);
         }
 
         private static void BodyTellManager_ToldByBody(string data, BodyTellManager.TellEventInfo info)
@@ -257,14 +276,25 @@ namespace AnylandMods.AutoBody
                 DebugLog.LogTemp("parent of {0} is {1}", ap, ap.transform.parent.gameObject);
 
                 if (shouldMove && thingName.Equals("lock")) {
-                    ap.transform.parent = Managers.personManager.ourPerson.transform;
-
+                    SetLegPlayspaceLock(ap, true);
                 } else if (shouldMove && thingName.Equals("unlock")) {
-                    ap.transform.parent = Managers.personManager.ourPerson.Torso.transform;
-                
+                    SetLegPlayspaceLock(ap, false);
                 } else if (thingName.StartsWith("emit ")) {
                     EmitCommand.Emit(ap.transform, thingName.Substring(5));
-
+                } else if (shouldMove && regexForGoto.IsMatch(thingName)) {
+                    Match matchForGoto = regexForGoto.Match(thingName);
+                    if (float.TryParse(matchForGoto.Groups[1].Value, out float x)
+                        && float.TryParse(matchForGoto.Groups[2].Value, out float y)
+                        && float.TryParse(matchForGoto.Groups[3].Value, out float z)) {
+                        if (delay > 0.0f) {
+                            var ds = ap.GetComponent<DelayedSwitch>();
+                            if (ds == null)
+                                ds = ap.AddComponent<DelayedSwitch>();
+                            ds.Begin(point, null, delay, new Vector3(x, y, z));
+                        } else {
+                            ap.transform.localPosition = new Vector3(x, y, z);
+                        }
+                    }
                 } else if (delay > 0.0f) {
                     var ds = ap.GetComponent<DelayedSwitch>();
                     if (ds == null)
@@ -552,9 +582,9 @@ namespace AnylandMods.AutoBody
         }
     }
 
-    [HarmonyPatch(typeof(PersonLegStateSync), "Update")]
+    [HarmonyPatch(typeof(PersonLegStateSync), "OnPhotonSerializeView")]
     public static class SyncLockedLegPoints {
-        public static bool Prefix(PersonLegStateSync __instance, ref Vector3 ___localPositionToSend, ref Quaternion ___localRotationToSend)
+        public static void Prefix(PersonLegStateSync __instance, ref Vector3 ___localPositionToSend, ref Quaternion ___localRotationToSend)
         {
             Transform torso = Managers.personManager.ourPerson.Torso.transform;
             if (__instance.isOurPerson && __instance.transform.parent != torso) {
@@ -562,11 +592,6 @@ namespace AnylandMods.AutoBody
                 ___localRotationToSend = __instance.transform.rotation;
                 ___localRotationToSend *= Quaternion.Inverse(__instance.transform.parent.rotation);
                 ___localRotationToSend *= torso.rotation;
-                DebugLog.LogTemp("Position: {0} -> {1}", __instance.transform.position, ___localPositionToSend);
-                DebugLog.LogTemp("Rotation: {0} -> {1}", __instance.transform.rotation.eulerAngles, ___localRotationToSend.eulerAngles);
-                return false;
-            } else {
-                return true;
             }
         }
     }

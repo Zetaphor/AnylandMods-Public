@@ -18,7 +18,7 @@ namespace AnylandMods.AutoBody {
 
         public void Begin(AttachmentPointId point, string thingName, float delay, Vector3? newPos = null)
         {
-            DebugLog.LogTemp("apid={0}, tn={1}, d={2}, np={3}", point, thingName, delay, newPos);
+            Main.SetLegPlayspaceLock(point, false);
             apid = point;
             this.thingName = thingName;
             this.delay = timeLeft = delay;
@@ -34,7 +34,10 @@ namespace AnylandMods.AutoBody {
         {
             timeLeft -= Time.deltaTime;
             if (timeLeft <= 0.0f) {
-                Main.SetAttachment(apid, thingName, shouldMove);
+                if (thingName != null)
+                    Main.SetAttachment(apid, thingName, shouldMove);
+                else
+                    transform.localPosition = end;
                 enabled = false;
             } else if (shouldMove) {
                 transform.localPosition = Vector3.Lerp(end, start, timeLeft / delay);

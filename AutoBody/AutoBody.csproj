@@ -60,6 +60,10 @@
       <HintPath>D:\steam\steamapps\common\Anyland\anyland_Data\Managed\UnityEngine.CoreModule.dll</HintPath>
       <Private>False</Private>
     </Reference>
+    <Reference Include="UnityEngine.IMGUIModule">
+      <HintPath>D:\steam\steamapps\common\Anyland\anyland_Data\Managed\UnityEngine.IMGUIModule.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
     <Reference Include="UnityEngine.JSONSerializeModule, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>D:\steam\steamapps\common\Anyland\anyland_Data\Managed\UnityEngine.JSONSerializeModule.dll</HintPath>

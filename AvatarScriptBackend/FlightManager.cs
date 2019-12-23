@@ -319,7 +319,7 @@ namespace AnylandMods.AvatarScriptBackend {
                 newMode = FlightMode.Wings;
             } else if (CrossDevice.GetPress(dotL.controller, CrossDevice.button_teleport, Side.Left) && CrossDevice.GetPress(dotR.controller, CrossDevice.button_teleport, Side.Right)) {
                 FM.HintFacingAngle();
-                newMode = FlightMode.Grab;
+                //newMode = FlightMode.Grab;
             }
 
             if (newMode != mode) {

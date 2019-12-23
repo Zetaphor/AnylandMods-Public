@@ -201,6 +201,15 @@ namespace AnylandMods.AvatarScriptBackend {
             AllMovedObjects.Clear();
         }
 
+        private void EndFX()
+        {
+            if (fxThing != null) {
+                fxThing.destroyMeInTime = 3.0f;
+                fxThing.GetComponent<SyncAuthority>()?.OneShot(true);
+                fxThing.TriggerEventAsStateAuthority(StateListener.EventType.OnTold, "x fx end");
+            }
+        }
+
         public void PutDown()
         {
             moveWithHand = false;
@@ -208,7 +217,12 @@ namespace AnylandMods.AvatarScriptBackend {
             Thing.rigidbody.useGravity = hadGravityBeforePickup;
             Thing.rigidbody.detectCollisions = hadCollisionBeforePickup;
             AllActiveHolds.Remove(this);
-            fxThing?.GetComponent<SyncAuthority>()?.Despawn();
+            EndFX();
+        }
+
+        public void OnDestroy()
+        {
+            EndFX();
         }
 
         public static void PutDownAll()

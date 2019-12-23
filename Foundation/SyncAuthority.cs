@@ -14,10 +14,12 @@ namespace AnylandMods {
         public static float SyncInterval { get; set; } = 0.1f;
         private static bool syncPending = false;
         private bool destroyAfterNextSync = false;
+        private bool onlySyncStatesOnce = false;
 
         public bool OnlySyncOnce { get; set; } = true;
         public bool SpawnOutOfEarshot { get; set; } = false;
         public bool SyncStates { get; set; } = false;
+        internal static bool SyncLocallyForTesting { get; set; } = false;
         
         static SyncAuthority()
         {
@@ -89,11 +91,17 @@ namespace AnylandMods {
                     } else if (sync.OnlySyncOnce) {
                         sync.enabled = false;
                     }
+
+                    if (sync.onlySyncStatesOnce) {
+                        sync.SyncStates = false;
+                    }
                 }
             }
 
             if (thingPartStatesString.Length > 0 || thingPhysicsString.Length > 0) {
-                Managers.personManager.ourPerson.photonView.RPC("DoInformOfBehaviorScriptVariablesAndThingStates_Remote", PhotonTargets.Others, new object[] {
+
+                PhotonTargets targets = SyncLocallyForTesting ? PhotonTargets.All : PhotonTargets.Others;
+                Managers.personManager.ourPerson.photonView.RPC("DoInformOfBehaviorScriptVariablesAndThingStates_Remote", targets, new object[] {
                     Time.time,
                     thingPartStatesString.ToString(),
                     thingPhysicsString.ToString(),
@@ -129,6 +137,16 @@ namespace AnylandMods {
             enabled = true;
             destroyAfterNextSync = true;
             GetComponent<Thing>().destroyMeInTime = 0;
+        }
+
+        public void OneShot(bool alwaysSyncStates = false)
+        {
+            if (alwaysSyncStates) {
+                onlySyncStatesOnce = !SyncStates;
+                SyncStates = true;
+            }
+            enabled = true;
+            OnlySyncOnce = true;
         }
 
         void CallSyncNow()

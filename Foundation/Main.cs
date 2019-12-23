@@ -17,8 +17,27 @@ namespace AnylandMods.FoundationPatches
             var harmony = HarmonyInstance.Create(modEntry.Info.Id);
             harmony.PatchAll();
 
+            ModMenu.AddButton(harmony, "Test", dotest);
+
             mod = modEntry;
             return true;
+        }
+
+        private class Temp : UnityEngine.MonoBehaviour {
+            public void Update()
+            {
+                GetComponentInChildren<ThingPart>().currentState = (int)UnityEngine.Time.time % 2;
+            }
+        }
+
+        private static void dotest(string id, Dialog dialog)
+        {
+            SyncAuthority.SyncLocallyForTesting = !SyncAuthority.SyncLocallyForTesting;
+            SyncTools.SpawnThing("5df6a6e79153495bbf2e67f2", delegate(Thing thing) {
+                thing.transform.position = Managers.personManager.ourPerson.transform.position;
+                thing.destroyMeInTime = 300f;
+                thing.gameObject.AddComponent<Temp>();
+            }, true);
         }
     }
 }

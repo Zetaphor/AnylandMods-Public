@@ -8,6 +8,12 @@ namespace AnylandMods.AutoBody {
     class SelectBodyPartDialog : MenuDialog {
         private AttachmentPointId apid;
         private bool isDelete;
+        private bool isLockedToPlayspace;
+
+        protected static Vector3? SavedLegPosLL { get; set; } = null;
+        protected static Vector3? SavedLegPosLW { get; set; } = null;
+        protected static Vector3? SavedLegPosRL { get; set; } = null;
+        protected static Vector3? SavedLegPosRW { get; set; } = null;
 
         private class MenuItemHandler {
             private SelectBodyPartDialog dialog;
@@ -98,9 +104,33 @@ namespace AnylandMods.AutoBody {
                 menu.Add(btnDelete);
             }
 
+            if (apid == AttachmentPointId.LegLeft || apid == AttachmentPointId.LegRight) {
+                Person ourPerson = Managers.personManager.ourPerson;
+                isLockedToPlayspace = (ourPerson.GetAttachmentPointById(apid).transform.parent != ourPerson.Torso.transform);
+                var btnToggleLock = new MenuButton("toggleLock", isLockedToPlayspace ? "Unlock from Playspace" : "Lock to Playspace");
+                btnToggleLock.TextColor = TextColor.Blue;
+                btnToggleLock.Action += BtnToggleLock_Action;
+                menu.Add(btnToggleLock);
+
+                var btnCopyLegPos = new MenuButton("copyLegPos", "Copy Position");
+                btnCopyLegPos.TextColor = TextColor.Blue;
+                btnCopyLegPos.Action += BtnCopyLegPos_Action;
+                menu.Add(btnCopyLegPos);
+
+                var btnPasteLegPos = new MenuButton("pasteLegPos", "Paste Local Pos.");
+                btnPasteLegPos.TextColor = TextColor.Blue;
+                btnPasteLegPos.Action += BtnPasteLegPos_Action;
+                menu.Add(btnPasteLegPos);
+
+                var btnPasteLegPosWorld = new MenuButton("pasteLegPosWorld", "Paste World Pos.");
+                btnPasteLegPosWorld.TextColor = TextColor.Blue;
+                btnPasteLegPosWorld.Action += BtnPasteLegPosWorld_Action;
+                menu.Add(btnPasteLegPosWorld);
+            }
+
             if (ShouldShowDetachButton()) {
                 var btnDetach = new MenuButton("detach", "(None)");
-                btnDetach.TextColor = TextColor.Blue;
+                btnDetach.TextColor = TextColor.White;
                 btnDetach.Action += BtnDetach_Action;
                 menu.Add(btnDetach);
             }
@@ -117,6 +147,55 @@ namespace AnylandMods.AutoBody {
 
             FinalizeMenu(menu);
             return menu;
+        }
+
+        private void BtnToggleLock_Action(string id, Dialog dialog)
+        {
+            Main.SetLegPlayspaceLock(apid, !isLockedToPlayspace);
+            Menu = BuildMenu();
+        }
+
+        private void BtnPasteLegPosWorld_Action(string id, Dialog dialog)
+        {
+            if (apid == AttachmentPointId.LegLeft) {
+                if (SavedLegPosLW.HasValue)
+                    Managers.personManager.ourPerson.AttachmentPointLegLeft.transform.position = SavedLegPosLW.Value;
+                else
+                    Managers.errorManager.BeepError();
+            } else if (apid == AttachmentPointId.LegRight) {
+                if (SavedLegPosRW.HasValue)
+                    Managers.personManager.ourPerson.AttachmentPointLegRight.transform.position = SavedLegPosRW.Value;
+                else
+                    Managers.errorManager.BeepError();
+            }
+        }
+
+        private void BtnPasteLegPos_Action(string id, Dialog dialog)
+        {
+            if (apid == AttachmentPointId.LegLeft) {
+                if (SavedLegPosLL.HasValue)
+                    Managers.personManager.ourPerson.AttachmentPointLegLeft.transform.localPosition = SavedLegPosLL.Value;
+                else
+                    Managers.errorManager.BeepError();
+            } else if (apid == AttachmentPointId.LegRight) {
+                if (SavedLegPosRL.HasValue)
+                    Managers.personManager.ourPerson.AttachmentPointLegRight.transform.localPosition = SavedLegPosRL.Value;
+                else
+                    Managers.errorManager.BeepError();
+            }
+        }
+
+        private void BtnCopyLegPos_Action(string id, Dialog dialog)
+        {
+            Vector3 toCopy = Vector3.zero;
+            if (apid == AttachmentPointId.LegLeft) {
+                SavedLegPosLL = toCopy = Managers.personManager.ourPerson.AttachmentPointLegLeft.transform.localPosition;
+                SavedLegPosLW = Managers.personManager.ourPerson.AttachmentPointLegLeft.transform.position;
+            } else if (apid == AttachmentPointId.LegRight) {
+                SavedLegPosRL = toCopy = Managers.personManager.ourPerson.AttachmentPointLegRight.transform.localPosition;
+                SavedLegPosRW = Managers.personManager.ourPerson.AttachmentPointLegRight.transform.position;
+            }
+            GUIUtility.systemCopyBuffer = String.Format("xa{0} goto {1:.3} {2:.3} {3:.3} ", (apid == AttachmentPointId.LegLeft) ? 6 : 7, toCopy.x, toCopy.y, toCopy.z);
         }
 
         protected virtual void FinalizeMenu(Menu menu)
