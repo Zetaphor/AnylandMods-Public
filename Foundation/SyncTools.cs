@@ -31,7 +31,6 @@ namespace AnylandMods {
 
                 var sync = gameObject.AddComponent<SyncAuthority>();
                 sync.OnlySyncOnce = !KeepSyncing;
-                sync.SpawnOutOfEarshot = true;
                 Destroy(this);
             }
 

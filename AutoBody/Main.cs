@@ -210,12 +210,12 @@ namespace AnylandMods.AutoBody
             if (!config.EnableTellControl)
                 return;
 
-            if (data.StartsWith("x emit ")) {
+            if (data.StartsWith("!emit ")) {
                 Transform source = Managers.personManager.ourPerson.Head.transform;
                 if (info.Thing != null) {
                     source = info.Thing.transform;
                 }
-                EmitCommand.Emit(source, data.Substring(7));
+                EmitCommand.Emit(source, data.Substring(6));
                 return;
             }
 
