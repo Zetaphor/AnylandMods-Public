@@ -15,6 +15,7 @@ namespace AnylandMods.AutoBody {
             Vector3 angularVelocity = Vector3.zero;
             Vector3 offset = Vector3.zero;
             Vector3 projectDir = Vector3.zero;
+            Vector3? eulerOverride = null;
             float defaultProjectDist = 0;
             bool lookingForThingName = true;
 
@@ -32,9 +33,13 @@ namespace AnylandMods.AutoBody {
                     lookingForThingName = false;
                 } else if (word.StartsWith("-p")) {
                     extraWordsToAdvance = ParseVector(words, i + 1, word.Substring(2), source, out projectDir);
+                    defaultProjectDist = projectDir.magnitude;
+                    projectDir = projectDir.normalized;
                     lookingForThingName = false;
-                } else if (word.Equals("-d")) {
-                    float.TryParse(words[i + 1], out defaultProjectDist);
+                } else if (word.StartsWith("-r")) {
+                    extraWordsToAdvance = ParseVector(words, i + 1, word.Substring(2), source, out Vector3 euler);
+                    eulerOverride = euler;
+                    lookingForThingName = false;
                 } else if (lookingForThingName) {
                     if (thingName.Length > 0)
                         thingName.Append(' ');
@@ -56,19 +61,33 @@ namespace AnylandMods.AutoBody {
             if (projectDir.magnitude > 0) {
                 RaycastHit[] hits = Physics.RaycastAll(source.position, projectDir);
                 try {
-                    RaycastHit hit = hits.First(h => h.collider.gameObject != source.gameObject);
+                    RaycastHit hit = hits.First(h => !IsSameThing(h.collider.gameObject, source.gameObject));
                     position = hit.point;
                 } catch (InvalidOperationException) {
                     position += defaultProjectDist * projectDir;
                 }
             }
             position += offset;
-            Quaternion rotation = source.rotation;
-            if (velocity.magnitude > 0) {
+            Quaternion rotation;
+            if (eulerOverride.HasValue) {
+                rotation = Quaternion.Euler(eulerOverride.Value);
+            } else if (velocity.magnitude > 0) {
                 rotation = Quaternion.FromToRotation(Vector3.forward, velocity.normalized);
+            } else {
+                rotation = Quaternion.AngleAxis(Vector3.SignedAngle(Managers.personManager.ourPerson.Torso.transform.forward, Vector3.forward, Vector3.up), Vector3.up);
             }
 
             SyncTools.SpawnThing(Main.config.Emittables[thingName.ToString().ToLower()].thingId, position, rotation, velocity, angularVelocity);
+        }
+
+        private static bool IsSameThing(GameObject a, GameObject b)
+        {
+            ThingPart tpa = a.GetComponent<ThingPart>();
+            ThingPart tpb = b.GetComponent<ThingPart>();
+            if (tpa == null || tpb == null)
+                return false;
+            else
+                return tpa.GetMyRootThing().GetInstanceID() == tpb.GetMyRootThing().GetInstanceID();
         }
 
         private static int ParseVector(string[] words, int index, string flags, Transform localBase, out Vector3 vector)
@@ -80,6 +99,8 @@ namespace AnylandMods.AutoBody {
                 singleCoord = Vector3.up;
             } else if (flags.Contains("z")) {
                 singleCoord = Vector3.forward;
+            } else if (flags.Contains("v")) {
+                singleCoord = (localBase.position - Managers.personManager.ourPerson.Head.transform.position).normalized;
             }
 
             Vector3 givenVector;
@@ -95,9 +116,9 @@ namespace AnylandMods.AutoBody {
                 }
 
                 if (flags.Contains("l")) {
-                    vector = localBase.position + localBase.rotation * givenVector;
+                    vector = localBase.rotation * givenVector;
                 } else {
-                    vector = localBase.position + givenVector;
+                    vector = givenVector;
                 }
 
                 return singleCoord.HasValue ? 1 : 3;

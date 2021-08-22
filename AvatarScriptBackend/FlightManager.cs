@@ -12,6 +12,7 @@ namespace AnylandMods.AvatarScriptBackend {
         public Vector3 Acceleration { get; set; }
         public Vector3 AngularVelocity { get; set; }
         public Vector3 AngularAcceleration { get; set; }
+        public float Gravity { get; set; }
         public float DragFactor { get; set; }
 
         public float MaxLeanAngle { get; set; } = 70f;
@@ -22,6 +23,7 @@ namespace AnylandMods.AvatarScriptBackend {
 
         private Vector3 lastSignificantDir;
         private Vector3 velWithLean;
+        private bool onGroundLast = false;
 
         public void Start()
         {
@@ -65,8 +67,21 @@ namespace AnylandMods.AvatarScriptBackend {
 
         public void Update()
         {
+            float effectiveGravity = Gravity;
+
             Velocity += Acceleration * Time.deltaTime;
+            Velocity += effectiveGravity * Vector3.down * Time.deltaTime;
             velWithLean += AccelWithLean * Time.deltaTime;
+
+            bool nowOnGround = Physics.CheckBox(Managers.personManager.OurPersonRig.transform.position + 0.6f * Vector3.down, 0.1f * Vector3.one);
+            if (nowOnGround) {
+                Velocity = new Vector3(Velocity.x, Mathf.Max(0, Velocity.y), Velocity.z);
+            }
+            if (onGroundLast != nowOnGround) {
+                BodyTellManager.Trigger(nowOnGround ? "xx ground" : "xx air");
+                onGroundLast = nowOnGround;
+            }
+
             transform.position += Velocity * Time.deltaTime;
 
             AngularVelocity += AngularAcceleration * Time.deltaTime;
@@ -167,6 +182,8 @@ namespace AnylandMods.AvatarScriptBackend {
                 if (HandleTellWithVectorArg(tell, "xx setacc", out Vector3 vec)) {
                     FM.Acceleration = vec;
                 }
+            } else if (tell.StartsWith("xx grav ") && float.TryParse(tell.Substring(8), out val)) {
+                FM.Gravity = val;
             } else if (tell.Equals("xx resetrot")) {
                 FM.ResetRotation();
             } else if (tell.Equals("xx grab")) {
@@ -247,15 +264,12 @@ namespace AnylandMods.AvatarScriptBackend {
                     lastPosIsInvalid = true;
                 }
 
-                float gravityControl = (dotLPos - head.position).magnitude + (dotRPos - head.position).magnitude;
-                float yAccel = Mathf.Lerp(-100.0f, 0.0f, gravityControl);
                 float angle = 0.5f * Vector3.SignedAngle((handR.transform.position - handL.transform.position) / ourScale, torso.right, torso.forward);
                 angle = (!fingersClosedLeft && !fingersClosedRight) ? angle : 0.0f;
 
                 if (!fingersClosedLeft || !fingersClosedRight) {
                     FM.AccelWithLean = (Quaternion.Inverse(FM.CurrentLean) * torso.rotation) * new Vector3(0.0f, 0.0f, 20.0f * handDist * handDist / (ourScale * ourScale));
                     FM.Acceleration = FM.AccelWithLean;
-                    FM.Acceleration += new Vector3(0, yAccel);
                     FM.Acceleration -= 15f * (torso.rotation * dotAvgVel) * dotAvgVel.magnitude / ourScale;
                     FM.AngularAcceleration = handDist / ourScale * angle * Vector3.up;
                     FM.DragFactor = Mathf.Clamp((-Vector3.SignedAngle(dotR.transform.position - handR.transform.position, torso.transform.forward, torso.transform.right) + 90.0f) / 180.0f, 0.0f, 1.0f);

@@ -88,6 +88,7 @@
   <ItemGroup>
     <Compile Include="DelayedSwitch.cs" />
     <Compile Include="EmitCommand.cs" />
+    <Compile Include="FakeParent.cs" />
     <Compile Include="Main.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="ConfigFile.cs" />

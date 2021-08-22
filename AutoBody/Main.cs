@@ -70,9 +70,9 @@ namespace AnylandMods.AutoBody
             mbtn = new MenuButton("HandRight", "(XAB) Right Hand*");
             mbtn.Action += Mbtn_Action;
             pointMenu.Add(mbtn);
-            mbtn = new MenuButton("Emits", "Emittables");
-            mbtn.Action += Emits_Action;
-            pointMenu.Add(mbtn);
+            //mbtn = new MenuButton("Emits", "Emittables");
+            //mbtn.Action += Emits_Action;
+            //pointMenu.Add(mbtn);
 
             regex = new Regex("^xa([0-9ab]) ?(.*)$");
             regexForIn = new Regex(" in ([0-9]*\\.?[0-9]*)s? ?(?:via (.*))?$");
@@ -192,11 +192,15 @@ namespace AnylandMods.AutoBody
         internal static void SetLegPlayspaceLock(GameObject leg, bool isLocked)
         {
             AttachmentPointId apid = leg.GetComponent<AttachmentPoint>().id;
+            FakeParent fpar = leg.GetComponent<FakeParent>();
+            if (fpar == null)
+                fpar = leg.AddComponent<FakeParent>();
+
             if (apid == AttachmentPointId.LegLeft || apid == AttachmentPointId.LegRight) {
                 if (isLocked)
-                    leg.transform.parent = Managers.personManager.ourPerson.transform;
+                    fpar.Parent = Managers.personManager.ourPerson.transform;
                 else
-                    leg.transform.parent = Managers.personManager.ourPerson.Torso.transform;
+                    fpar.Parent = null;
             }
         }
 
@@ -217,6 +221,10 @@ namespace AnylandMods.AutoBody
                 }
                 EmitCommand.Emit(source, data.Substring(6));
                 return;
+            } else if (data.Equals("!selfhide")) {
+                ThingManager.SetLayerForThingAndParts(info.Thing, LayerMask.NameToLayer("InvisibleToOurPerson"));
+            } else if (data.Equals("!selfshow")) {
+                ThingManager.SetLayerForThingAndParts(info.Thing, -1);
             }
 
             // TODO: Add a toggle to disable IsTrusted check
@@ -582,17 +590,21 @@ namespace AnylandMods.AutoBody
         }
     }
 
-    [HarmonyPatch(typeof(PersonLegStateSync), "OnPhotonSerializeView")]
+    /*[HarmonyPatch(typeof(PhotonStream), "SendNext")]
     public static class SyncLockedLegPoints {
-        public static void Prefix(PersonLegStateSync __instance, ref Vector3 ___localPositionToSend, ref Quaternion ___localRotationToSend)
+        public static void Prefix(PersonLegStateSync __instance, ref Tuple<Transform, Transform> __state)
         {
-            Transform torso = Managers.personManager.ourPerson.Torso.transform;
-            if (__instance.isOurPerson && __instance.transform.parent != torso) {
-                ___localPositionToSend = __instance.transform.position - torso.position;
-                ___localRotationToSend = __instance.transform.rotation;
-                ___localRotationToSend *= Quaternion.Inverse(__instance.transform.parent.rotation);
-                ___localRotationToSend *= torso.rotation;
-            }
+            Person ourPerson = Managers.personManager.ourPerson;
+            __state = new Tuple<Transform, Transform>(ourPerson.AttachmentPointLegLeft.transform.parent, ourPerson.AttachmentPointLegRight.transform.parent);
+            ourPerson.AttachmentPointLegLeft.transform.parent = ourPerson.Torso.transform;
+            ourPerson.AttachmentPointLegRight.transform.parent = ourPerson.Torso.transform;
         }
-    }
+
+        public static void Postfix(PersonLegStateSync __instance, ref Tuple<Transform, Transform> __state)
+        {
+            Person ourPerson = Managers.personManager.ourPerson;
+            ourPerson.AttachmentPointLegLeft.transform.parent = __state.Item1;
+            ourPerson.AttachmentPointLegRight.transform.parent = __state.Item2;
+        }
+    }*/
 }
