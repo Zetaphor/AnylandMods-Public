@@ -89,6 +89,7 @@ namespace AnylandMods.BetterVertexMover
                     VertexMover mover = __instance.vertexMover();
                     ThingPart tp = mover.thingPart();
                     Vector3[] vertices = mover.mesh.vertices;
+                    DebugLog.LogTemp("{0} vertices", vertices.Length);
                     foreach (Main.UndoVertex vertex in undoVertices) {
                         vertices[vertex.index] = vertex.pos;
                         tp.changedVertices[vertex.index] = vertex.pos;

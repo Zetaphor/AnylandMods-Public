@@ -70,9 +70,9 @@ namespace AnylandMods.AutoBody
             mbtn = new MenuButton("HandRight", "(XAB) Right Hand*");
             mbtn.Action += Mbtn_Action;
             pointMenu.Add(mbtn);
-            //mbtn = new MenuButton("Emits", "Emittables");
-            //mbtn.Action += Emits_Action;
-            //pointMenu.Add(mbtn);
+            mbtn = new MenuButton("Emits", "Emittables");
+            mbtn.Action += Emits_Action;
+            pointMenu.Add(mbtn);
 
             regex = new Regex("^xa([0-9ab]) ?(.*)$");
             regexForIn = new Regex(" in ([0-9]*\\.?[0-9]*)s? ?(?:via (.*))?$");

@@ -284,6 +284,17 @@ namespace AnylandMods.AvatarScriptBackend {
 
                     break;
 
+                case "x tkh stop":
+                    foreach (var tkh in TelekineticHold.AllActiveHolds) {
+                        try {
+                            tkh.Thing.rigidbody.velocity = Vector3.zero;
+                        } catch (NullReferenceException) {
+                        } catch (Exception ex) {
+                            DebugLog.Log("{0}", ex);
+                        }
+                    }
+                    break;
+
                 case "x tkh vanish":
                     var toPutDown = new List<TelekineticHold>();
                     foreach (var tkh in TelekineticHold.AllActiveHolds) {

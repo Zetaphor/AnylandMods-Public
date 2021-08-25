@@ -48,20 +48,35 @@ namespace AnylandMods.AvatarScriptBackend {
 
         public void Update()
         {
+            if (Thing == null || Thing.rigidbody == null) {
+                enabled = false;
+                return;
+            }
             if (moveWithHand) {
-                if (Thing == null || Thing.rigidbody == null) {
-                    enabled = false;
-                    return;
-                }
                 Vector3 handMovement = Hand.transform.position - lastHandPos;
                 Vector3 handVelocity = handMovement / Time.deltaTime;
                 Vector3 acceleration = GetAccel(handVelocity) * Time.deltaTime;
                 Thing.rigidbody.useGravity = false;
                 Thing.rigidbody.detectCollisions = AllowCollision && hadCollisionBeforePickup;
-                Thing.rigidbody.AddForce(acceleration, ForceMode.VelocityChange);
                 Vector3 axis = Vector3.Cross(handMovement.normalized, lastHandVec.normalized);
                 float angle = Vector3.SignedAngle(handMovement, lastHandVec, axis);
-                Thing.rigidbody.AddTorque(-3f * axis * angle * (lastHandVec + handMovement).magnitude, ForceMode.VelocityChange);
+                Thing.rigidbody.AddTorque(-2f * axis * angle * (lastHandVec + handMovement).magnitude, ForceMode.VelocityChange);
+                Thing.rigidbody.AddForce(acceleration, ForceMode.VelocityChange);
+                // Spin around center point
+                if (AllActiveHolds.Count > 1) {
+                    var center = Vector3.zero;
+                    foreach (TelekineticHold tkh in AllActiveHolds) {
+                        if (tkh != null && tkh.Thing != null && tkh.Thing.transform != null) {
+                            center += tkh.Thing.transform.position;
+                        }
+                    }
+                    center /= AllActiveHolds.Count;
+                    Vector3 fromCenter = Thing.transform.position - center;
+                    Vector3 rotated = Quaternion.AngleAxis(-0.5f*angle, axis) * fromCenter + center;
+                    Vector3 delta = rotated - Thing.transform.position;
+                    Thing.rigidbody.AddForce(delta, ForceMode.Acceleration);
+                }
+
                 //Thing.transform.rotation = Quaternion.Inverse(lastHandRot) * Hand.transform.rotation * Thing.transform.rotation;
                 lastHandVec = handMovement;
                 lastHandPos = Hand.transform.position;
@@ -125,8 +140,11 @@ namespace AnylandMods.AvatarScriptBackend {
                 comp.savedPosition = thing.transform.position;
                 comp.savedRotation = thing.transform.localEulerAngles;
             }
-            if (!AllActiveHolds.Contains(comp))
+            
+            if (!AllActiveHolds.Contains(comp)) {
                 AllActiveHolds.Add(comp);
+            }
+
             if (comp.moveWithHand)
                 return comp;
             if (comp.positionWasReset) {
@@ -135,6 +153,7 @@ namespace AnylandMods.AvatarScriptBackend {
                 comp.positionWasReset = false;
                 AllMovedObjects.Add(comp);
             }
+
             comp.Hand = hand;
             comp.lastHandPos = hand.transform.position;
             comp.Thing = thing;
@@ -199,6 +218,7 @@ namespace AnylandMods.AvatarScriptBackend {
                 }
             }
             AllMovedObjects.Clear();
+            AllActiveHolds.Clear(); //is this right?
         }
 
         private void EndFX()
@@ -239,6 +259,7 @@ namespace AnylandMods.AvatarScriptBackend {
                     DebugLog.Log("Error putting down:\n{0}", ex);
                 }
             }
+            ResetAll();
         }
     }
 }

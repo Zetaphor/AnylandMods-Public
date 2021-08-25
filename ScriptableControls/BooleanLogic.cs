@@ -10,13 +10,13 @@ namespace AnylandMods.ScriptableControls {
     };
 
     interface IFlagTest {
-        bool Evaluate(UInt64 currentFlags);
+        bool Evaluate(FlagSet currentFlags);
         IFlagTest Complement { get; }
     }
 
     class MaskTest : IFlagTest {
-        public UInt64 Flags { get; private set; }
-        public UInt64 Mask { get; private set; }
+        public FlagSet Flags { get; private set; }
+        public FlagSet Mask { get; private set; }
         public BooleanOp Mode { get; private set; }
 
         public static MaskTest Tautology { get; private set; }
@@ -24,27 +24,27 @@ namespace AnylandMods.ScriptableControls {
         
         static MaskTest()
         {
-            Tautology = new MaskTest(0, 0, BooleanOp.And);
-            Falsehood = new MaskTest(0, 0, BooleanOp.Or);
+            Tautology = new MaskTest(FlagSet.Zeros, FlagSet.Zeros, BooleanOp.And);
+            Falsehood = new MaskTest(FlagSet.Zeros, FlagSet.Zeros, BooleanOp.Or);
         }
 
-        public MaskTest(UInt64 flags, UInt64 mask, BooleanOp mode = BooleanOp.And)
+        public MaskTest(FlagSet flags, FlagSet mask, BooleanOp mode = BooleanOp.And)
         {
             this.Flags = flags;
             this.Mask = mask;
             this.Mode = mode;
         }
 
-        public MaskTest(UInt64 flags, BooleanOp mode = BooleanOp.And)
+        public MaskTest(FlagSet flags, BooleanOp mode = BooleanOp.And)
             : this(flags, flags, mode)
         { }
 
-        public bool Evaluate(UInt64 currentFlags)
+        public bool Evaluate(FlagSet currentFlags)
         {
             if (Mode == BooleanOp.And)
                 return (currentFlags & Mask) == (Flags & Mask);
             else // Mode.Or
-                return Mask != 0 && (~(currentFlags ^ Flags) & Mask) != 0;
+                return Mask != FlagSet.Zeros && (~(currentFlags ^ Flags) & Mask) != FlagSet.Zeros;
         }
 
         internal static BooleanOp OppositeMode(BooleanOp mode)
@@ -81,12 +81,12 @@ namespace AnylandMods.ScriptableControls {
             return new CompoundTest(tests, BooleanOp.And);
         }
 
-        public override string ToString()
+        /*public override string ToString()
         {
             var chars = new Stack<char>();
             const int bits = ControlState.Flags.BitsToShiftForLeft * 2;
-            UInt64 ftemp = Flags;
-            UInt64 mtemp = Mask;
+            FlagSet ftemp = Flags;
+            FlagSet mtemp = Mask;
             for (int i=0; i<bits; ++i) {
                 if ((mtemp & 1) == 1) {
                     chars.Push((ftemp & 1) == 1 ? '1' : '0');
@@ -103,7 +103,7 @@ namespace AnylandMods.ScriptableControls {
             }
             sb.Append(">");
             return sb.ToString();
-        }
+        }*/
     }
 
     class CompoundTest : IFlagTest {
@@ -118,7 +118,7 @@ namespace AnylandMods.ScriptableControls {
             this.mode = mode;
         }
 
-        public bool Evaluate(UInt64 currentFlags)
+        public bool Evaluate(FlagSet currentFlags)
         {
             if (mode == BooleanOp.And) {
                 foreach (IFlagTest test in tests) {
@@ -194,6 +194,83 @@ namespace AnylandMods.ScriptableControls {
         public static CompoundTest operator&(CompoundTest a, IFlagTest b)
         {
             return BinaryBoolOperator(a, b, BooleanOp.And);
+        }
+    }
+
+    struct FlagSet {
+        public UInt64 left;
+        public UInt64 right;
+
+        public static readonly FlagSet Zeros = new FlagSet(0, 0);
+        public static readonly FlagSet Ones = ~Zeros;
+
+        public FlagSet(UInt64 left, UInt64 right)
+        {
+            this.left = left;
+            this.right = right;
+        }
+
+        public static FlagSet operator |(FlagSet a, FlagSet b)
+        {
+            return new FlagSet(a.left | b.left, a.right | b.right);
+        }
+
+        public static FlagSet operator &(FlagSet a, FlagSet b)
+        {
+            return new FlagSet(a.left & b.left, a.right & b.right);
+        }
+
+        public static FlagSet operator ^(FlagSet a, FlagSet b)
+        {
+            return new FlagSet(a.left ^ b.left, a.right ^ b.right);
+        }
+
+        public static FlagSet operator ~(FlagSet a)
+        {
+            return new FlagSet(~a.left, ~a.right);
+        }
+
+        public static FlagSet operator <<(FlagSet a, int b)
+        {
+            UInt64 left = (a.left << b) | (a.right >> (64 - b));
+            UInt64 right = a.right << b;
+            return new FlagSet(left, right);
+        }
+
+        public static FlagSet operator >>(FlagSet a, int b)
+        {
+            UInt64 left = a.left >> b;
+            UInt64 right = (a.right >> b) | (a.left << (64 - b));
+            return new FlagSet(left, right);
+        }
+
+        public static bool operator ==(FlagSet a, FlagSet b)
+        {
+            return a.left == b.left && a.right == b.right;
+        }
+
+        public static bool operator !=(FlagSet a, FlagSet b)
+        {
+            return a.left != b.left || a.right != b.right;
+        }
+
+        public override bool Equals(object obj)
+        {
+            try {
+                return this == (FlagSet)obj;
+            } catch (InvalidCastException) {
+                return false;
+            }
+        }
+
+        public override int GetHashCode()
+        {
+            return left.GetHashCode() ^ right.GetHashCode();
+        }
+
+        public override string ToString()
+        {
+            return String.Format("[{0:lX} : {1:lX}]", left, right);
         }
     }
 }
