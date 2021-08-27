@@ -165,8 +165,12 @@ namespace AnylandMods.AvatarScriptBackend {
                                 Transform parent = part.gameObject.transform.parent;
                                 if (parent != null) {
                                     thing = parent.gameObject.GetComponent<Thing>();
-                                    if (thing != null)
+                                    if (thing != null) {
                                         thing = thing.GetMyRootThing();
+                                        var person = thing.GetComponentInParent<Person>();
+                                        if (person != null && person.isOurPerson)
+                                            continue;
+                                    }
                                 }
                             } else {
                                 thing = hit.collider.gameObject.GetComponentInParent<Thing>();

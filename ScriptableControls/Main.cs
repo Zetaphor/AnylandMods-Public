@@ -13,16 +13,20 @@ namespace AnylandMods.ScriptableControls {
     public static class Main {
         public static bool enabled;
         public static UnityModManager.ModEntry mod;
+        public static UniversalScript universal;
+        public static HarmonyInstance harmony;
 
         public static bool Load(UnityModManager.ModEntry modEntry)
         {
-            var harmony = HarmonyInstance.Create(modEntry.Info.Id);
+            harmony = HarmonyInstance.Create(modEntry.Info.Id);
             harmony.PatchAll();
             mod = modEntry;
 
             ModMenu.AddButton(harmony, "Body Motions...", BtnBodyMotions_Action);
 
             BodyTellManager.OnUpdate += HandDotUpdateHook.UpdateTests;
+
+            universal = new UniversalScript(mod);
 
             return true;
         }
@@ -65,7 +69,7 @@ namespace AnylandMods.ScriptableControls {
 
         private static List<ControlState> tests;
         private static List<string> tells;
-        private static UInt64 flags = 0;
+        private static FlagSet flags = FlagSet.Zeros;
         private static Vector3 lastposLeft, lastposRight;
         private static float lasttimeLeft, lasttimeRight;
 
@@ -83,6 +87,22 @@ namespace AnylandMods.ScriptableControls {
                         tests.Add(state);
                     tells.Add(tell);
                 }
+            }
+        }
+
+        private static UInt64 DirectionToFlag(Vector3 direction, UInt64[] flagTbl, Side hand)  // {X-, X+, Y-, Y+, Z-, Z+, in, out}
+        {
+            UInt64 left = (hand == Side.Left) ? flagTbl[7] : flagTbl[6];
+            UInt64 right = (hand == Side.Right) ? flagTbl[7] : flagTbl[6];
+            float absx = Mathf.Abs(direction.x), absy = Mathf.Abs(direction.y), absz = Mathf.Abs(direction.z);
+            if (absx > absy && absx > absz) {
+                return (direction.x > 0) ? flagTbl[1] | right : flagTbl[0] | left;
+            } else if (absy > absx && absy > absz) {
+                return (direction.y > 0) ? flagTbl[3] : flagTbl[2];
+            } else if (absz > absx && absz > absy) {
+                return (direction.z > 0) ? flagTbl[5] : flagTbl[4];
+            } else {
+                return 0;
             }
         }
 
@@ -125,7 +145,35 @@ namespace AnylandMods.ScriptableControls {
             Vector3 handpos = __instance.transform.position;
             Vector3 handpos_local = Quaternion.Inverse(headrot) * (handpos - headpos);
             handpos_local /= Managers.personManager.GetOurScale();
-            
+            Quaternion handrot = Managers.personManager.ourPerson.GetHandBySide(__instance.side).transform.rotation;
+            Vector3 pointdir = handrot * Vector3.forward;
+            Vector3 pointdir_local = Quaternion.Inverse(headrot) * pointdir;
+
+            myFlags |= DirectionToFlag(pointdir_local, new UInt64[] {
+                ControlState.Flags.PointLeft,
+                ControlState.Flags.PointRight,
+                ControlState.Flags.PointDown,
+                ControlState.Flags.PointUp,
+                ControlState.Flags.PointFwd,
+                ControlState.Flags.PointBack,
+                ControlState.Flags.PointIn,
+                ControlState.Flags.PointOut
+            }, __instance.side);
+
+            Vector3 palmdir = handrot * Vector3.left;
+            Vector3 palmdir_local = Quaternion.Inverse(headrot) * palmdir;
+
+            myFlags |= DirectionToFlag(palmdir_local, new UInt64[] {
+                ControlState.Flags.PalmLeft,
+                ControlState.Flags.PalmRight,
+                ControlState.Flags.PalmDown,
+                ControlState.Flags.PalmUp,
+                ControlState.Flags.PalmFwd,
+                ControlState.Flags.PalmBack,
+                ControlState.Flags.PalmIn,
+                ControlState.Flags.PalmOut
+            }, __instance.side);
+
             if (handpos_local.x >= XThreshold) {
                 myFlags |= ControlState.Flags.PosX2;
             } else if (handpos_local.x <= -XThreshold) {
@@ -163,22 +211,24 @@ namespace AnylandMods.ScriptableControls {
                     }
                 }
 
-                float absx = Mathf.Abs(velocity.x), absy = Mathf.Abs(velocity.y), absz = Mathf.Abs(velocity.z);
-                if (absx > absy && absx > absz) {
-                    myFlags |= (velocity.x > 0) ? ControlState.Flags.DirRight : ControlState.Flags.DirLeft;
-                } else if (absy > absx && absy > absz) {
-                    myFlags |= (velocity.y > 0) ? ControlState.Flags.DirUp : ControlState.Flags.DirDown;
-                } else if (absz > absx && absz > absy) {
-                    myFlags |= (velocity.z > 0) ? ControlState.Flags.DirFwd : ControlState.Flags.DirBack;
-                }
+                myFlags |= DirectionToFlag(velocity, new UInt64[] {
+                    ControlState.Flags.DirLeft,
+                    ControlState.Flags.DirRight,
+                    ControlState.Flags.DirDown,
+                    ControlState.Flags.DirUp,
+                    ControlState.Flags.DirFwd,
+                    ControlState.Flags.DirBack,
+                    ControlState.Flags.DirIn,
+                    ControlState.Flags.DirOut
+                }, __instance.side);
             }
 
             if (__instance.side == Side.Left) {
-                flags = (flags & ControlState.Flags.RightMask) | (myFlags << ControlState.Flags.BitsToShiftForLeft);
+                flags = new FlagSet(myFlags, flags.right);
                 lastposLeft = handpos_local;
                 lasttimeLeft = Time.time;
             } else {
-                flags = (flags & ControlState.Flags.LeftMask) | myFlags;
+                flags = new FlagSet(flags.left, myFlags);
                 lastposRight = handpos_local;
                 lasttimeRight = Time.time;
             }

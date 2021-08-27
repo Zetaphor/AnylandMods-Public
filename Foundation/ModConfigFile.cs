@@ -101,6 +101,8 @@ namespace AnylandMods {
                     file.Close();
                 }
             }
+
+            PostLoad();
         }
 
         public void AddDefaultValue(string key, string value = "", bool addDefaultLine = true)
@@ -129,6 +131,10 @@ namespace AnylandMods {
         }
 
         protected virtual void ValueChanged(string key, string newValue)
+        {
+        }
+
+        protected virtual void PostLoad()
         {
         }
 

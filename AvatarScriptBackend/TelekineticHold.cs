@@ -72,10 +72,12 @@ namespace AnylandMods.AvatarScriptBackend {
                     }
                     center /= AllActiveHolds.Count;
                     Vector3 fromCenter = Thing.transform.position - center;
-                    Vector3 rotated = Quaternion.AngleAxis(-0.5f*angle, axis) * fromCenter + center;
+                    Vector3 rotated = Quaternion.AngleAxis(-0.25f*angle, axis) * fromCenter + center;
                     Vector3 delta = rotated - Thing.transform.position;
-                    Thing.rigidbody.AddForce(delta, ForceMode.Acceleration);
+                    acceleration += delta;
                 }
+
+                Thing.rigidbody.AddForce(acceleration, ForceMode.VelocityChange);
 
                 //Thing.transform.rotation = Quaternion.Inverse(lastHandRot) * Hand.transform.rotation * Thing.transform.rotation;
                 lastHandVec = handMovement;
@@ -259,7 +261,6 @@ namespace AnylandMods.AvatarScriptBackend {
                     DebugLog.Log("Error putting down:\n{0}", ex);
                 }
             }
-            ResetAll();
         }
     }
 }

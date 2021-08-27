@@ -93,7 +93,7 @@ namespace AnylandMods.ScriptableControls {
             UInt64 flags = 0;
             char mode = '-';
             foreach (char c in str) {
-                if (c == 'p' || c == 'q' || c == 'x' || c == 'y' || c == 'z') {
+                if ("opqxyz".Contains(c)) {
                     mode = c;
                 } else if ('0' <= c && c <= '7') {
                     if (mode == 'x' || mode == 'y' || mode == 'z') {
