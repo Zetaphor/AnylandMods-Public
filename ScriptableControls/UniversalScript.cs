@@ -24,8 +24,6 @@ namespace AnylandMods.ScriptableControls {
         }
 
         public sealed class Tag_ScriptLinesAdded : MonoBehaviour {
-            public int[] stateLineCounts;
-            public bool ignore = false;
             public void Start()
             {
                 enabled = false;
@@ -41,31 +39,18 @@ namespace AnylandMods.ScriptableControls {
                 DebugLog.Log("Did not find ThingPart in Head");
                 return;
             } else {
+                Thing headThing = headPart.GetMyRootThing();
                 DebugLog.Log("Found ThingPart in Head");
-                var tag = headPart.gameObject.GetComponent<Tag_ScriptLinesAdded>();
-                if (tag == null || tag.ignore) {
-                    int[] stateLineCounts = new int[headPart.states.Count];
-                    for (int i=0; i<headPart.states.Count; ++i) {
-                        stateLineCounts[i] = headPart.states[i].listeners.Count;
-                    }
-                    if (tag == null) {
-                        headPart.gameObject.AddComponent<Tag_ScriptLinesAdded>().stateLineCounts = stateLineCounts;
-                    } else {
-                        tag.ignore = false;
-                    }
+                if (headThing.GetComponent<Tag_ScriptLinesAdded>() == null) {
+                    DebugLog.Log("Adding universal script...");
                     foreach (string line in ScriptLines) {
                         StateListener listener = BehaviorScriptParser.GetStateListenerFromScriptLine(line, headPart.GetMyRootThing(), headPart);
                         foreach (ThingPartState state in headPart.states) {
+                            DebugLog.Log("Adding {0}", line);
                             state.listeners.Add(listener);
                         }
                     }
-                } else {
-                    for (int i=0; i<tag.stateLineCounts.Length; ++i) {
-                        var listeners = headPart.states[i].listeners;
-                        listeners.RemoveRange(tag.stateLineCounts[i], tag.stateLineCounts.Length - tag.stateLineCounts[i]);
-                        tag.ignore = true;
-                        AddScriptToHead();
-                    }
+                    headThing.gameObject.AddComponent<Tag_ScriptLinesAdded>();
                 }
                 BodyTellManager.Update();
             }
@@ -80,6 +65,7 @@ namespace AnylandMods.ScriptableControls {
                 while (!file.EndOfStream) {
                     string line = file.ReadLine().Trim();
                     ScriptLines.Add(line);
+                    DebugLog.Log("Loaded universal script line: {0}", line);
                 }
             } catch (FileNotFoundException) {
                 DebugLog.Log("{0} not found!", filename);
@@ -96,57 +82,6 @@ namespace AnylandMods.ScriptableControls {
                 file.WriteLine(line);
             }
             file.Close();
-        }
-
-        public static void LoadAndAddToHead(UnityModManager.ModEntry mod, string filename = "universal.txt")
-        {
-            var script = new UniversalScript(mod, filename);
-            script.Load();
-            script.AddScriptToHead();
-        }
-    }
-
-    /*[HarmonyPatch(typeof(Person), "ConstructAttachments")]
-    public static class ConstructAttachmentsHook {
-        public static void Postfix()
-        {
-            Main.universal.Load();
-            Main.universal.AddScriptToHead();
-        }
-    }
-
-    [HarmonyPatch(typeof(Person), "AttachNewThing")]
-    public static class AttachNewThingHook {
-        private static System.Collections.IEnumerable GetEnumerable(System.Collections.IEnumerator beginning)
-        {
-            while (beginning.MoveNext()) {
-                yield return beginning.Current;
-            }
-            DebugLog.Log("Finished original coroutine");
-            Main.universal.Load();
-            Main.universal.AddScriptToHead();
-            DebugLog.Log("Finished coroutine extension");
-        }
-
-        public static void Postfix(AttachmentPointId attachmentPointId, Person __instance, ref System.Collections.IEnumerator __result)
-        {
-            DebugLog.LogTemp("AttachNewThingHook.Postfix was called");
-            __result = GetEnumerable(__result).GetEnumerator();
-        }
-    }*/
-
-    [HarmonyPatch(typeof(AttachmentPoint), "Update")]
-    public static class KeepScriptInHead {
-        public static void Postfix(AttachmentPoint __instance)
-        {
-            if (__instance.name == "HeadAttachmentPoint") {
-                var person = __instance.GetComponentInParent<Person>();
-                if (person != null && person.isOurPerson) {
-                    var tag = __instance.GetComponent<UniversalScript.Tag_ScriptLinesAdded>();
-                    if (tag == null)
-                        Main.universal.AddScriptToHead();
-                }
-            }
         }
     }
 
@@ -167,7 +102,6 @@ namespace AnylandMods.ScriptableControls {
                     }
                 }
                 Main.universal.Save();
-                Main.universal.AddScriptToHead();
             }
         }
 

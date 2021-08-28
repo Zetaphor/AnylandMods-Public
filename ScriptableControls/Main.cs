@@ -28,6 +28,18 @@ namespace AnylandMods.ScriptableControls {
 
             universal = new UniversalScript(mod);
 
+            modEntry.OnUpdate = delegate (UnityModManager.ModEntry entry, float dt) {
+                Person me = Managers.personManager.ourPerson;
+                GameObject head = me.GetAttachmentPointById(AttachmentPointId.Head);
+                var thing = head.GetComponentInChildren<Thing>();
+                if (thing != null && thing.gameObject.GetComponent<UniversalScript.Tag_ScriptLinesAdded>() == null) {
+                    DebugLog.Log("Adding universal script to {0}", thing.givenName);
+                    universal.Load();
+                    universal.AddScriptToHead();
+                    thing.gameObject.AddComponent<UniversalScript.Tag_ScriptLinesAdded>();
+                }
+            };
+
             return true;
         }
 
