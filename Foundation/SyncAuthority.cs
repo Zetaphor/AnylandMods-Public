@@ -66,24 +66,29 @@ namespace AnylandMods {
                                     disposable.Dispose();
                             }
                         }
-
                         // Physics
-                        if (thing.rigidbody != null && thing.isThrownOrEmitted && !string.IsNullOrEmpty(thing.thrownId)) {
-                            if (thingPhysicsString.Length > 0)
-                                thingPhysicsString.Append("\n");
-                            thingPhysicsString.Append(compressed + "|");
-                            thingPhysicsString.Append(specid + "|");
-                            thingPhysicsString.Append(thing.thingId + "|");
-                            if (sync.SpawnOutOfEarshot) {
-                                thingPhysicsString.Append(PersonManager.GetSyncingCompressedVector3(SyncTools.FarAway));
-                            } else {
-                                thingPhysicsString.Append(PersonManager.GetSyncingCompressedVector3(thing.transform.position) + "|");
-                            }
-                            thingPhysicsString.Append(PersonManager.GetSyncingCompressedQuaternion(thing.transform.rotation) + "|");
-                            thingPhysicsString.Append(PersonManager.GetSyncingCompressedVector3(thing.rigidbody.velocity) + "|");
-                            thingPhysicsString.Append(PersonManager.GetSyncingCompressedVector3(thing.rigidbody.angularVelocity) + "|");
-                            thingPhysicsString.Append(PersonManager.GetSyncingCompressedFloat(thing.destroyMeInTime));
+                        DebugLog.LogTemp("Syncing physics");
+                        if (thingPhysicsString.Length > 0)
+                            thingPhysicsString.Append("\n");
+                        thingPhysicsString.Append(compressed + "|");
+                        thingPhysicsString.Append(specid + "|");
+                        thingPhysicsString.Append(thing.thingId + "|");
+                        if (sync.SpawnOutOfEarshot) {
+                            thingPhysicsString.Append(PersonManager.GetSyncingCompressedVector3(SyncTools.FarAway));
+                        } else {
+                            thingPhysicsString.Append(PersonManager.GetSyncingCompressedVector3(thing.transform.position) + "|");
                         }
+                        thingPhysicsString.Append(PersonManager.GetSyncingCompressedQuaternion(thing.transform.rotation) + "|");
+                        Vector3 velocity, angularVelocity;
+                        if (thing.rigidbody != null) {
+                            velocity = thing.rigidbody.velocity;
+                            angularVelocity = thing.rigidbody.angularVelocity;
+                        } else {
+                            velocity = angularVelocity = Vector3.zero;
+                        }
+                        thingPhysicsString.Append(PersonManager.GetSyncingCompressedVector3(velocity) + "|");
+                        thingPhysicsString.Append(PersonManager.GetSyncingCompressedVector3(angularVelocity) + "|");
+                        thingPhysicsString.Append(PersonManager.GetSyncingCompressedFloat(thing.destroyMeInTime));
                     }
 
                     if (sync.destroyAfterNextSync) {
